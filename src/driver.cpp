@@ -2,22 +2,61 @@
  * @file
  * @auther Jessica Li, Jingwen Wang, Hamik Mukelyan
  *
- * This file reads input for and drives the simulation then dumps data to
- * disk for post-processing into graphs.
+ * This file reads a network description from a JSON file then starts a
+ * simulation of the network. It logs data as the simulation progresses then
+ * dumps it to to disk so scripts can generate graphs.
+ *
+ * TODO decide how the data is dumped... to stdout so it can be redirected to
+ * a single file? To multiple files in the 'data_dump' directory?
  */
 
+// ---------------------------- Includes --------------------------------------
+
+// Standard headers.
 #include <iostream>
-#include "netdevice.h"
-#include "nethost.h"
-#include "netrouter.h"
-#include "netlink.h"
-#include "netflow.h"
+#include <string>
+#include <cstdlib>
+#include "simulation.h"
 
 using namespace std;
 
+// --------------------------- Prototypes -------------------------------------
+
+/**
+ * Prints a usage statement to stderr.
+ * @param progname name of this program.
+ */
+void print_usage_statement (char *progname);
+
+// ------------------------ Global variables ----------------------------------
+
+// ------------------------------ Main ----------------------------------------
+
+/**
+ * Reads a JSON file from disk, populates in-memory collections of hosts,
+ * routers, links, and flows, starts a simulation, then logs data.
+ *
+ * TODO describe how we log data to disk. Multiple files? To stdout intending
+ * that it will get redirected to a single file?
+ */
 int main (int argc, char **argv) {
 
-	cout << "Hi, I like cookies." << endl;
+	// See print_usage_statement function for expected console arguments.
+	if (argc != 2) {
+		print_usage_statement(argv[0]);
+		exit (1);
+	}
+
+	simulation sim(argv[1]);
+
+	// TODO do stuff with the simulation object :-)
 
 	return 0;
+}
+
+// ---------------------------- Functions  ------------------------------------
+
+void print_usage_statement (char *progname) {
+	cerr << "Usage: " << progname << " <JSON input file>" << endl;
+	// TODO update when we decide where to send output.
 }

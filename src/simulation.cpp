@@ -1,86 +1,45 @@
-/**
- * @file
- * @author Hamik Mukelyan
- *
- * This test case doesn't correspond with a source file or class in the
- * simulation; it just contains code that can be copy-pasted into the
- * simulation driver's JSON file input functions. I wanted to test JSON file
- * input before putting it into the driver, which is why all this is here.
- */
-
-#ifndef TEST_SIMULATION_INPUT_CPP
-#define TEST_SIMULATION_INPUT_CPP
-
-#include "rapidjson/document.h"
-#include "rapidjson/prettywriter.h"
-#include "gtest/gtest.h"
-#include <string>
-#include <iostream>
-#include <cstdlib>
-#include <vector>
-#include <map>
-#include <string.h>
-#include <sstream>
-#include <fstream>
-#include "netdevice.h"
-#include "nethost.h"
-#include "netrouter.h"
-#include "netlink.h"
-#include "netflow.h"
-
-using namespace std;
-using namespace rapidjson;
-
 /*
- * This is a "test fixture" that sets up things we need in the actual unit
- * tests below. Note that an object of this class is created before
- * each test case begins and is torn down when each test case ends.
+ * See header file for function comments.
  */
-class simulationInputTest : public ::testing::Test {
-protected:
 
-	/* This string will contain json data read in from the file below. */
+#include "simulation.h"
+
+simulation::simulation (const char *inputfile) {
+
+	// Read JSON file into a single string.
 	string jsonstr;
-
-	virtual void SetUp() {
-
-		// Read the data into an intermediate string, tack that onto a
-		// string buffer, then after file ends copy whole json string.
-		stringstream sstr;
-		ifstream inputfile ("input_files/test_case_2");
-		string line;
-		if (inputfile.is_open()) {
-			while (getline(inputfile, line)) {
-				sstr << line << endl;
-			}
-			inputfile.close();
+	stringstream sstr;
+	ifstream inputfilestream (inputfile);
+	string line;
+	if (inputfilestream.is_open()) {
+		while (getline(inputfilestream, line)) {
+			sstr << line << endl;
 		}
-		jsonstr = sstr.str();
+		inputfilestream.close();
 	}
+	jsonstr = sstr.str();
 
-	virtual void TearDown() { }
-};
+	// Send the JSON string to a parser. Populate in-memory collections of
+	// hosts, routers, links, and flows.
+	parse_JSON_input (jsonstr);
+}
 
-/*
- * Reads JSON from a file and populates hosts, links, routers, flows.
- */
-TEST_F(simulationInputTest, JsonFileInput) {
+simulation::~simulation () {
+	free_network_devices();
+}
+
+void simulation::parse_JSON_input (string jsonstring) {
 
 	// Parse JSON text into a document.
     Document document;
-    char buffer[jsonstr.length() + 1];
-    memcpy(buffer, jsonstr.c_str(), jsonstr.length());
-    buffer[jsonstr.length()] = 0; // string has to be null-terminated
-    ASSERT_FALSE(document.ParseInsitu(buffer).HasParseError());
-
-    map<string, nethost *> hosts;
-    map<string, netrouter *> routers;
-    map<string, netlink *> links;
-    map<string, netflow *> flows;
+    char buffer[jsonstring.length() + 1];
+    memcpy(buffer, jsonstring.c_str(), jsonstring.length());
+    buffer[jsonstring.length()] = 0; // string has to be null-terminated
+    assert(!document.ParseInsitu(buffer).HasParseError());
 
     // Load the hosts into memory.
     const Value& texthosts = document["hosts"];
-	ASSERT_TRUE(texthosts.IsArray());
+	assert(texthosts.IsArray());
 	for (SizeType i = 0; i < texthosts.Size(); i++) {
 		string hostname(texthosts[i].GetString());
 		nethost *curr_host = new nethost(hostname);
@@ -89,32 +48,18 @@ TEST_F(simulationInputTest, JsonFileInput) {
 
 	// Load the routers into memory
     const Value& textrouters = document["routers"];
-	ASSERT_TRUE(textrouters.IsArray());
+	assert(textrouters.IsArray());
 	for (SizeType i = 0; i < textrouters.Size(); i++) {
 		string routername(textrouters[i].GetString());
 		netrouter *curr_router = new netrouter(routername);
 		routers[routername] = curr_router;
 	}
 
-	// Check that the router and host names were read correctly.
-	map<string, nethost *>::iterator hitr;
-	const char *correct_hnames[] =
-		{ "S1", "S2", "S3", "T1", "T2", "T3"};
-	map<string, netrouter *>::iterator ritr;
-	const char *correct_rnames[] = { "R1", "R2", "R3", "R4" };
-	int i;
-	for (hitr = hosts.begin(), i = 0; hitr != hosts.end(); hitr++, i++) {
-		ASSERT_STREQ(correct_hnames[i], hitr->first.c_str());
-	}
-	for (ritr = routers.begin(), i = 0; ritr != routers.end(); ritr++, i++) {
-		ASSERT_STREQ(correct_rnames[i], ritr->first.c_str());
-	}
-
 	// Load the links into memory
     const Value& textlinks = document["links"];
-	ASSERT_TRUE(textlinks.IsArray());
+	assert(textlinks.IsArray());
 	for (SizeType i = 0; i < textlinks.Size(); i++) {
-		ASSERT_TRUE(textlinks[i].IsObject());
+		assert(textlinks[i].IsObject());
 		const Value& thislink = textlinks[i];
 		string linkname = thislink["id"].GetString();
 
@@ -138,7 +83,7 @@ TEST_F(simulationInputTest, JsonFileInput) {
 		// if this endpoing is neither a router nor a host...
 		else {
 			// ...that should never happen!
-			ASSERT_TRUE(false);
+			assert(false);
 		}
 
 		// if this endpoint is a host
@@ -153,7 +98,7 @@ TEST_F(simulationInputTest, JsonFileInput) {
 		// if this endpoing is neither a router nor a host...
 		else {
 			// ...that should never happen!
-			ASSERT_TRUE(false);
+			assert(false);
 		}
 
 		netlink *curr_link =
@@ -167,13 +112,13 @@ TEST_F(simulationInputTest, JsonFileInput) {
 		if (endpt1IsHost) {
 			nethost *thishost = dynamic_cast<nethost *>(endpoint1);
 			// each host must have exactly 1 link
-			ASSERT_TRUE(thishost->getLink() == NULL);
+			assert(thishost->getLink() == NULL);
 			thishost->setLink(*curr_link);
 		}
 		if (endpt2IsHost) {
 			nethost *thishost = dynamic_cast<nethost *>(endpoint2);
 			// each host must have exactly 1 link
-			ASSERT_TRUE(thishost->getLink() == NULL);
+			assert(thishost->getLink() == NULL);
 			thishost->setLink(*curr_link);
 		}
 
@@ -191,9 +136,9 @@ TEST_F(simulationInputTest, JsonFileInput) {
 
 	// Load the flows into memory.
     const Value& textflows = document["flows"];
-	ASSERT_TRUE(textflows.IsArray());
+	assert(textflows.IsArray());
 	for (SizeType i = 0; i < textflows.Size(); i++) {
-		ASSERT_TRUE(textflows[i].IsObject());
+		assert(textflows[i].IsObject());
 		const Value& thisflow = textflows[i];
 		string flowname = thisflow["id"].GetString();
 
@@ -213,7 +158,7 @@ TEST_F(simulationInputTest, JsonFileInput) {
 		}
 		// but flows can't start (or end) on anything else...
 		else {
-			ASSERT_TRUE(false);
+			assert(false);
 		}
 
 		// if the destination is a host, great, that's expected
@@ -223,10 +168,10 @@ TEST_F(simulationInputTest, JsonFileInput) {
 		}
 		// but flows can't end (or start) on anything else...
 		else {
-			ASSERT_TRUE(false);
+			assert(false);
 		}
 
-		ASSERT_TRUE(srcIsHost && dstIsHost);
+		assert(srcIsHost && dstIsHost);
 
 		netflow *curr_flow =
 				new netflow (flowname,
@@ -235,10 +180,15 @@ TEST_F(simulationInputTest, JsonFileInput) {
 						*source_host, *destination_host);
 		flows[flowname] = curr_flow;
 	}
+}
 
-	// Remove all the dynamically allocated objects from memory.
+void simulation::free_network_devices () {
+
+	map<string, nethost *>::iterator hitr;
+	map<string, netrouter *>::iterator ritr;
 	map<string, netlink *>::iterator litr;
 	map<string, netflow *>::iterator fitr;
+
 	for (hitr = hosts.begin(); hitr != hosts.end(); hitr++) {
 		delete hitr->second;
 	}
@@ -253,4 +203,30 @@ TEST_F(simulationInputTest, JsonFileInput) {
 	}
 }
 
-#endif // TEST_SIMULATION_INPUT_CPP
+void simulation::print_network(ostream &os) {
+
+	map<string, nethost *>::iterator hitr;
+	map<string, netrouter *>::iterator ritr;
+	map<string, netlink *>::iterator litr;
+	map<string, netflow *>::iterator fitr;
+
+	// Print all the hosts
+	for (hitr = hosts.begin(); hitr != hosts.end(); hitr++) {
+		os << *(hitr->second) << endl;
+	}
+
+	// Print all the routers
+	for (ritr = routers.begin(); ritr != routers.end(); ritr++) {
+		os << *(ritr->second) << endl;
+	}
+
+	// Print all the links
+	for (litr = links.begin(); litr != links.end(); litr++) {
+		os << *(litr->second) << endl;
+	}
+
+	// Print all the flows
+	for (fitr = flows.begin(); fitr != flows.end(); fitr++) {
+		os << *(fitr->second) << endl;
+	}
+}

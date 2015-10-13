@@ -6,6 +6,7 @@
 #include "gtest/gtest.h"
 #include "test_jsonlib.cpp"
 #include "test_simulation_input.cpp"
+#include "test_simulation.cpp"
 #include "netdevice.h"
 #include "nethost.h"
 #include "netrouter.h"

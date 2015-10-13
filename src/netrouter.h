@@ -3,6 +3,9 @@
  * @auther Jessica Li, Jingwen Wang, Hamik Mukelyan
  */
 
+#ifndef NETROUTER_H
+#define NETROUTER_H
+
 #include <iostream>
 #include <cassert>
 #include <string>
@@ -13,9 +16,6 @@
 #include "netdevice.h"
 
 using namespace std;
-
-#ifndef NETROUTER_H
-#define NETROUTER_H
 
 /**
  * Represents a router in a simple network. TODO add detail to this comment.
@@ -38,14 +38,6 @@ public:
 
 	netrouter (string name, vector<netlink *> links) :
 		netdevice(name), links(links) { }
-
-	virtual bool isHost() {
-		return false;
-	}
-
-	virtual bool isRouter() {
-		return true;
-	}
 
 	void addLink (netlink &link) {
 		links.push_back(&link);

@@ -3,8 +3,12 @@
  * @author Hamik Mukelyan
  *
  * Tests that the JSON parser library can be used. A lot of the code here has
- * been pulled from the rapidjson example code.
+ * been pulled from the rapidjson example code. This test case doesn't
+ * correspond with a source file or class in the simulation.
  */
+
+#ifndef TEST_JSONLIB_CPP
+#define TEST_JSONLIB_CPP
 
 #include "rapidjson/document.h"     // rapidjson's DOM-style API
 #include "rapidjson/prettywriter.h" // for stringify JSON
@@ -16,9 +20,6 @@
 
 using namespace std;
 using namespace rapidjson;
-
-#ifndef TEST_JSONLIB_CPP
-#define TEST_JSONLIB_CPP
 
 /*
  * This is a "test fixture" that sets up things we need in the actual unit

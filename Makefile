@@ -47,16 +47,24 @@ $(SRC_DIR)/netflow.cpp
 all: $(NETSIM) $(TESTS)
 
 # Network simulation binary.
-$(NETSIM): $(SRC_DIR)/driver.o $(OBJS)
-	$(CXX) $(CXX_FLAGS) $(CPP_FLAGS) $(SRC_DIR)/driver.o -o $(NETSIM)
+$(NETSIM): $(SRC_DIR)/driver.o $(SRC_DIR)/simulation.o $(OBJS)
+	$(CXX) $(CXX_FLAGS) $(CPP_FLAGS) $(OBJS) $(SRC_DIR)/simulation.o \
+	$(SRC_DIR)/driver.o -o $(NETSIM)
 
+# Deal with all the declared object files
 %.o: %.cpp
-	$(CXX) $(CXX_FLAGS) $(CPP_FLAGS) -c -o $@ $<
+	$(CXX) $(CXX_FLAGS) $(CPP_FLAGS) -c $< -o $@
+	
+# Deal with the simulation object file in particular.
+$(SRC_DIR)/simulation.o: $(SRC_DIR)/simulation.cpp $(SRC_DIR)/simulation.h
+	$(CXX) $(CXX_FLAGS) $(CPP_FLAGS) -I$(JSON_LIB) \
+	-c $(SRC_DIR)/simulation.cpp -o $(SRC_DIR)/simulation.o
 
 # Unit test binary.
-$(TESTS): $(TST_DIR)/alltests.o $(GT_DIR)/make/$(GT_OBJ) $(OBJS)
+$(TESTS): $(TST_DIR)/alltests.o $(SRC_DIR)/simulation.o \
+$(GT_DIR)/make/$(GT_OBJ) $(OBJS)
 	$(CXX) $(CXX_FLAGS) $(CPP_FLAGS) $(GT_DIR)/make/$(GT_OBJ) \
-	$(TST_DIR)/alltests.o -lpthread -o $(TESTS)
+	$(TST_DIR)/alltests.o $(SRC_DIR)/simulation.o $(OBJS) -lpthread -o $(TESTS)
 
 # Following are some object files needed for the binaries above.
 $(SRC_DIR)/driver.o: $(SRC_DIR)/driver.cpp
@@ -86,12 +94,37 @@ docs:
 # then writes them below the "DO NOT DELETE" line in this makefile.
 depend:
 	makedepend $(CXX_FLAGS) $(CPP_FLAGS) -Y -I$(SRC_DIR) -I$(TST_DIR) \
-	$(SRC_DIR)/driver.cpp $(SRCS) $(TST_DIR)/alltests.cpp
+	$(SRC_DIR)/driver.cpp $(SRC_DIR)/simulation.cpp $(SRCS) \
+	$(TST_DIR)/alltests.cpp
 
 # DO NOT DELETE
 
+src/driver.o: src/simulation.h rapidjson/document.h rapidjson/reader.h
+src/driver.o: rapidjson/rapidjson.h rapidjson/allocators.h
+src/driver.o: rapidjson/encodings.h rapidjson/internal/meta.h
+src/driver.o: rapidjson/rapidjson.h rapidjson/internal/stack.h
+src/driver.o: rapidjson/internal/swap.h rapidjson/internal/strtod.h
+src/driver.o: rapidjson/internal/ieee754.h rapidjson/internal/biginteger.h
+src/driver.o: rapidjson/internal/diyfp.h rapidjson/internal/pow10.h
+src/driver.o: rapidjson/error/error.h rapidjson/internal/strfunc.h
+src/driver.o: rapidjson/prettywriter.h rapidjson/writer.h
+src/driver.o: rapidjson/internal/dtoa.h rapidjson/internal/itoa.h
+src/driver.o: rapidjson/internal/itoa.h rapidjson/stringbuffer.h
 src/driver.o: src/netdevice.h src/nethost.h src/netlink.h src/netrouter.h
 src/driver.o: src/netflow.h
+src/simulation.o: src/simulation.h rapidjson/document.h rapidjson/reader.h
+src/simulation.o: rapidjson/rapidjson.h rapidjson/allocators.h
+src/simulation.o: rapidjson/encodings.h rapidjson/internal/meta.h
+src/simulation.o: rapidjson/rapidjson.h rapidjson/internal/stack.h
+src/simulation.o: rapidjson/internal/swap.h rapidjson/internal/strtod.h
+src/simulation.o: rapidjson/internal/ieee754.h
+src/simulation.o: rapidjson/internal/biginteger.h rapidjson/internal/diyfp.h
+src/simulation.o: rapidjson/internal/pow10.h rapidjson/error/error.h
+src/simulation.o: rapidjson/internal/strfunc.h rapidjson/prettywriter.h
+src/simulation.o: rapidjson/writer.h rapidjson/internal/dtoa.h
+src/simulation.o: rapidjson/internal/itoa.h rapidjson/internal/itoa.h
+src/simulation.o: rapidjson/stringbuffer.h src/netdevice.h src/nethost.h
+src/simulation.o: src/netlink.h src/netrouter.h src/netflow.h
 src/nethost.o: src/nethost.h src/netlink.h src/netdevice.h
 src/netrouter.o: src/netrouter.h src/netlink.h src/netdevice.h
 src/netlink.o: src/netlink.h src/netdevice.h
@@ -109,4 +142,4 @@ test/alltests.o: rapidjson/writer.h rapidjson/internal/dtoa.h
 test/alltests.o: rapidjson/internal/itoa.h rapidjson/internal/itoa.h
 test/alltests.o: rapidjson/stringbuffer.h test/test_simulation_input.cpp
 test/alltests.o: src/netdevice.h src/nethost.h src/netlink.h src/netrouter.h
-test/alltests.o: src/netflow.h
+test/alltests.o: src/netflow.h test/test_simulation.cpp src/simulation.h

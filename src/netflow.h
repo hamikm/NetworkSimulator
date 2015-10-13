@@ -3,6 +3,9 @@
  * @auther Jessica Li, Jingwen Wang, Hamik Mukelyan
  */
 
+#ifndef NETFLOW_H
+#define NETFLOW_H
+
 #include <iostream>
 #include <cassert>
 #include <string>
@@ -11,9 +14,6 @@
 #include "netdevice.h"
 
 using namespace std;
-
-#ifndef NETFLOW_H
-#define NETFLOW_H
 
 /**
  * Represents a flow in a simple network. TODO add detail to this comment.
@@ -51,14 +51,6 @@ public:
 			netdevice(name), start_time(start_time), size(size) {
 		source = NULL;
 		destination = NULL;
-	}
-
-	virtual bool isHost() {
-		return false;
-	}
-
-	virtual bool isRouter() {
-		return false;
 	}
 
 	nethost *getDestination() const {

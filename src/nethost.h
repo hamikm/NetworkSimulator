@@ -3,6 +3,9 @@
  * @auther Jessica Li, Jingwen Wang, Hamik Mukelyan
  */
 
+#ifndef NETHOST_H
+#define NETHOST_H
+
 #include <iostream>
 #include <cassert>
 #include <string>
@@ -10,9 +13,6 @@
 #include "netdevice.h"
 
 using namespace std;
-
-#ifndef NETHOST_H
-#define NETHOST_H
 
 /**
  * Represents a host in a simple network. TODO add detail to this comment.
@@ -32,14 +32,6 @@ public:
 	}
 
 	nethost (string name, netlink &link) : netdevice(name), link(&link) { }
-
-	virtual bool isHost() {
-		return true;
-	}
-
-	virtual bool isRouter() {
-		return false;
-	}
 
 	void setLink(netlink &link) {
 		this->link = &link;

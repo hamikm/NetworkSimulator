@@ -3,6 +3,9 @@
  * @auther Jessica Li, Jingwen Wang, Hamik Mukelyan
  */
 
+#ifndef NETLINK_H
+#define NETLINK_H
+
 #include <iostream>
 #include <cassert>
 #include <string>
@@ -10,9 +13,6 @@
 #include "netdevice.h"
 
 using namespace std;
-
-#ifndef NETLINK_H
-#define NETLINK_H
 
 /**
  * Represents a link in a simple network. TODO add detail to this comment.
@@ -49,14 +49,6 @@ public:
 			netdevice(name), rate(rate), delay(delay), buflen(buflen) {
 		endpoint1 = NULL;
 		endpoint2 = NULL;
-	}
-
-	virtual bool isHost() {
-		return false;
-	}
-
-	virtual bool isRouter() {
-		return false;
 	}
 
 	long getBuflen() const {

@@ -3,6 +3,9 @@
  * @auther Jessica Li, Jingwen Wang, Hamik Mukelyan
  */
 
+#ifndef NETDEVICE_H
+#define NETDEVICE_H
+
 #include <iostream>
 #include <cassert>
 #include <string>
@@ -11,16 +14,12 @@
 
 using namespace std;
 
-#ifndef NETDEVICE_H
-#define NETDEVICE_H
-
 /**
  * Superclass of all network elements including routers, hosts, links, and
  * flows. "Device" is a bit of a misnomer for the latter but they all share a
  * superclass so they can share an output operator overload and so they can
- * co-exist in the same STL collection if necessary.
- *
- * TODO add detail to this comment.
+ * co-exist in the same STL collection if necessary. Ideally each type of
+ * netdevice would exist in its own generic-using collection though.
  */
 class netdevice {
 
@@ -39,15 +38,6 @@ public:
 	}
 
 	/**
-	 * Used to verify that flows originate at and end on hosts and to load
-	 * links into hosts.
-	 */
-	virtual bool isHost() = 0;
-
-	/** Used to load links into routers. */
-	virtual bool isRouter() = 0;
-
-	/**
 	 * Print helper function. Derived classes should (partially) override this.
 	 * @param os The output stream to which to write scene object information.
 	 */
@@ -64,7 +54,7 @@ public:
  * @param device The @c netdevice object to write.
  * @return The same output stream for operator chaining.
  */
-ostream & operator<<(ostream &os, const netdevice &device) {
+inline ostream & operator<<(ostream &os, const netdevice &device) {
 	device.printHelper(os);
 	return os;
 }
