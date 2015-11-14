@@ -4,4 +4,3 @@
 
 #include "nethost.h"
 
-// TODO implement non-inline functions here

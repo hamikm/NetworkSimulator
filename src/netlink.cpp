@@ -4,4 +4,3 @@
 
 #include "netlink.h"
 
-// TODO implement non-inline functions here

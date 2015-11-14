@@ -80,7 +80,7 @@ void simulation::parse_JSON_input (string jsonstring) {
 		else if (routers.find(endpt1name) != routers.end()) {
 			endpoint1 = routers[endpt1name];
 		}
-		// if this endpoing is neither a router nor a host...
+		// if this endpoint is neither a router nor a host...
 		else {
 			// ...that should never happen!
 			assert(false);
@@ -95,7 +95,7 @@ void simulation::parse_JSON_input (string jsonstring) {
 		else if (routers.find(endpt2name) != routers.end()) {
 			endpoint2 = routers[endpt2name];
 		}
-		// if this endpoing is neither a router nor a host...
+		// if this endpoint is neither a router nor a host...
 		else {
 			// ...that should never happen!
 			assert(false);

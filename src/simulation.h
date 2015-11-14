@@ -31,7 +31,7 @@ using namespace std;
 using namespace rapidjson;
 
 /**
- * Represents the entire simulation. TODO add details.
+ * Represents the simulation. TODO add details.
  */
 class simulation {
 

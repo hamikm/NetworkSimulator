@@ -4,4 +4,4 @@
 
 #include "netrouter.h"
 
-// TODO implement non-inline functions here
+
