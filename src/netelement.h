@@ -41,7 +41,7 @@ public:
 
 	/**
 	 * Print helper function. Derived classes should (partially) override this.
-	 * @param os The output stream to which to write scene object information.
+	 * @param os The output stream to which to write netdevice information.
 	 */
 	virtual void printHelper(std::ostream &os) const {
 		os << "[device. name: " << name << "]";
@@ -49,7 +49,7 @@ public:
 };
 
 /**
- * Output operator override for printing contents of the given object
+ * Output operator override for printing contents of the given netelement
  * to an output stream. Uses the printHelper function, which is virtual
  * because derived classes will want to modify or enhance printing behavior.
  * @param os The output stream to which to write.

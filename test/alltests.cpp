@@ -7,6 +7,7 @@
 #include "test_jsonlib.cpp"
 #include "test_simulation_input.cpp"
 #include "test_simulation.cpp"
+#include "test_event.cpp"
 #include "netelement.h"
 #include "nethost.h"
 #include "netrouter.h"

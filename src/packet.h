@@ -23,14 +23,14 @@ class packet : public netelement {
 
 public:
 
+private:
+
 	/** Types of packets in this simulation. */
 	enum packetType {
 		FLOW,
 		ACK,
 		ROUTING
 	};
-
-private:
 
 	/**
 	 * Type of packet: either payload transmission, acknowledgement, or

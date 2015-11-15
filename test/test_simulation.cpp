@@ -39,9 +39,28 @@ protected:
  * in-memory network devices to cout for visual inspection.
  */
 TEST_F(simulationTest, Simulation) {
-	const char *input_file = "input_files/test_case_2";
-	simulation sim(input_file);
-	sim.print_network(cout);
+
+	cout << endl;
+	const char *input_file0 = "input_files/test_case_0";
+	cout << "Reading the file \"" << input_file0 << "\" into the simulation. "
+			<< "Here are the simulation elements after the read: " << endl;
+	simulation sim0(input_file0);
+	sim0.print_network(cout);
+	cout << endl;
+
+	const char *input_file1 = "input_files/test_case_1";
+	cout << "Reading the file \"" << input_file1 << "\" into the simulation. "
+			<< "Here are the simulation elements after the read: " << endl;
+	simulation sim1(input_file1);
+	sim1.print_network(cout);
+	cout << endl;
+
+	const char *input_file2 = "input_files/test_case_2";
+	cout << "Reading the file \"" << input_file2 << "\" into the simulation. "
+			<< "Here are the simulation elements after the read: " << endl;
+	simulation sim2(input_file2);
+	sim2.print_network(cout);
+	cout << endl;
 }
 
 #endif // TEST_SIMULATION_CPP
