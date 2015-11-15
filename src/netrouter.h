@@ -12,15 +12,16 @@
 #include <map>
 #include <iterator>
 #include <vector>
+
+#include "netelement.h"
 #include "netlink.h"
-#include "netdevice.h"
 
 using namespace std;
 
 /**
  * Represents a router in a simple network. TODO add detail to this comment.
  */
-class netrouter : public netdevice {
+class netrouter : public netelement {
 
 private:
 
@@ -34,10 +35,10 @@ private:
 
 public:
 
-	netrouter (string name) : netdevice(name) { }
+	netrouter (string name) : netelement(name) { }
 
 	netrouter (string name, vector<netlink *> links) :
-		netdevice(name), links(links) { }
+		netelement(name), links(links) { }
 
 	void addLink (netlink &link) {
 		links.push_back(&link);
@@ -52,7 +53,7 @@ public:
 	 * @param os The output stream to which to write.
 	 */
 	virtual void printHelper(ostream &os) const {
-		netdevice::printHelper(os);
+		netelement::printHelper(os);
 		os << " ---> [router. links: [ ";
 		for (unsigned int i = 0;
 				i < (links.size() == 0 ? 0 : links.size() - 1); i++) {

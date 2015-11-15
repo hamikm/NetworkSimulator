@@ -9,29 +9,28 @@
 #include <iostream>
 #include <cassert>
 #include <string>
+
+#include "netelement.h"
 #include "netlink.h"
-#include "netdevice.h"
 
 using namespace std;
 
 /**
  * Represents a host in a simple network. TODO add detail to this comment.
  */
-class nethost : public netdevice {
+class nethost : public netelement {
 
 private:
 
 	netlink *link;
 
-	// TODO add reference to parent simulation
-
 public:
 
-	nethost (string name) : netdevice(name) {
+	nethost (string name) : netelement(name) {
 		link = NULL;
 	}
 
-	nethost (string name, netlink &link) : netdevice(name), link(&link) { }
+	nethost (string name, netlink &link) : netelement(name), link(&link) { }
 
 	void setLink(netlink &link) {
 		this->link = &link;
@@ -46,7 +45,7 @@ public:
 	 * @param os The output stream to which to write.
 	 */
 	virtual void printHelper(ostream &os) const {
-		netdevice::printHelper(os);
+		netelement::printHelper(os);
 		os << " ---> [host. link: "
 				<< (link == NULL ? "NULL" : link->getName()) << "]";
 	}

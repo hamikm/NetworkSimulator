@@ -22,7 +22,8 @@
 #include <string.h>
 #include <sstream>
 #include <fstream>
-#include "netdevice.h"
+
+#include "netelement.h"
 #include "nethost.h"
 #include "netrouter.h"
 #include "netlink.h"
@@ -121,9 +122,9 @@ TEST_F(simulationInputTest, JsonFileInput) {
 		string endpt1name = thislink["endpt_1"].GetString();
 		string endpt2name = thislink["endpt_2"].GetString();
 
-		netdevice *endpoint1;
+		netelement *endpoint1;
 		bool endpt1IsHost = false;
-		netdevice *endpoint2;
+		netelement *endpoint2;
 		bool endpt2IsHost = false;
 
 		// if this endpoint is a host

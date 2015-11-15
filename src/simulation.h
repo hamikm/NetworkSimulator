@@ -16,12 +16,12 @@
 #include <iostream>
 #include <cstdlib>
 
+#include "netelement.h"
 // Libraries.
 #include "rapidjson/document.h"
 #include "rapidjson/prettywriter.h"
 
 // Custom headers.
-#include "netdevice.h"
 #include "nethost.h"
 #include "netrouter.h"
 #include "netlink.h"

@@ -39,11 +39,13 @@ TESTS = tests
 
 # Update this list of object files every time a new .cpp is added to simulation
 OBJS = $(SRC_DIR)/nethost.o $(SRC_DIR)/netrouter.o $(SRC_DIR)/netlink.o \
-$(SRC_DIR)/netflow.o $(SRC_DIR)/simulation.o $(SRC_DIR)/driver.o
+$(SRC_DIR)/netflow.o $(SRC_DIR)/packet.o \
+$(SRC_DIR)/simulation.o $(SRC_DIR)/driver.o
 
 # Update this list of source files every time a new .cpp is added to simulation
 SRCS = $(SRC_DIR)/nethost.cpp $(SRC_DIR)/netrouter.cpp $(SRC_DIR)/netlink.cpp \
-$(SRC_DIR)/netflow.cpp $(SRC_DIR)/simulation.cpp $(SRC_DIR)/driver.cpp
+$(SRC_DIR)/netflow.cpp $(SRC_DIR)/packet.cpp \
+$(SRC_DIR)/simulation.cpp $(SRC_DIR)/driver.cpp
 
 # Makes the simulation binary as well as the unit test binary.
 all: $(NETSIM) $(TESTS)
@@ -92,25 +94,27 @@ depend:
 
 # DO NOT DELETE
 
-src/nethost.o: src/nethost.h src/netlink.h src/netdevice.h
-src/netrouter.o: src/netrouter.h src/netlink.h src/netdevice.h
-src/netlink.o: src/netlink.h src/netdevice.h
-src/netflow.o: src/netflow.h src/nethost.h src/netlink.h src/netdevice.h
-src/simulation.o: src/simulation.h rapidjson/document.h rapidjson/reader.h
-src/simulation.o: rapidjson/rapidjson.h rapidjson/allocators.h
-src/simulation.o: rapidjson/encodings.h rapidjson/internal/meta.h
-src/simulation.o: rapidjson/rapidjson.h rapidjson/internal/stack.h
-src/simulation.o: rapidjson/internal/swap.h rapidjson/internal/strtod.h
-src/simulation.o: rapidjson/internal/ieee754.h
+src/nethost.o: src/nethost.h src/netelement.h src/netlink.h
+src/netrouter.o: src/netrouter.h src/netelement.h src/netlink.h
+src/netlink.o: src/netlink.h src/netelement.h
+src/netflow.o: src/netflow.h src/netelement.h src/nethost.h src/netlink.h
+src/packet.o: src/packet.h src/nethost.h src/netelement.h src/netlink.h
+src/packet.o: src/netflow.h
+src/simulation.o: src/simulation.h src/netelement.h rapidjson/document.h
+src/simulation.o: rapidjson/reader.h rapidjson/rapidjson.h
+src/simulation.o: rapidjson/allocators.h rapidjson/encodings.h
+src/simulation.o: rapidjson/internal/meta.h rapidjson/rapidjson.h
+src/simulation.o: rapidjson/internal/stack.h rapidjson/internal/swap.h
+src/simulation.o: rapidjson/internal/strtod.h rapidjson/internal/ieee754.h
 src/simulation.o: rapidjson/internal/biginteger.h rapidjson/internal/diyfp.h
 src/simulation.o: rapidjson/internal/pow10.h rapidjson/error/error.h
 src/simulation.o: rapidjson/internal/strfunc.h rapidjson/prettywriter.h
 src/simulation.o: rapidjson/writer.h rapidjson/internal/dtoa.h
 src/simulation.o: rapidjson/internal/itoa.h rapidjson/internal/itoa.h
-src/simulation.o: rapidjson/stringbuffer.h src/netdevice.h src/nethost.h
-src/simulation.o: src/netlink.h src/netrouter.h src/netflow.h
-src/driver.o: src/simulation.h rapidjson/document.h rapidjson/reader.h
-src/driver.o: rapidjson/rapidjson.h rapidjson/allocators.h
+src/simulation.o: rapidjson/stringbuffer.h src/nethost.h src/netlink.h
+src/simulation.o: src/netrouter.h src/netflow.h
+src/driver.o: src/simulation.h src/netelement.h rapidjson/document.h
+src/driver.o: rapidjson/reader.h rapidjson/rapidjson.h rapidjson/allocators.h
 src/driver.o: rapidjson/encodings.h rapidjson/internal/meta.h
 src/driver.o: rapidjson/rapidjson.h rapidjson/internal/stack.h
 src/driver.o: rapidjson/internal/swap.h rapidjson/internal/strtod.h
@@ -120,8 +124,7 @@ src/driver.o: rapidjson/error/error.h rapidjson/internal/strfunc.h
 src/driver.o: rapidjson/prettywriter.h rapidjson/writer.h
 src/driver.o: rapidjson/internal/dtoa.h rapidjson/internal/itoa.h
 src/driver.o: rapidjson/internal/itoa.h rapidjson/stringbuffer.h
-src/driver.o: src/netdevice.h src/nethost.h src/netlink.h src/netrouter.h
-src/driver.o: src/netflow.h
+src/driver.o: src/nethost.h src/netlink.h src/netrouter.h src/netflow.h
 test/alltests.o: test/test_jsonlib.cpp rapidjson/document.h
 test/alltests.o: rapidjson/reader.h rapidjson/rapidjson.h
 test/alltests.o: rapidjson/allocators.h rapidjson/encodings.h
@@ -134,5 +137,5 @@ test/alltests.o: rapidjson/internal/strfunc.h rapidjson/prettywriter.h
 test/alltests.o: rapidjson/writer.h rapidjson/internal/dtoa.h
 test/alltests.o: rapidjson/internal/itoa.h rapidjson/internal/itoa.h
 test/alltests.o: rapidjson/stringbuffer.h test/test_simulation_input.cpp
-test/alltests.o: src/netdevice.h src/nethost.h src/netlink.h src/netrouter.h
+test/alltests.o: src/netelement.h src/nethost.h src/netlink.h src/netrouter.h
 test/alltests.o: src/netflow.h test/test_simulation.cpp src/simulation.h

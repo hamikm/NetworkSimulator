@@ -10,15 +10,16 @@
 #include <cassert>
 #include <string>
 #include <map>
+
+#include "netelement.h"
 #include "nethost.h"
-#include "netdevice.h"
 
 using namespace std;
 
 /**
  * Represents a flow in a simple network. TODO add detail to this comment.
  */
-class netflow : public netdevice {
+class netflow : public netelement {
 
 private:
 
@@ -34,8 +35,6 @@ private:
 	/** Pointer to the other end of this link. */
 	nethost *destination;
 
-	// TODO add reference to parent simulation
-
 	// TODO add last successfully sent packet number
 
 	// TODO add total number of packets
@@ -44,11 +43,11 @@ public:
 
 	netflow (string name, float start_time, float size,
 			nethost &source, nethost &destination) :
-				netdevice(name), start_time(start_time), size(size),
+				netelement(name), start_time(start_time), size(size),
 				source(&source), destination(&destination) { }
 
 	netflow (string name, float start_time, float size) :
-			netdevice(name), start_time(start_time), size(size) {
+			netelement(name), start_time(start_time), size(size) {
 		source = NULL;
 		destination = NULL;
 	}
@@ -85,7 +84,7 @@ public:
 	 * printer for debugging help.
 	 */
 	virtual void printHelper(ostream &os) const {
-		netdevice::printHelper(os);
+		netelement::printHelper(os);
 		os << " ---> [flow. start time: " << start_time << ", size: " << size
 				<< ", source: "
 				<< (source == NULL ? "NULL" : source->getName())

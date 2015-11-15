@@ -10,6 +10,8 @@
 #include <cassert>
 #include <string>
 #include "nethost.h"
+#include "netflow.h"
+#include "netelement.h"
 
 using namespace std;
 
@@ -17,7 +19,7 @@ using namespace std;
  * Describes a packet in the simulated network, which can be one of the types
  * in the enumerated type @c packetType.
  */
-class packet {
+class packet : public netelement {
 
 public:
 
@@ -59,8 +61,9 @@ public:
 
 	packet(packetType type, float size, string source_ip,
 			string dest_ip, int seq, netflow &parent_flow) :
-				t(type), size(size), source_ip(source_ip), dest_ip(dest_ip),
-				seq(seq), parent_flow(&parent_flow) { }
+				netelement (""), t(type), size(size), seq(seq),
+				source_ip(source_ip), dest_ip(dest_ip),
+				parent_flow(&parent_flow) { }
 
 	string getSource() { return source_ip; }
 
@@ -70,12 +73,22 @@ public:
 
 	netflow *getParentFlow() { return parent_flow; }
 
-	bool isAckPacket() { return packetType == ACK; }
+	bool isAckPacket() { return t == ACK; }
 
-	bool isFlowPacket() { return packetType == FLOW; }
+	bool isFlowPacket() { return t == FLOW; }
 
-	bool isRoutingPacket() { return packetType == ROUTING; }
+	bool isRoutingPacket() { return t == ROUTING; }
 
+	/**
+	 * Print helper function which partially overrides the one in @c netdevice.
+	 * @param os The output stream to which to write.
+	 */
+	virtual void printHelper(ostream &os) const {
+		netelement::printHelper(os);
+		os << " ---> [packet. src: " << source_ip << ", dst: " << dest_ip <<
+				", type: " << t << ", seq_num: " << seq << ", size: " <<
+				size << "]";
+	}
 };
 
 #endif // PACKET_H

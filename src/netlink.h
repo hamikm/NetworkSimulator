@@ -10,14 +10,15 @@
 #include <cassert>
 #include <string>
 #include <map>
-#include "netdevice.h"
+
+#include "netelement.h"
 
 using namespace std;
 
 /**
  * Represents a link in a simple network. TODO add detail to this comment.
  */
-class netlink : public netdevice {
+class netlink : public netelement {
 
 private:
 
@@ -31,22 +32,20 @@ private:
 	long buflen;
 
 	/** Pointer to one end of this link. */
-	netdevice *endpoint1;
+	netelement *endpoint1;
 
 	/** Pointer to the other end of this link. */
-	netdevice *endpoint2;
-
-	// TODO add reference to parent simulation
+	netelement *endpoint2;
 
 public:
 
 	netlink (string name, float rate, float delay, long buflen,
-			netdevice &endpoint1, netdevice &endpoint2) :
-				netdevice(name), rate(rate), delay(delay), buflen(buflen),
+			netelement &endpoint1, netelement &endpoint2) :
+				netelement(name), rate(rate), delay(delay), buflen(buflen),
 				endpoint1(&endpoint1), endpoint2(&endpoint2) { }
 
 	netlink (string name, float rate, float delay, long buflen) :
-			netdevice(name), rate(rate), delay(delay), buflen(buflen) {
+			netelement(name), rate(rate), delay(delay), buflen(buflen) {
 		endpoint1 = NULL;
 		endpoint2 = NULL;
 	}
@@ -59,19 +58,19 @@ public:
 		return delay;
 	}
 
-	netdevice *getEndpoint1() const {
+	netelement *getEndpoint1() const {
 		return endpoint1;
 	}
 
-	void setEndpoint1(netdevice &endpoint1) {
+	void setEndpoint1(netelement &endpoint1) {
 		this->endpoint1 = &endpoint1;
 	}
 
-	netdevice *getEndpoint2() const {
+	netelement *getEndpoint2() const {
 		return endpoint2;
 	}
 
-	void setEndpoint2(netdevice &endpoint2) {
+	void setEndpoint2(netelement &endpoint2) {
 		this->endpoint2 = &endpoint2;
 	}
 
@@ -84,7 +83,7 @@ public:
 	 * @param os The output stream to which to write.
 	 */
 	virtual void printHelper(ostream &os) const {
-		netdevice::printHelper(os);
+		netelement::printHelper(os);
 		os << " ---> [link. rate: " << rate << ", delay: " << delay
 				<< ", buffer length: " << buflen << ", endpoint 1: "
 				<< (endpoint1 == NULL ? "NULL" : endpoint1->getName())

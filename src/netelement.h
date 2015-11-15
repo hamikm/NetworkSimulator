@@ -15,23 +15,25 @@
 using namespace std;
 
 /**
- * Superclass of all network elements including routers, hosts, links, and
+ * Superclass of all network elements including routers, hosts, links, packets,
  * flows. "Device" is a bit of a misnomer for the latter but they all share a
  * superclass so they can share an output operator overload and so they can
- * co-exist in the same STL collection if necessary. Ideally each type of
- * netdevice would exist in its own generic-using collection though.
+ * co-exist in the same STL collection if necessary.
  */
-class netdevice {
+class netelement {
 
 private:
 
+	/** E.g. a router or host name like "H1". */
 	string name;
+
+	// TODO reference to simulation (or some data logger object?) for data...
 
 public:
 
-	netdevice (string name) : name(name) { }
+	netelement (string name) : name(name) { }
 
-	virtual ~netdevice() { }
+	virtual ~netelement() { }
 
 	const string &getName() const {
 		return name;
@@ -54,7 +56,7 @@ public:
  * @param device The @c netdevice object to write.
  * @return The same output stream for operator chaining.
  */
-inline ostream & operator<<(ostream &os, const netdevice &device) {
+inline ostream & operator<<(ostream &os, const netelement &device) {
 	device.printHelper(os);
 	return os;
 }
