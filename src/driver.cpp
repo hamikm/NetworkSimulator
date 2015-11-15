@@ -49,9 +49,17 @@ int main (int argc, char **argv) {
 		exit (1);
 	}
 
+	// TODO make data logger object (not in its own thread...)
+
+	// Load hosts, routers, links, and flows from the JSON input file.
+	// TODO pass in the data logger object
 	simulation sim(argv[1]);
 
-	// TODO do stuff with the simulation object :-)
+	// Invoke the simulation loop, which should terminate when all events
+	// have been processed.
+	// TODO invoke
+
+	// TODO flush the data logger's data to disk
 
 	return 0;
 }

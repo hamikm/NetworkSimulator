@@ -53,7 +53,7 @@ private:
 	map<string, netflow *> flows;
 
 	/** Global discrete event queue. */
-	//priority_queue<event, vector<event>, < > events;
+	priority_queue<event, vector<event>, eventTimeSorter> events;
 
 	/**
 	 * Helper for the destructor.
