@@ -51,7 +51,7 @@ public:
 	 * sending packets, adding new events to the simulation event queue, and
 	 * logging data in this function.
 	 */
-	virtual void execute() {}
+	virtual void runEvent() {}
 
 	/**
 	 * Print helper function. Derived classes should (partially) override this.

@@ -230,3 +230,11 @@ void simulation::print_network(ostream &os) const {
 		os << *(fitr->second) << endl;
 	}
 }
+
+void simulation::runSimulation() {
+
+	// TODO Load initial events into the events queue
+
+	// TODO Loop over the events in the events queue.
+
+}

@@ -16,12 +16,12 @@
 #include <iostream>
 #include <cstdlib>
 
-#include "netelement.h"
 // Libraries.
 #include "rapidjson/document.h"
 #include "rapidjson/prettywriter.h"
 
 // Custom headers.
+#include "netelement.h"
 #include "nethost.h"
 #include "netrouter.h"
 #include "netlink.h"
@@ -52,7 +52,7 @@ private:
 	/** All flows in network. */
 	map<string, netflow *> flows;
 
-	/** Global discrete event queue. */
+	/** Event queue. */
 	priority_queue<event, vector<event>, eventTimeSorter> events;
 
 	/**
@@ -92,6 +92,18 @@ public:
 	 * @param os the output stream to which to print.
 	 */
 	void print_network(ostream &os) const;
+
+	/**
+	 * Runs the simulation by loading some initial events into the @c events
+	 * queue then starts a loop over queue events, calling the @c runEvent
+	 * function on each of them, and continues until the @c events queue
+	 * empties. Note that each event can (1) modify the host, flow, router,
+	 * or link data structures in this simulation object, (2) add new events
+	 * to this simulation object's event queue, or (3) log data into this
+	 * simulation object's data logger object. This function is not responsible
+	 * for writing the data logger's data to disk--the caller is.
+	 */
+	void runSimulation();
 };
 
 #endif // SIMULATION_H
