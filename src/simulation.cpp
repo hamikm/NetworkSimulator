@@ -66,9 +66,9 @@ void simulation::parse_JSON_input (string jsonstring) {
 		string endpt1name = thislink["endpt_1"].GetString();
 		string endpt2name = thislink["endpt_2"].GetString();
 
-		netdevice *endpoint1;
+		netelement *endpoint1;
 		bool endpt1IsHost = false;
-		netdevice *endpoint2;
+		netelement *endpoint2;
 		bool endpt2IsHost = false;
 
 		// if this endpoint is a host
