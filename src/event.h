@@ -1,6 +1,10 @@
 /**
  * @file
  * @author Jessica Li, Jingwen Wang, Hamik Mukelyan
+ *
+ * Contains definition of base class of events for event-driven network
+ * simulation as well as a comparison functor that can be used in containers
+ * for these events.
  */
 
 #ifndef EVENT_H
@@ -11,9 +15,7 @@
 using namespace std;
 
 /**
- * Parent class of events in a discrete event-driven network simulation.
- * Includes a time attribute as well as comparison operator overrides which can
- * be used as comparators in container templates.
+ * Base class for events in an event-driven network simulation.
  */
 class event {
 
@@ -60,9 +62,24 @@ public:
 	}
 };
 
+/**
+ * Comparison functor for use in container templates like @c priority_queue.
+ * Sorts on events' times.
+ */
+class eventTimeSorter {
 
-// TODO write a comparator functor
+public:
 
+	/**
+	 * Comparison function; compares on times.
+	 * @param e1
+	 * @param e2
+	 * @return true if time of @c e1 is less than time of @c e2.
+	 */
+	bool operator() (const event &e1, const event &e2) {
+		return e1.getTime() < e2.getTime();
+	}
+};
 
 /**
  * Output operator override for printing contents of the given event

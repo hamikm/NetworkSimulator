@@ -205,10 +205,10 @@ void simulation::free_network_devices () {
 
 void simulation::print_network(ostream &os) const {
 
-	map<string, nethost *>::iterator hitr;
-	map<string, netrouter *>::iterator ritr;
-	map<string, netlink *>::iterator litr;
-	map<string, netflow *>::iterator fitr;
+	map<string, nethost *>::const_iterator hitr;
+	map<string, netrouter *>::const_iterator ritr;
+	map<string, netlink *>::const_iterator litr;
+	map<string, netflow *>::const_iterator fitr;
 
 	// Print all the hosts
 	for (hitr = hosts.begin(); hitr != hosts.end(); hitr++) {
