@@ -57,7 +57,7 @@ int main (int argc, char **argv) {
 
 	// Invoke the simulation loop, which should terminate when all events
 	// have been processed.
-	// TODO invoke
+	sim.runSimulation();
 
 	// TODO flush the data logger's data to disk
 
