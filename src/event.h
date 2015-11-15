@@ -17,7 +17,7 @@ using namespace std;
  */
 class event {
 
-private :
+private:
 
 	/** Time of this event. */
 	double time;
@@ -30,6 +30,10 @@ public:
 	/** Unique ID number generator. Initialized in corresponding cpp file. */
 	static long id_generator;
 
+	/**
+	 * Initializes this event's time to the given one and sets the event id
+	 * to whatever the static ID generates spits out.
+	 */
 	event(double time) : time(time) {
 		id = id_generator++;
 	}
@@ -40,6 +44,11 @@ public:
 
 	long getId() { return id; }
 
+	/**
+	 * Subclasses--i.e. more specific events--will run operations like
+	 * sending packets, adding new events to the simulation event queue, and
+	 * logging data in this function.
+	 */
 	virtual void execute() {}
 
 	/**
@@ -50,24 +59,40 @@ public:
 		os << "[event. id: " << id << ", time: " << time << "]";
 	}
 
-	/** Ordering is given by time attribute. */
+	/**
+	 * Ordering is given by time attribute.
+	 * @param e other event
+	 * @return true if time of this event is < time of @c e
+	 */
 	bool operator<(const event &e) {
 		if (this == &e)
 			return false;
 		return time < e.time;
 	}
 
-	/** Ordering is given by time attribute. */
+	/**
+	 * Ordering is given by time attribute.
+	 * @param e other event
+	 * @return true if time of this event is >= time of @c e
+	 */
 	bool operator>=(const event &e) { return !((*this) < e); }
 
-	/** Ordering is given by time attribute. */
+	/**
+	 * Ordering is given by time attribute.
+	 * @param e other event
+	 * @return true if time of this event is > time of @c e
+	 */
 	bool operator>(const event &e) {
 		if (this == &e)
 			return false;
 		return time > e.time;
 	}
 
-	/** Ordering is given by time attribute. */
+	/**
+	 * Ordering is given by time attribute.
+	 * @param e other event
+	 * @return true if time of this event is <= time of @c e
+	 */
 	bool operator<=(const event &e) { return !((*this) > e); }
 };
 
