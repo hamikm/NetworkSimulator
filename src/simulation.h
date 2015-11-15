@@ -26,6 +26,9 @@
 #include "netrouter.h"
 #include "netlink.h"
 #include "netflow.h"
+#include "event.h"
+#include <vector>
+#include <queue>
 
 using namespace std;
 using namespace rapidjson;
@@ -48,6 +51,9 @@ private:
 
 	/** All flows in network. */
 	map<string, netflow *> flows;
+
+	/** Global discrete event queue. */
+	//priority_queue<event, vector<event>, < > events;
 
 	/**
 	 * Helper for the destructor.
@@ -85,7 +91,7 @@ public:
 	 * Prints hosts, routers, links, and flows to given output stream.
 	 * @param os the output stream to which to print.
 	 */
-	void print_network(ostream &os);
+	void print_network(ostream &os) const;
 };
 
 #endif // SIMULATION_H

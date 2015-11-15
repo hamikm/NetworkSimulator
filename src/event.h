@@ -12,8 +12,8 @@ using namespace std;
 
 /**
  * Parent class of events in a discrete event-driven network simulation.
- * Includes a time attribute as well as a < operator override which can be
- * be used as a comparator in e.g. a priority queue template.
+ * Includes a time attribute as well as comparison operator overrides which can
+ * be used as comparators in container templates.
  */
 class event {
 
@@ -40,9 +40,9 @@ public:
 
 	virtual ~event() {}
 
-	double getTime() { return time; }
+	double getTime() const { return time; }
 
-	long getId() { return id; }
+	long getId() const { return id; }
 
 	/**
 	 * Subclasses--i.e. more specific events--will run operations like
@@ -58,43 +58,11 @@ public:
 	virtual void printHelper(std::ostream &os) const {
 		os << "[event. id: " << id << ", time: " << time << "]";
 	}
-
-	/**
-	 * Ordering is given by time attribute.
-	 * @param e other event
-	 * @return true if time of this event is < time of @c e
-	 */
-	bool operator<(const event &e) {
-		if (this == &e)
-			return false;
-		return time < e.time;
-	}
-
-	/**
-	 * Ordering is given by time attribute.
-	 * @param e other event
-	 * @return true if time of this event is >= time of @c e
-	 */
-	bool operator>=(const event &e) { return !((*this) < e); }
-
-	/**
-	 * Ordering is given by time attribute.
-	 * @param e other event
-	 * @return true if time of this event is > time of @c e
-	 */
-	bool operator>(const event &e) {
-		if (this == &e)
-			return false;
-		return time > e.time;
-	}
-
-	/**
-	 * Ordering is given by time attribute.
-	 * @param e other event
-	 * @return true if time of this event is <= time of @c e
-	 */
-	bool operator<=(const event &e) { return !((*this) > e); }
 };
+
+
+// TODO write a comparator functor
+
 
 /**
  * Output operator override for printing contents of the given event

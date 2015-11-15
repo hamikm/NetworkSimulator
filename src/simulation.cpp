@@ -203,7 +203,7 @@ void simulation::free_network_devices () {
 	}
 }
 
-void simulation::print_network(ostream &os) {
+void simulation::print_network(ostream &os) const {
 
 	map<string, nethost *>::iterator hitr;
 	map<string, netrouter *>::iterator ritr;

@@ -43,42 +43,6 @@ TEST_F(eventTest, idGeneratorTest) {
 }
 
 /*
- * Tests the <, >, <=, >= operator overloads.
- */
-TEST_F(eventTest, comparatorOverloadsTest) {
-
-	// Test <
-	ASSERT_TRUE(e1 < e2);
-	ASSERT_TRUE(e1 < e3);
-	ASSERT_TRUE(e2 < e3);
-	ASSERT_FALSE(e3 < e1);
-	ASSERT_FALSE(e3 < e3);
-
-	// Test <=
-	ASSERT_TRUE(e1 <= e2);
-	ASSERT_TRUE(e1 <= e3);
-	ASSERT_TRUE(e2 <= e3);
-	ASSERT_TRUE(e1 <= e1);
-	ASSERT_TRUE(e1 <= e4);
-	ASSERT_FALSE(e3 <= e1);
-
-	// Test >
-	ASSERT_TRUE(e3 > e2);
-	ASSERT_TRUE(e3 > e1);
-	ASSERT_TRUE(e2 > e1);
-	ASSERT_FALSE(e1 > e3);
-	ASSERT_FALSE(e3 > e3);
-
-	// Test >=
-	ASSERT_TRUE(e3 >= e2);
-	ASSERT_TRUE(e3 >= e1);
-	ASSERT_TRUE(e2 >= e1);
-	ASSERT_TRUE(e2 >= e2);
-	ASSERT_TRUE(e2 >= e4);
-	ASSERT_FALSE(e1 >= e2);
-}
-
-/*
  * Tests that basic printing happens correctly. Just prints to cout.
  */
 TEST_F(eventTest, printTest) {

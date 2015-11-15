@@ -65,19 +65,19 @@ public:
 				source_ip(source_ip), dest_ip(dest_ip),
 				parent_flow(&parent_flow) { }
 
-	string getSource() { return source_ip; }
+	string getSource() const { return source_ip; }
 
-	string getDestination() { return dest_ip; }
+	string getDestination() const { return dest_ip; }
 
-	int getSeq() { return seq; }
+	int getSeq() const { return seq; }
 
-	netflow *getParentFlow() { return parent_flow; }
+	netflow *getParentFlow() const { return parent_flow; }
 
-	bool isAckPacket() { return t == ACK; }
+	bool isAckPacket() const { return t == ACK; }
 
-	bool isFlowPacket() { return t == FLOW; }
+	bool isFlowPacket() const { return t == FLOW; }
 
-	bool isRoutingPacket() { return t == ROUTING; }
+	bool isRoutingPacket() const { return t == ROUTING; }
 
 	/**
 	 * Print helper function which partially overrides the one in @c netdevice.
