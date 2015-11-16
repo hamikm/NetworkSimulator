@@ -16,6 +16,7 @@
 #include <iostream>
 #include <string>
 #include <cstdlib>
+#include <string.h>
 #include "simulation.h"
 
 using namespace std;
@@ -28,9 +29,28 @@ using namespace std;
  */
 void print_usage_statement (char *progname);
 
+/**
+ * Processes console arguments, returning the input filename and setting flags
+ * like the debug one.
+ * @param argc number of console arguments
+ * @param argv console arguments
+ * @return the input filename
+ * @post sets the debug flag
+ * @warning exits from this process after printing a usage statement if the
+ * console arguments don't conform to the usage statement
+ */
+char *process_console_args(int argc, char **argv);
+
 // ------------------------ Global variables ----------------------------------
 
+/** If true lots of debugging output is shown. */
+bool debug = false;
 
+/**
+ * Output stream to which to write debugging statements. Might be customized
+ * to be a file output stream, stderr, or something else.
+ */
+ostream &debug_os = cout;
 
 // ------------------------------ Main ----------------------------------------
 
@@ -43,17 +63,13 @@ void print_usage_statement (char *progname);
  */
 int main (int argc, char **argv) {
 
-	// See print_usage_statement function for expected console arguments.
-	if (argc != 2) {
-		print_usage_statement(argv[0]);
-		exit (1);
-	}
+	char *infile = process_console_args(argc, argv);
 
 	// TODO make data logger object (not in its own thread...)
 
 	// Load hosts, routers, links, and flows from the JSON input file.
 	// TODO pass in the data logger object
-	simulation sim(argv[1]);
+	simulation sim(infile);
 
 	// Invoke the simulation loop, which should terminate when all events
 	// have been processed.
@@ -67,6 +83,41 @@ int main (int argc, char **argv) {
 // ---------------------------- Functions  ------------------------------------
 
 void print_usage_statement (char *progname) {
-	cerr << "Usage: " << progname << " <JSON input file>" << endl;
+	cerr << "Usage: " << progname << " <JSON input file> [-d]" << endl;
+	cerr << "  -d to print debugging statements to stdout." << endl;
 	// TODO update when we decide where to send output.
+}
+
+char *process_console_args(int argc, char **argv) {
+
+	// See print_usage_statement function for expected console arguments.
+	if (argc != 2 && argc != 3) {
+		print_usage_statement(argv[0]);
+		exit (1);
+	}
+
+	if (argc == 2) {
+		if (strcmp(argv[1], "-d") != 0)
+			return argv[1];
+		else {
+			print_usage_statement(argv[0]);
+			exit (1);
+		}
+	}
+
+	if (argc == 3) {
+		if (strcmp(argv[1], "-d") == 0) {
+			debug = true;
+			return argv[2];
+		}
+		else {
+			if (strcmp(argv[2], "-d") == 0)
+				debug = true;
+			return argv[1];
+		}
+	}
+
+	// Shouldn't get here.
+	print_usage_statement(argv[0]);
+	exit (1);
 }

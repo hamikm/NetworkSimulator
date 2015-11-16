@@ -14,6 +14,9 @@
 
 using namespace std;
 
+extern bool debug;
+extern ostream &debug_os;
+
 /**
  * Superclass of all network elements including routers, hosts, links, packets,
  * flows. "Device" is a bit of a misnomer for the latter but they all share a

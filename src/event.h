@@ -14,6 +14,9 @@
 
 using namespace std;
 
+extern bool debug;
+extern ostream &debug_os;
+
 /**
  * Base class for events in an event-driven network simulation.
  */
@@ -57,7 +60,7 @@ public:
 	 * Print helper function. Derived classes should (partially) override this.
 	 * @param os The output stream to which to write event information.
 	 */
-	virtual void printHelper(std::ostream &os) const {
+	virtual void printHelper(ostream &os) const {
 		os << "[event. id: " << id << ", time: " << time << "]";
 	}
 };

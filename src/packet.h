@@ -15,9 +15,13 @@
 
 using namespace std;
 
+extern bool debug;
+extern ostream &debug_os;
+
 /**
  * Describes a packet in the simulated network, which can be one of the types
- * in the enumerated type @c packetType.
+ * in the enumerated type @c packetType. Note that a real packet would have a
+ * payload but this class doesn't provide for one.
  */
 class packet : public netelement {
 

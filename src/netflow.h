@@ -16,6 +16,9 @@
 
 using namespace std;
 
+extern bool debug;
+extern ostream &debug_os;
+
 /**
  * Represents a flow in a simple network. TODO add detail to this comment.
  */

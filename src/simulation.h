@@ -33,6 +33,9 @@
 using namespace std;
 using namespace rapidjson;
 
+extern bool debug;
+extern ostream &debug_os;
+
 /**
  * Represents the simulation. TODO add details.
  */
