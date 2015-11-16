@@ -3,11 +3,11 @@
  * @author Jessica Li, Jingwen Wang, Hamik Mukelyan
  */
 
-#ifndef ROUTER_DISCOVERY_EVENT_H
-#define ROUTER_DISCOVERY_EVENT_H
+#ifndef TIMEOUT_EVENT_H
+#define TIMEOUT_EVENT_H
 
 #include <iostream>
-#include "netrouter.h"
+#include "netflow.h"
 #include "event.h"
 #include "simulation.h"
 
@@ -17,14 +17,20 @@ extern bool debug;
 extern ostream &debug_os;
 
 /**
- * Event that triggers a given router's routing-table-population algorithm.
+ * Event that takes the window size to one then sends a packet by trying to
+ * queue a packet arrival event; if the link buffer can't support the
+ * additional packet the packet gets dropped though. This event also queues
+ * another timeout event.
  */
-class router_discovery_event : public event {
+class timeout_event : public event {
 
 private:
 
-	/** Router whose routing table will be updated by this event. */
-	netrouter *router;
+	/**
+	 * Flow whose window size will change and from which a packet will be
+	 * sent.
+	 */
+	netflow *flow;
 
 public:
 
@@ -32,10 +38,10 @@ public:
 	 * Initializes this event's time to the given one, sets the event ID,
 	 * and sets the router from which this router discovery event should run.
 	 */
-	router_discovery_event(double time, simulation &sim, netrouter &router) :
-		event(time, sim), router(&router) { }
+	timeout_event(double time, simulation &sim, netflow &flow) :
+		event(time, sim), flow(&flow) { }
 
-	~router_discovery_event() { }
+	~timeout_event() { }
 
 	/**
 	 * Runs the Bellman-Ford algorithm from this router.
@@ -55,9 +61,9 @@ public:
 	 */
 	void printHelper(ostream &os) const {
 		event::printHelper(os);
-		os << " --> [router_discovery_event. router: " << endl
-				<< "  " << *router << endl << "]";
+		os << " --> [timeout_event. flow: " << endl
+				<< "  " << *flow << endl << "]";
 	}
 };
 
-#endif // ROUTER_DISCOVERY_EVENT_H
+#endif // TIMEOUT_EVENT_H

@@ -17,6 +17,9 @@ using namespace std;
 extern bool debug;
 extern ostream &debug_os;
 
+// Forward declaration of simulation
+class simulation;
+
 /**
  * Base class for events in an event-driven network simulation.
  */
@@ -30,6 +33,14 @@ private:
 	/** ID number of this object. */
 	long id;
 
+protected:
+
+	/**
+	 * Pointer to simulation this event is in so generated events can be
+	 * added to its events queue.
+	 */
+	simulation *sim;
+
 public:
 
 	/** Unique ID number generator. Initialized in corresponding cpp file. */
@@ -39,9 +50,8 @@ public:
 	 * Initializes this event's time to the given one and sets the event id
 	 * to whatever the static ID generates spits out.
 	 */
-	event(double time) : time(time) {
-		id = id_generator++;
-	}
+	event(double time, simulation &sim) :
+		time(time), id(id_generator++), sim(&sim) { }
 
 	virtual ~event() {}
 

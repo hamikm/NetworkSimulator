@@ -14,6 +14,7 @@
 #include "event.h"
 #include <vector>
 #include <algorithm>
+#include "simulation.h"
 
 using namespace std;
 
@@ -25,9 +26,10 @@ using namespace std;
 class eventTest : public ::testing::Test {
 protected:
 
+	simulation sim;
 	event e1, e2, e3, e4;
 
-	eventTest() : e1(0), e2(2.5), e3(2.6), e4(0) {}
+	eventTest() : e1(0, sim), e2(2.5, sim), e3(2.6, sim), e4(0, sim) {}
 
 	virtual void SetUp() { }
 

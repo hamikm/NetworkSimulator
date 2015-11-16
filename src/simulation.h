@@ -76,6 +76,12 @@ public:
 	simulation (const char *inputfile);
 
 	/**
+	 * Default constructor which does nothing. Might be used in tests.
+	 * @param inputfile JSON filename. Points to description of network.
+	 */
+	simulation () { }
+
+	/**
 	 * Deletes all the dynamically allocated network objects like hosts,
 	 * routers, and so forth.
 	 */
@@ -107,6 +113,16 @@ public:
 	 * for writing the data logger's data to disk--the caller is.
 	 */
 	void runSimulation();
+
+	/**
+	 * Adds an event to the simulation's event queue. Event objects have a
+	 * reference to this simulation so they can add events they need to
+	 * generate by invoking this function.
+	 * @param e event to add to the simulation's @c events queue
+	 */
+	void addEvent(event &e) {
+		events.push(e);
+	}
 };
 
 #endif // SIMULATION_H

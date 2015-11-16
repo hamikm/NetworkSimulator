@@ -17,6 +17,7 @@
 #include <string>
 #include <cstdlib>
 #include <string.h>
+#include "event.h"
 #include "simulation.h"
 
 using namespace std;

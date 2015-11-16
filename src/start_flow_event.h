@@ -3,11 +3,12 @@
  * @author Jessica Li, Jingwen Wang, Hamik Mukelyan
  */
 
-#ifndef ROUTER_DISCOVERY_EVENT_H
-#define ROUTER_DISCOVERY_EVENT_H
+#ifndef START_FLOW_EVENT_H
+#define START_FLOW_EVENT_H
 
 #include <iostream>
-#include "netrouter.h"
+#include "netflow.h"
+#include "netlink.h"
 #include "event.h"
 #include "simulation.h"
 
@@ -17,14 +18,16 @@ extern bool debug;
 extern ostream &debug_os;
 
 /**
- * Event that triggers a given router's routing-table-population algorithm.
+ * Event that runs when a flow is about to start. Initializes a flow's state
+ * variables and queues a timeout event, since a timeout just takes the window
+ * size to one then sends a packet. TODO bring in line with document on gdriv
  */
-class router_discovery_event : public event {
+class start_flow_event : public event {
 
 private:
 
-	/** Router whose routing table will be updated by this event. */
-	netrouter *router;
+	/** Flow that we're going to start. */
+	netflow *flow;
 
 public:
 
@@ -32,10 +35,10 @@ public:
 	 * Initializes this event's time to the given one, sets the event ID,
 	 * and sets the router from which this router discovery event should run.
 	 */
-	router_discovery_event(double time, simulation &sim, netrouter &router) :
-		event(time, sim), router(&router) { }
+	start_flow_event(double time, simulation &sim, netflow &flow) :
+		event(time, sim), flow(&flow) { }
 
-	~router_discovery_event() { }
+	~start_flow_event() { }
 
 	/**
 	 * Runs the Bellman-Ford algorithm from this router.
@@ -55,9 +58,9 @@ public:
 	 */
 	void printHelper(ostream &os) const {
 		event::printHelper(os);
-		os << " --> [router_discovery_event. router: " << endl
-				<< "  " << *router << endl << "]";
+		os << " --> [start_flow_event. flow: " << endl
+				<< "  " << *flow << endl << "]";
 	}
 };
 
-#endif // ROUTER_DISCOVERY_EVENT_H
+#endif // START_FLOW_EVENT_H
