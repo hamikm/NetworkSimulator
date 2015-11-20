@@ -69,14 +69,15 @@ int main (int argc, char **argv) {
 	// TODO make data logger object (not in its own thread...)
 
 	// Load hosts, routers, links, and flows from the JSON input file.
-	// TODO pass in the data logger object
+	// TODO pass in the data logger object. Make sure the data logger
+	// appends data to the file on disk each time the logger function is
+	// called at the end of a runEvent invocation on an event
 	simulation sim(infile);
 
 	// Invoke the simulation loop, which should terminate when all events
 	// have been processed.
 	sim.runSimulation();
 
-	// TODO flush the data logger's data to disk
 
 	return 0;
 }

@@ -10,8 +10,7 @@
 #include <cassert>
 #include <string>
 
-#include "netelement.h"
-#include "netlink.h"
+#include "netnode.h"
 
 using namespace std;
 
@@ -21,26 +20,35 @@ extern ostream &debug_os;
 /**
  * Represents a host in a simple network. TODO add detail to this comment.
  */
-class nethost : public netelement {
+class nethost : public netnode {
 
 private:
 
-	netlink *link;
-
 public:
 
-	nethost (string name) : netelement(name) {
-		link = NULL;
+	nethost (string name) : netnode(name) { }
+
+	nethost (string name, netlink &link) : netnode(name) {
+		addLink(link);
 	}
 
-	nethost (string name, netlink &link) : netelement(name), link(&link) { }
-
-	void setLink(netlink &link) {
-		this->link = &link;
-	}
-
+	/**
+	 * Gets the first (and only, since this is a host) link.
+	 * @return link attached to this host
+	 */
 	netlink *getLink() const {
-		return link;
+		if(getLinks().size() == 0)
+			return NULL;
+		return getLinks()[0];
+	}
+
+	/**
+	 * Deletes all links then adds the given one.
+	 * @param link link to add after deleteing the others
+	 */
+	void setLink(netlink &link) {
+		links.clear();
+		addLink(link);
 	}
 
 	/**
@@ -48,9 +56,9 @@ public:
 	 * @param os The output stream to which to write.
 	 */
 	virtual void printHelper(ostream &os) const {
-		netelement::printHelper(os);
+		netnode::printHelper(os);
 		os << " ---> [host. link: "
-				<< (link == NULL ? "NULL" : link->getName()) << "]";
+				<< (getLink() == NULL ? "NULL" : getLink()->getName()) << "]";
 	}
 };
 

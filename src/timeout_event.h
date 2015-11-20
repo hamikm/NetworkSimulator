@@ -9,7 +9,6 @@
 #include <iostream>
 #include "netflow.h"
 #include "event.h"
-#include "simulation.h"
 
 using namespace std;
 
