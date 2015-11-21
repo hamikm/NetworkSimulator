@@ -22,6 +22,8 @@ simulation::simulation (const char *inputfile) {
 	// Send the JSON string to a parser. Populate in-memory collections of
 	// hosts, routers, links, and flows.
 	parse_JSON_input (jsonstr);
+
+	current_time = 0;
 }
 
 simulation::~simulation () {

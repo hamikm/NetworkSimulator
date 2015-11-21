@@ -58,6 +58,14 @@ private:
 	priority_queue<event, vector<event>, eventTimeSorter> events;
 
 	/**
+	 * The current global time in the simulation. Every simulation member
+	 * has access to this through a reference to this simulation object. It's
+	 * used e.g. by the link class to figure out the arrival time of packets
+	 * as @code{current_time + (packet_size / link_rate + link_delay)}
+	 */
+	double current_time;
+
+	/**
 	 * Helper for the destructor.
 	 *
 	 * TODO make sure to update this function if other stuff is stuff is
@@ -78,7 +86,7 @@ public:
 	 * Default constructor which does nothing. Might be used in tests.
 	 * @param inputfile JSON filename. Points to description of network.
 	 */
-	simulation () { }
+	simulation () : current_time(0) { }
 
 	/**
 	 * Deletes all the dynamically allocated network objects like hosts,
@@ -121,6 +129,21 @@ public:
 	 */
 	void addEvent(event &e) {
 		events.push(e);
+	}
+
+	/**
+	 * Getter for global time.
+	 * @return current_time
+	 */
+	double getCurrentTime() { return current_time; }
+
+	/**
+	 * Increases the global time by the given NONNEGATIVE amount.
+	 * @param delta_t nonnegative time interval.
+	 */
+	void increaseTimeBy(double delta_t) {
+		assert(delta_t >= 0);
+		current_time += delta_t;
 	}
 };
 

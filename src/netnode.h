@@ -43,6 +43,8 @@ public:
 
 	const vector<netlink *> &getLinks() const { return links; }
 
+	// TODO virtual send packet function
+
 	/**
 	 * Print helper function. Partially overrides superclass's.
 	 * @param os The output stream to which to write netdevice information.
