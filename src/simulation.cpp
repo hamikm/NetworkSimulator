@@ -22,8 +22,6 @@ simulation::simulation (const char *inputfile) {
 	// Send the JSON string to a parser. Populate in-memory collections of
 	// hosts, routers, links, and flows.
 	parse_JSON_input (jsonstr);
-
-	current_time = 0;
 }
 
 simulation::~simulation () {
@@ -235,8 +233,20 @@ void simulation::print_network(ostream &os) const {
 
 void simulation::runSimulation() {
 
-	// TODO Load initial events into the events queue
+	// Loop over the flows, making a start flow event for each and adding
+	// it to the events queue
+	for (map<string, netflow *>::iterator itr = flows.begin();
+			itr != flows.end(); itr++) {
+		netflow *flow = itr->second;
+		start_flow_event fevent(flow->getStartTime(), *this, *flow);
+		addEvent(fevent);
+	}
 
-	// TODO Loop over the events in the events queue.
-
+	// Loop over the events in the events queue, running the one with the
+	// smallest start time.
+	while (!events.empty()) {
+		event curr_event = events.top();
+		events.pop();
+		curr_event.runEvent();
+	}
 }

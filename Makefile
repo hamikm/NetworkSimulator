@@ -129,7 +129,7 @@ src/router_discovery_event.o: rapidjson/internal/dtoa.h
 src/router_discovery_event.o: rapidjson/internal/itoa.h
 src/router_discovery_event.o: rapidjson/internal/itoa.h
 src/router_discovery_event.o: rapidjson/stringbuffer.h src/nethost.h
-src/router_discovery_event.o: src/netflow.h
+src/router_discovery_event.o: src/netflow.h src/start_flow_event.h
 src/start_flow_event.o: src/start_flow_event.h src/netflow.h src/netelement.h
 src/start_flow_event.o: src/nethost.h src/netnode.h src/netlink.h src/event.h
 src/start_flow_event.o: src/simulation.h rapidjson/document.h
@@ -165,7 +165,7 @@ src/send_packet_event.o: rapidjson/internal/strfunc.h
 src/send_packet_event.o: rapidjson/prettywriter.h rapidjson/writer.h
 src/send_packet_event.o: rapidjson/internal/dtoa.h rapidjson/internal/itoa.h
 src/send_packet_event.o: rapidjson/internal/itoa.h rapidjson/stringbuffer.h
-src/send_packet_event.o: src/netrouter.h src/packet.h
+src/send_packet_event.o: src/netrouter.h src/start_flow_event.h src/packet.h
 src/receive_packet_event.o: src/receive_packet_event.h src/netflow.h
 src/receive_packet_event.o: src/netelement.h src/nethost.h src/netnode.h
 src/receive_packet_event.o: src/netlink.h src/event.h src/simulation.h
@@ -186,7 +186,7 @@ src/receive_packet_event.o: rapidjson/internal/dtoa.h
 src/receive_packet_event.o: rapidjson/internal/itoa.h
 src/receive_packet_event.o: rapidjson/internal/itoa.h
 src/receive_packet_event.o: rapidjson/stringbuffer.h src/netrouter.h
-src/receive_packet_event.o: src/packet.h
+src/receive_packet_event.o: src/start_flow_event.h src/packet.h
 src/netnode.o: src/netnode.h src/netelement.h src/netlink.h
 src/simulation.o: src/simulation.h rapidjson/document.h rapidjson/reader.h
 src/simulation.o: rapidjson/rapidjson.h rapidjson/allocators.h
@@ -201,7 +201,7 @@ src/simulation.o: rapidjson/writer.h rapidjson/internal/dtoa.h
 src/simulation.o: rapidjson/internal/itoa.h rapidjson/internal/itoa.h
 src/simulation.o: rapidjson/stringbuffer.h src/nethost.h src/netnode.h
 src/simulation.o: src/netelement.h src/netlink.h src/netrouter.h
-src/simulation.o: src/netflow.h src/event.h
+src/simulation.o: src/netflow.h src/event.h src/start_flow_event.h
 src/driver.o: src/event.h src/simulation.h rapidjson/document.h
 src/driver.o: rapidjson/reader.h rapidjson/rapidjson.h rapidjson/allocators.h
 src/driver.o: rapidjson/encodings.h rapidjson/internal/meta.h
@@ -214,7 +214,7 @@ src/driver.o: rapidjson/prettywriter.h rapidjson/writer.h
 src/driver.o: rapidjson/internal/dtoa.h rapidjson/internal/itoa.h
 src/driver.o: rapidjson/internal/itoa.h rapidjson/stringbuffer.h
 src/driver.o: src/nethost.h src/netnode.h src/netelement.h src/netlink.h
-src/driver.o: src/netrouter.h src/netflow.h
+src/driver.o: src/netrouter.h src/netflow.h src/start_flow_event.h
 test/alltests.o: test/test_jsonlib.cpp rapidjson/document.h
 test/alltests.o: rapidjson/reader.h rapidjson/rapidjson.h
 test/alltests.o: rapidjson/allocators.h rapidjson/encodings.h
@@ -229,4 +229,5 @@ test/alltests.o: rapidjson/internal/itoa.h rapidjson/internal/itoa.h
 test/alltests.o: rapidjson/stringbuffer.h test/test_simulation_input.cpp
 test/alltests.o: src/netelement.h src/nethost.h src/netnode.h src/netlink.h
 test/alltests.o: src/netrouter.h src/netflow.h test/test_simulation.cpp
-test/alltests.o: src/simulation.h src/event.h test/test_event.cpp
+test/alltests.o: src/simulation.h src/event.h src/start_flow_event.h
+test/alltests.o: test/test_event.cpp
