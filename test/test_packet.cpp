@@ -40,7 +40,23 @@ TEST_F(packetTest, constructorTest) {
 	l1.setEndpoint1(h1);
 	l1.setEndpoint1(h2);
 	netflow testflow("F1", 1, 20, h1, h2);
-	// packet p1(FLOW, "H1", "H2", 3, testflow); TODO finish
+
+	packet p1(FLOW, testflow, 3);
+	packet p2(FLOW, testflow, 4);
+	packet p3(FLOW, testflow, 5);
+
+	netrouter r1("R1");
+	netrouter r2("R2");
+	netrouter r3("R3");
+	netlink l12("L12", 5, 10, 64);
+	netlink l23("L23", 5, 12.5, 128);
+	netlink l31("L31", 5, 10, 64);
+	r1.addLink(l12); r1.addLink(l31);
+	r2.addLink(l12); r2.addLink(l31);
+	r3.addLink(l12); r3.addLink(l31);
+
+
+
 }
 
 #endif // TEST_PACKET_CPP
