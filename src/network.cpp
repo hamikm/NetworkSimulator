@@ -62,9 +62,9 @@ void nethost::setLink(netlink &link) {
 
 void nethost::receivePacket(double time, simulation &sim, 
 	netflow &flow, packet &pkt) {
-	if (pkt.isAckPacket())
+	if (pkt.getType() == ACK)
 		nethost::receiveAckPacket(time, sim, flow, pkt);
-	else if (pkt.isFlowPacket())
+	else if (pkt.getType() == FLOW)
 		nethost::receiveFlowPacket(time, sim, flow, pkt);
 }
 
@@ -123,7 +123,7 @@ netrouter::netrouter (string name, vector<netlink *> links) :
 	netnode(name, links) { }
 
 void netrouter::receivePacket(double time, simulation &sim, netflow &flow, packet &pkt) {
-	if (pkt.isRoutingPacket()) {
+	if (pkt.getType() == ROUTING) {
 		// TODO: Handle routing packets later
 	}
 	else
@@ -152,8 +152,8 @@ void netrouter::printHelper(ostream &os) const {
 
 // ------------------------------- netflow class ------------------------------
 
-void netflow::constructorHelper (double start_time, float size_mb, nethost &source,
-		nethost &destination, int num_total_packets,
+void netflow::constructorHelper (double start_time, float size_mb,
+		nethost &source, nethost &destination, int num_total_packets,
 		int last_received_ack_seqnum, int window_size,
 		int num_duplicate_acks, double timeout_length) {
 	this->start_time_sec = start_time;

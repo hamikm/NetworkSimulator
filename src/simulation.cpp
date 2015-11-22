@@ -264,7 +264,7 @@ void simulation::addEvent(event &e) {
 
 void simulation::removeEvent(event &e) {
 		
-	// Find the first occurance of the input time. Since map is sorted
+	// Find the first occurrence of the input time. Since map is sorted
 	// by time, all simultaneous events (if any) will be lumped together
 	multimap<double, event>::iterator it = events.find(e.getTime());
 
