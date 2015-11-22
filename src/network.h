@@ -327,7 +327,7 @@ private:
 	 * Helper for the constructors. Converts the buffer length from kilobytes
 	 * to bytes and the rate from megabits per second to bytes per second.
 	 */
-	void constructor_helper(float rate_mbps, int delay, int buflen_kb,
+	void constructor_helper(double rate_mbps, int delay, int buflen_kb,
 			netelement *endpoint1, netelement *endpoint2);
 
 public:
@@ -341,7 +341,7 @@ public:
 	 * @param endpoint1 the host or router on one side of this link
 	 * @param endpoint2 the host or router on the other side of this link
 	 */
-	netlink(string name, float rate_mbps, int delay_ms, int buflen_kb,
+	netlink(string name, double rate_mbps, int delay_ms, int buflen_kb,
 			netelement &endpoint1, netelement &endpoint2);
 
 	/**
@@ -352,7 +352,7 @@ public:
 	 * @param buflen_kb the size of the only buffer on this link in kilobytes
      * This is stored internally in bytes.
 	 */
-	netlink (string name, float rate_mbps, int delay_ms, int buflen_kb);
+	netlink (string name, double rate_mbps, int delay_ms, int buflen_kb);
 
 	/** @return buffer length in bytes. */
 	long getBuflen() const;
@@ -365,17 +365,17 @@ public:
 
 	netelement *getEndpoint1() const;
 
-	void setEndpoint1(netelement &endpoint1);
-
 	netelement *getEndpoint2() const;
 
-	void setEndpoint2(netelement &endpoint2);
-
 	/** @return link rate in bytes per second. */
-	long getRate() const;
+	double getRateBytesPerSec() const;
 
 	/** @return link rate in megabits per second. */
-	float getRateMbps() const;
+	double getRateMbps() const;
+
+	void setEndpoint1(netelement &endpoint1);
+
+	void setEndpoint2(netelement &endpoint2);
 
 	/**
 	 * Returns the buffer occupancy at a particular time.
@@ -473,7 +473,7 @@ public:
 	 * router
 	 * @warning assertion triggered if the packet type isn't ROUTING
 	 */
-	packet(packet_type type, string &source_ip, string &dest_ip);
+	packet(packet_type type, const string &source_ip, const string &dest_ip);
 
 	/**
 	 * This constructor infers the size of a packet from the given type, which
@@ -498,14 +498,13 @@ public:
 
 	netflow *getParentFlow() const;
 
-	bool isAckPacket() const;
+	packet_type getType() const;
 
-	bool isFlowPacket() const;
-
-	bool isRoutingPacket() const;
-
-	/** @return size in megabits */
+	/** @return size in megabits. */
 	float getSizeMb() const;
+
+	/** @return size in bytes. */
+	float getSizeBytes() const;
 
 	/**
 	 * Print helper function which partially overrides the one in @c netdevice.

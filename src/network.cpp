@@ -27,10 +27,6 @@ void netnode::addLink (netlink &link) { links.push_back(&link); }
 
 const vector<netlink *> &netnode::getLinks() const { return links; }
 
-/*
- * Print helper function which partially overrides the one in @c netdevice.
- * @param os The output stream to which to write.
- */
 void netnode::printHelper(ostream &os) const {
 	netelement::printHelper(os);
 	os << " ---> [node. links: { ";
@@ -150,7 +146,7 @@ void netflow::printHelper(ostream &os) const {
 
 // ------------------------------- netlink class ------------------------------
 
-void netlink::constructor_helper(float rate_mbps, int delay_ms, int buflen_kb,
+void netlink::constructor_helper(double rate_mbps, int delay_ms, int buflen_kb,
 		netelement *endpoint1, netelement *endpoint2) {
 	this->rate_bpms = rate_mbps * BYTES_PER_MEGABIT / MS_PER_SEC;
 	this->delay_ms = delay_ms;
@@ -162,13 +158,13 @@ void netlink::constructor_helper(float rate_mbps, int delay_ms, int buflen_kb,
 	this->last_known_time = 0;
 }
 
-netlink::netlink(string name, float rate_mbps, int delay_ms, int buflen_kb,
+netlink::netlink(string name, double rate_mbps, int delay_ms, int buflen_kb,
 		netelement &endpoint1, netelement &endpoint2) : netelement(name) {
 	constructor_helper(
 			rate_mbps, delay_ms, buflen_kb, &endpoint1, &endpoint2);
 }
 
-netlink::netlink (string name, float rate_mbps, int delay_ms, int buflen_kb) :
+netlink::netlink (string name, double rate_mbps, int delay_ms, int buflen_kb) :
 		 netelement(name) {
 	constructor_helper(rate_mbps, delay_ms, buflen_kb, NULL, NULL);
 }
@@ -189,11 +185,13 @@ netelement *netlink::getEndpoint2() const {
 	return endpoint2;
 }
 
-void netlink::setEndpoint2(netelement &endpoint2) { this->endpoint2 = &endpoint2; }
+void netlink::setEndpoint2(netelement &endpoint2) {
+	this->endpoint2 = &endpoint2;
+}
 
-long netlink::getRate() const { return rate_bpms * MS_PER_SEC; }
+double netlink::getRateBytesPerSec() const { return rate_bpms * MS_PER_SEC; }
 
-float netlink::getRateMbps() const {
+double netlink::getRateMbps() const {
 	return ((float) rate_bpms) / BYTES_PER_MEGABIT * MS_PER_SEC;
 }
 
@@ -247,12 +245,12 @@ void packet::constructorHelper(packet_type type, const string &source_ip,
 	this->size = size;
 }
 
-packet::packet(packet_type type, string &source_ip, string &dest_ip) :
-		netelement("") {
+packet::packet(packet_type type, const string &source_ip,
+		const string &dest_ip) : netelement("") {
 	switch (type) {
 	case ROUTING:
 		constructorHelper(type, source_ip, dest_ip, SEQNUM_FOR_NONFLOWS,
-				NULL, ROUTING_PACKET_SIZE);
+				NULL, ((float)ROUTING_PACKET_SIZE) / BYTES_PER_MEGABIT);
 		break;
 	default:
 		assert(type == ROUTING); // other types not allowed in this constructor
@@ -266,12 +264,14 @@ packet::packet(packet_type type, netflow &parent_flow, int seqnum) :
 	case FLOW:
 		constructorHelper(type, parent_flow.getSource()->getName(),
 				parent_flow.getDestination()->getName(), seqnum,
-						&parent_flow, FLOW_PACKET_SIZE);
+						&parent_flow,
+						((float)FLOW_PACKET_SIZE) / BYTES_PER_MEGABIT);
 		break;
 	case ACK:
 		constructorHelper(type, parent_flow.getDestination()->getName(),
 				parent_flow.getSource()->getName(), SEQNUM_FOR_NONFLOWS,
-						&parent_flow, ACK_PACKET_SIZE);
+						&parent_flow,
+						((float)ACK_PACKET_SIZE) / BYTES_PER_MEGABIT);
 		break;
 	default:
 		assert(type == FLOW || type == ACK); // no other packets types allowed
@@ -286,19 +286,12 @@ int packet::getSeq() const { return seqnum; }
 
 netflow *packet::getParentFlow() const { return parent_flow; }
 
-bool packet::isAckPacket() const { return type == ACK; }
+packet_type packet::getType() const { return type; }
 
-bool packet::isFlowPacket() const { return type == FLOW; }
-
-bool packet::isRoutingPacket() const { return type == ROUTING; }
-
-/** @return size in megabits */
 float packet::getSizeMb() const { return size; }
 
-/**
- * Print helper function which partially overrides the one in @c netdevice.
- * @param os The output stream to which to write.
- */
+float packet::getSizeBytes() const { return size * BYTES_PER_MEGABIT;; }
+
 void packet::printHelper(ostream &os) const {
 	netelement::printHelper(os);
 	os << " ---> [packet. src: " << source_ip << ", dst: " << dest_ip <<

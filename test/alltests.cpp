@@ -20,6 +20,7 @@
 #include "test_simulation.cpp"
 #include "test_event.cpp"
 #include "test_packet.cpp"
+#include "test_link.cpp"
 
 using namespace testing;
 

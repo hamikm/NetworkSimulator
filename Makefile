@@ -144,4 +144,4 @@ test/alltests.o: rapidjson/internal/itoa.h rapidjson/internal/itoa.h
 test/alltests.o: rapidjson/stringbuffer.h src/network.h src/util.h
 test/alltests.o: test/test_jsonlib.cpp test/test_simulation_input.cpp
 test/alltests.o: test/test_simulation.cpp test/test_event.cpp
-test/alltests.o: test/test_packet.cpp
+test/alltests.o: test/test_packet.cpp test/test_link.cpp

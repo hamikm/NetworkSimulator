@@ -236,7 +236,7 @@ public:
 	~start_flow_event();
 
 	/**
-	 * Runs the Bellman-Ford algorithm from this router.
+	 * TODO
 	 */
 	void runEvent();
 

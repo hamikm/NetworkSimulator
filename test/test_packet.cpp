@@ -42,8 +42,7 @@ TEST_F(packetTest, constructorTest) {
 	netflow testflow("F1", 1, 20, h1, h2);
 
 	packet p1(FLOW, testflow, 3);
-	packet p2(FLOW, testflow, 4);
-	packet p3(FLOW, testflow, 5);
+	packet p2(ACK, testflow, 5);
 
 	netrouter r1("R1");
 	netrouter r2("R2");
@@ -55,8 +54,28 @@ TEST_F(packetTest, constructorTest) {
 	r2.addLink(l12); r2.addLink(l31);
 	r3.addLink(l12); r3.addLink(l31);
 
+	packet p4(ROUTING, r1.getName(), r2.getName());
+	packet p5(ROUTING, r2.getName(), r3.getName());
+	packet p6(ROUTING, r1.getName(), r3.getName());
 
+	ASSERT_EQ(FLOW, p1.getType());
+	ASSERT_EQ(ACK, p2.getType());
 
+	ASSERT_EQ(ROUTING, p4.getType());
+	ASSERT_EQ(ROUTING, p5.getType());
+	ASSERT_EQ(ROUTING, p6.getType());
+
+	// tests necessary because lots of internal unit changes in packet class
+	ASSERT_FLOAT_EQ(1024, p1.getSizeBytes());
+	ASSERT_FLOAT_EQ(64, p2.getSizeBytes());
+	ASSERT_FLOAT_EQ(64, p4.getSizeBytes());
+	ASSERT_FLOAT_EQ(1024, p1.getSizeBytes());
+	ASSERT_FLOAT_EQ(64.0 / 1024 / 1024 * 8, p2.getSizeMb());
+	ASSERT_FLOAT_EQ(64.0 / 1024 / 1024 * 8, p2.getSizeMb());
+
+	ASSERT_EQ(3, p1.getSeq());
+	ASSERT_LT(p2.getSeq(), 0);
+	ASSERT_LT(p4.getSeq(), 0);
 }
 
 #endif // TEST_PACKET_CPP
