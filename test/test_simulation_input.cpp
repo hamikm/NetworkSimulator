@@ -11,6 +11,7 @@
 #ifndef TEST_SIMULATION_INPUT_CPP
 #define TEST_SIMULATION_INPUT_CPP
 
+// Standard includes.
 #include "rapidjson/document.h"
 #include "rapidjson/prettywriter.h"
 #include "gtest/gtest.h"
@@ -22,12 +23,6 @@
 #include <string.h>
 #include <sstream>
 #include <fstream>
-
-#include "netelement.h"
-#include "nethost.h"
-#include "netrouter.h"
-#include "netlink.h"
-#include "netflow.h"
 
 using namespace std;
 using namespace rapidjson;

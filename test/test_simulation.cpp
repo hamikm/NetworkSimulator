@@ -11,12 +11,12 @@
 #ifndef TEST_SIMULATION_CPP
 #define TEST_SIMULATION_CPP
 
+// Standard includes.
 #include "gtest/gtest.h"
 #include <string>
 #include <iostream>
 #include <cstdlib>
 #include <string.h>
-#include "simulation.h"
 
 using namespace std;
 

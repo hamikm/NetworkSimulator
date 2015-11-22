@@ -17,7 +17,8 @@
 #include <string>
 #include <cstdlib>
 #include <string.h>
-#include "event.h"
+
+// Custom headers.
 #include "simulation.h"
 
 using namespace std;

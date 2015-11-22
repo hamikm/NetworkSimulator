@@ -4,6 +4,12 @@
 
 #include "simulation.h"
 
+bool eventTimeSorter::operator() (const event &e1, const event &e2) {
+	return e1.getTime() < e2.getTime();
+}
+
+simulation::simulation () {}
+
 simulation::simulation (const char *inputfile) {
 
 	// Read JSON file into a single string.
@@ -238,7 +244,7 @@ void simulation::runSimulation() {
 	for (map<string, netflow *>::iterator itr = flows.begin();
 			itr != flows.end(); itr++) {
 		netflow *flow = itr->second;
-		start_flow_event fevent(flow->getStartTime(), *this, *flow);
+		start_flow_event fevent(flow->getStartTimeSec(), *this, *flow);
 		addEvent(fevent);
 	}
 
@@ -249,4 +255,8 @@ void simulation::runSimulation() {
 		events.pop();
 		curr_event.runEvent();
 	}
+}
+
+void simulation::addEvent(event &e) {
+	events.push(e);
 }

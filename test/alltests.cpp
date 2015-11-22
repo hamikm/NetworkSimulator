@@ -8,17 +8,18 @@
 #include <cstdlib>
 #include <string.h>
 
+// Custom headers for use in all test suits
+#include "events.h"
+#include "network.h"
+#include "simulation.h"
+
 // Unit test suites
 #include "gtest/gtest.h"
 #include "test_jsonlib.cpp"
 #include "test_simulation_input.cpp"
 #include "test_simulation.cpp"
 #include "test_event.cpp"
-#include "netelement.h"
-#include "nethost.h"
-#include "netrouter.h"
-#include "netlink.h"
-#include "netflow.h"
+#include "test_packet.cpp"
 
 using namespace testing;
 

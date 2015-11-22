@@ -8,13 +8,12 @@
 #ifndef TEST_EVENT_CPP
 #define TEST_EVENT_CPP
 
+// Standard includes.
 #include "gtest/gtest.h"
 #include <iostream>
 #include <cstdlib>
-#include "event.h"
 #include <vector>
 #include <algorithm>
-#include "simulation.h"
 
 using namespace std;
 

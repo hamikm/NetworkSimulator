@@ -15,26 +15,46 @@
 #include <fstream>
 #include <iostream>
 #include <cstdlib>
+#include <vector>
+#include <queue>
 
 // Libraries.
 #include "rapidjson/document.h"
 #include "rapidjson/prettywriter.h"
 
+// Forward declarations.
+class event;
+class eventTimeSorter;
+class nethost;
+class netrouter;
+class netlink;
+class netflow;
+
 // Custom headers.
-#include "nethost.h"
-#include "netrouter.h"
-#include "netlink.h"
-#include "netflow.h"
-#include "event.h"
-#include "start_flow_event.h"
-#include <vector>
-#include <queue>
+#include "events.h"
 
 using namespace std;
 using namespace rapidjson;
 
 extern bool debug;
 extern ostream &debug_os;
+
+/**
+ * Comparison functor for use in container templates like @c priority_queue.
+ * Sorts on events' times.
+ */
+class eventTimeSorter {
+
+public:
+
+	/**
+	 * Comparison function; compares on times.
+	 * @param e1
+	 * @param e2
+	 * @return true if time of @c e1 is less than time of @c e2.
+	 */
+	bool operator() (const event &e1, const event &e2);
+};
 
 /**
  * Represents the simulation. TODO add details.
@@ -79,7 +99,7 @@ public:
 	 * Default constructor which does nothing. Might be used in tests.
 	 * @param inputfile JSON filename. Points to description of network.
 	 */
-	simulation () { }
+	simulation ();
 
 	/**
 	 * Deletes all the dynamically allocated network objects like hosts,
@@ -120,9 +140,7 @@ public:
 	 * generate by invoking this function.
 	 * @param e event to add to the simulation's @c events queue
 	 */
-	void addEvent(event &e) {
-		events.push(e);
-	}
+	void addEvent(event &e);
 };
 
 #endif // SIMULATION_H
