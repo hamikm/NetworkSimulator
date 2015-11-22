@@ -75,8 +75,9 @@ private:
 	/** All flows in network. */
 	map<string, netflow *> flows;
 
-	/** Event queue. */
-	priority_queue<event, vector<event>, eventTimeSorter> events;
+	/** Event queue (implemented with a map which is sorted by key).
+	 * Keys represent time in milliseconds. */
+	multimap<double, event> events;
 
 	/**
 	 * Helper for the destructor.
@@ -141,6 +142,8 @@ public:
 	 * @param e event to add to the simulation's @c events queue
 	 */
 	void addEvent(event &e);
+
+	void removeEvent(event &e);
 };
 
 #endif // SIMULATION_H

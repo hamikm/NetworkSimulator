@@ -16,6 +16,7 @@
 // Forward declarations.
 class netlink;
 class netflow;
+class netnode;
 class nethost;
 class netrouter;
 class packet;
@@ -24,6 +25,7 @@ class send_ack_event;
 
 // Custom headers.
 #include "util.h"
+#include "simulation.h"
 
 using namespace std;
 
@@ -97,6 +99,11 @@ public:
 
 	// TODO virtual send packet function
 
+	/** Receive packet method that is overridden by hosts and routers.
+	 * Packet type-checking is performed by the host or router. */
+	virtual void receivePacket(double time, simulation &sim,
+		netflow &flow, packet &pkt) = 0;
+
 	/**
 	 * Print helper function. Partially overrides superclass's.
 	 * @param os The output stream to which to write netdevice information.
@@ -131,6 +138,16 @@ public:
 	 */
 	void setLink(netlink &link);
 
+	/** 
+	 * Receives a packet by checking whether it is a flow or ack packet, and 
+	 * then calling the appropriate function. Ignores routing packets.
+	 */
+	void receivePacket(double time, simulation &sim, netflow &flow, packet &pkt);
+
+	void receiveAckPacket(double time, simulation &sim, netflow &flow, packet &pkt);
+
+	void receiveFlowPacket(double time, simulation &sim, netflow &flow, packet &pkt);
+
 	/**
 	 * Print helper function which partially overrides the one in @c netdevice.
 	 * @param os The output stream to which to write.
@@ -155,6 +172,10 @@ public:
 	netrouter (string name);
 
 	netrouter (string name, vector<netlink *> links);
+
+	void receivePacket(double time, simulation &sim, netflow &flow, packet &pkt);
+
+	void forwardPacket(double time, simulation &sim, netflow &flow, packet &pkt);
 
 	/**
 	 * Print helper function which partially overrides the one in @c netdevice.
@@ -273,6 +294,14 @@ public:
 	nethost *getSource() const;
 
 	void setSource(nethost &source);
+
+	int incrDuplicateAcks();
+
+	int getLastAck();
+
+	void updateLastAck(int new_seqnum);
+
+	timeout_event* removeTimeoutEvent(int seq);
 
 	/**
 	 * Print helper function which partially overrides the one in @c netdevice.

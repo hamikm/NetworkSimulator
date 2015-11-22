@@ -251,12 +251,32 @@ void simulation::runSimulation() {
 	// Loop over the events in the events queue, running the one with the
 	// smallest start time.
 	while (!events.empty()) {
-		event curr_event = events.top();
-		events.pop();
+		multimap<double, event>::iterator it = events.begin();
+		event curr_event = (*it).second;
+		events.erase(it);
 		curr_event.runEvent();
 	}
 }
 
 void simulation::addEvent(event &e) {
-	events.push(e);
+	events.insert( pair<double, event> (e.getTime(), e) );
+}
+
+void simulation::removeEvent(event &e) {
+		
+	// Find the first occurance of the input time. Since map is sorted
+	// by time, all simultaneous events (if any) will be lumped together
+	multimap<double, event>::iterator it = events.find(e.getTime());
+
+	while ((*it).first == e.getTime()) {
+
+		// Check that the event we are removing has the same id as the
+		// input.
+		if ((*it).second.getId() == e.getId()) {
+			events.erase(it);
+			return;
+		}
+		it++;
+	}
+
 }

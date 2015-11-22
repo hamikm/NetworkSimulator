@@ -112,6 +112,11 @@ private:
 	 */
 	packet *pkt;
 
+	/**
+	 * Host or router that is receiving the packet.
+	 */
+	netnode *step_destination;
+
 public:
 
 	/**
@@ -119,7 +124,7 @@ public:
 	 * sets the flow from which this packet originates, and sets the packet.
 	 */
 	receive_packet_event(double time, simulation &sim,
-			netflow &flow, packet &pkt);
+			netflow &flow, packet &pkt, netnode &step_destination);
 
 	~receive_packet_event();
 

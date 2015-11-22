@@ -26,14 +26,15 @@ void event::printHelper(ostream &os) const {
 // ------------------------- receive_packet_event class -----------------------
 
 receive_packet_event::receive_packet_event(double time, simulation &sim,
-			netflow &flow, packet &pkt) :
-		event(time, sim), flow(&flow), pkt(&pkt) { }
+			netflow &flow, packet &pkt, netnode &step_destination) :
+		event(time, sim), flow(&flow), pkt(&pkt),
+		step_destination(&step_destination) { }
 
 receive_packet_event::~receive_packet_event() { }
 
 void receive_packet_event::runEvent() {
 
-	// TODO
+	step_destination->receivePacket(getTime(), *sim, *flow, *pkt);
 
 	if(debug) {
 		debug_os << "STARTING: " << *this << endl;
