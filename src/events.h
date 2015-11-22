@@ -69,7 +69,7 @@ public:
 	/**
 	 * Subclasses--i.e. more specific events--will run operations like
 	 * sending packets, adding new events to the simulation event queue, and
-	 * logging data in this function.
+	 * logging data in this method.
 	 */
 	virtual void runEvent();
 
