@@ -59,6 +59,56 @@ void nethost::setLink(netlink &link) {
 	addLink(link);
 }
 
+
+void nethost::receivePacket(double time, simulation &sim, 
+	netflow &flow, packet &pkt) {
+	if (pkt.isAckPacket())
+		nethost::receiveAckPacket(time, sim, flow, pkt);
+	else if (pkt.isFlowPacket())
+		nethost::receiveFlowPacket(time, sim, flow, pkt);
+}
+
+void nethost::receiveAckPacket(double time, simulation &sim, 
+	netflow &flow, packet &pkt) {
+
+	// Check if sequence number is the same as the last one
+	if (pkt.getSeq() == flow.getLastAck()) {
+		// Increment number of duplicate acks and check if more than 
+		// allowed number. If so, do fast retransmit.
+		if (flow.incrDuplicateAcks() >= 3) {
+			// TODO: use a constant for maximum no. allowed duplicates
+			// instead of hardcoding it above.
+
+			// Fast retransmit: instantly try to resend packet
+			packet resent_pkt(FLOW, flow, pkt.getSeq());
+			send_packet_event retransmit(time, sim, flow, resent_pkt);
+			sim.addEvent(retransmit);
+		}
+	}
+
+	else {
+		// Update the last successfully received ack
+		flow.updateLastAck(pkt.getSeq());
+
+		/** Remove the timeout action event for this packet from the queue
+		 * since the corresponding flow packet does not need to be resent */
+
+		// Remove event from the flow's map of future timeout events
+		timeout_event *t_event = flow.removeTimeoutEvent(pkt.getSeq() - 1);
+
+		// Remove event from global queue
+		sim.removeEvent((*t_event));
+
+	}
+}
+
+void nethost::receiveFlowPacket(double time, simulation &sim,
+		netflow &flow, packet &pkt) {
+
+	/** TODO */
+
+}
+
 void nethost::printHelper(ostream &os) const {
 	netnode::printHelper(os);
 	os << " ---> [host. link: "
@@ -71,6 +121,18 @@ netrouter::netrouter (string name) : netnode(name) { }
 
 netrouter::netrouter (string name, vector<netlink *> links) :
 	netnode(name, links) { }
+
+void netrouter::receivePacket(double time, simulation &sim, netflow &flow, packet &pkt) {
+	if (pkt.isRoutingPacket()) {
+		// TODO: Handle routing packets later
+	}
+	else
+		netrouter::forwardPacket(time, sim, flow, pkt);
+}
+
+void netrouter::forwardPacket(double time, simulation &sim, netflow &flow, packet &pkt) {
+	// TODO
+}
 
 void netrouter::printHelper(ostream &os) const {
 	netnode::printHelper(os);
@@ -131,6 +193,24 @@ void netflow::setDestination(nethost &destination) {
 
 void netflow::setSource(nethost &source) {
 	this->source = &source;
+}
+
+int netflow::incrDuplicateAcks() {
+	return ++num_duplicate_acks;
+}
+
+int netflow::getLastAck() {
+	return last_received_ack_seqnum;
+}
+
+void netflow::updateLastAck(int new_seqnum) {
+	last_received_ack_seqnum = new_seqnum;
+}
+
+timeout_event* netflow::removeTimeoutEvent(int seq) {
+	timeout_event *t = future_timeouts_events[seq];
+	future_timeouts_events.erase(seq);
+	return t;
 }
 
 void netflow::printHelper(ostream &os) const {
