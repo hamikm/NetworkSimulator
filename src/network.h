@@ -31,7 +31,6 @@ class start_flow_event;
 class send_packet_event;
 class receive_packet_event;
 class timeout_event;
-class send_ack_event;
 class simulation;
 class eventTimeSorter;
 
@@ -56,6 +55,8 @@ private:
 	string name;
 
 public:
+
+	netelement ();
 
 	netelement (string name);
 
@@ -196,7 +197,7 @@ private:
 	double start_time_sec;
 
 	/** Transmission size in megabits. */
-	float size_mb;
+	double size_mb;
 
 	/** Pointer to one end of this link. */
 	nethost *source;
@@ -211,7 +212,7 @@ private:
 	int highest_sent_seqnum;
 
 	/** The TCP protocol's window size. */
-	float window_size;
+	double window_size;
 
 	/** Sequence number at which the current transmission window starts. */
 	int window_start;
@@ -256,9 +257,9 @@ private:
 	 * is received before that packet's timeout_event has been processed
 	 * then it's the receive_ack_event's job to remove the corresponding
 	 * timeout_event from the global events queue by looking up the
-	 * timeout_event in this map then using the pointer to delete from events.
+	 * timeout_event in this map then deleting by event id number and time.
 	 */
-	map<int, timeout_event *> future_timeouts_events;
+	map<int, timeout_event> future_timeouts_events;
 
 	/**
 	 * Every time a send_ack_event is pushed onto the global events queue we
@@ -266,9 +267,10 @@ private:
 	 * queue. The second event is for duplicate acks. If a future
 	 * receive_packet_event runs before the duplicate send_ack_event for
 	 * the previous packet, the duplicate send_ack_event must be looked
-	 * up in this map then deleted from the global events queue.
+	 * up in this map then deleted from the global events queue (by time and id
+	 * number).
 	 */
-	map<int, send_ack_event *> future_send_ack_events;
+	map<int, send_packet_event> future_send_ack_events;
 
 	/**
 	 * Map from sequence numbers to round-trip times of those packets. If a
@@ -281,9 +283,9 @@ private:
 	/** Pointer to simulation so timeout_events can be made in this class. */
 	simulation *sim;
 
-	void constructorHelper (double start_time, float size_mb,
+	void constructorHelper (double start_time, double size_mb,
 			nethost &source, nethost &destination, int num_total_packets,
-			float window_size, double timeout_length_ms, simulation &sim);
+			double window_size, double timeout_length_ms, simulation &sim);
 
 public:
 
@@ -320,7 +322,7 @@ public:
 	 * to perform TCP Reno transmissions, like window size, last ACK seen,
 	 * number of duplicate ACKs, etc.
 	 */
-	netflow (string name, float start_time, float size_mb,
+	netflow (string name, double start_time, double size_mb,
 			nethost &source, nethost &destination, simulation &sim);
 
 	// --------------------------- Accessors ----------------------------------
@@ -332,7 +334,7 @@ public:
 	double getStartTimeMs() const;
 
 	/** @return size in megabits */
-	float getSizeMb() const;
+	double getSizeMb() const;
 
 	nethost *getDestination() const;
 
@@ -358,6 +360,25 @@ public:
 	 * @param os The output stream to which to write.
 	 */
 	virtual void printHelper(ostream &os) const;
+
+	int getHighestAckSeqnum() const;
+
+	int getHighestSentSeqnum() const;
+
+	int getNumDuplicateAcks() const;
+
+	const map<int, double>& getRoundTripTimes() const;
+
+	double getWindowSize() const;
+
+	/** @return the packet on which the window starts. */
+	int getWindowStart() const;
+
+	int getLinGrowthWinsizeThreshold() const;
+
+	const map<int, timeout_event>& getFutureTimeoutsEvents() const;
+
+	const map<int, send_packet_event>& getFutureSendAckEvents() const;
 
 	// --------------------------- Mutators -----------------------------------
 
@@ -387,15 +408,15 @@ public:
 	 * number. It also stores the starting time for each packet so RTTs
 	 * can be computed later. It also returns corresponding timeout events
 	 * for all the returned packets.
-	 * @param start_time time at which the packets are put on the initial
-	 * link buffer
+	 * @param start_time_ms time in millisaeconds at which the packets are put
+	 * on the initial link buffer
 	 * @param[out] outstanding_pkts should come in empty so it can be
 	 * populated with packets to send
 	 * @param[out] timeout_events should likewise come in empty so it can be
 	 * populated with corresponding timeout events
 	 * @return all the outstanding packets in the window
 	 */
-	void popOutstandingPackets(double start_time,
+	void popOutstandingPackets(double start_time_ms,
 			vector<packet> &outstanding_pkts,
 			vector<timeout_event> &timeout_events);
 
@@ -403,14 +424,14 @@ public:
 	 * When an ACK is received this function must be called so the window will
 	 * slide and resize, so duplicate ACKs will register, so the timeout
 	 * length will adjust, and so the corresonding timeout event will be
-	 * removed from this flow. DOESN'T SEND PACKETS, use popOutstandingPackets
-	 * to get the packets to send after this function is called.
+	 * removed from this flow and simulation.
 	 * @param pkt the received ACK packet.
-	 * @param time at which this ACK was received; used to calculate RTTs.
-	 * @return the @c timeout_event that should be removed from the events
-	 * queue, or NULL if none
+	 * @param end_time_ms time in milliseconds at which this ACK was received;
+	 * used to calculate RTTs.
+	 * @warning DOESN'T SEND PACKETS, use @c popOutstandingPackets to get the
+	 * packets to send after this function is called.
 	 */
-	timeout_event *receivedAck(packet &pkt, double end_time);
+	void receivedAck(packet &pkt, double end_time_ms);
 
 	/**
 	 * This function should be called after a timeout so the window size can
@@ -422,9 +443,9 @@ public:
 	 * Invoke after an ACK is received to to cancel a pending timeout.
 	 * @param seq sequence number corresponding to the packet that would have
 	 * been retransmitted after a timeout
-	 * @return pointer to the timeout event that was cancelled
+	 * @return the timeout event that was cancelled
 	 */
-	timeout_event *cancelTimeoutAction(int seq);
+	timeout_event cancelTimeoutAction(int seq);
 };
 
 // ------------------------------- netlink class ------------------------------
@@ -601,7 +622,7 @@ private:
 	netflow *parent_flow;
 
 	/** Packet size in megabits (to be consistent with flow) */
-	float size;
+	double size;
 
 	/** Sequence number of packet */
 	int seqnum;
@@ -612,7 +633,7 @@ private:
 	 */
 	void constructorHelper(packet_type type, const string &source_ip,
 				   const string &dest_ip, int seqnum,
-				   netflow *parent_flow, float size);
+				   netflow *parent_flow, double size);
 
 public:
 
@@ -627,6 +648,8 @@ public:
 
 	/** Size of a routing packet in bytes. */
 	static const long ROUTING_PACKET_SIZE = 64;
+
+	packet();
 
 	/**
 	 * This constructor infers the size of a packet from the given type, which
@@ -670,7 +693,7 @@ public:
 	packet_type getType() const;
 
 	/** @return size in megabits. */
-	float getSizeMb() const;
+	double getSizeMb() const;
 
 	/** @return size in bytes. */
 	long getSizeBytes() const;

@@ -11,6 +11,8 @@
 
 long event::id_generator = 1;
 
+event::event() { }
+
 event::event(double time, simulation &sim) :
 		time(time), id(id_generator++), sim(&sim) { }
 
@@ -77,6 +79,8 @@ void router_discovery_event::printHelper(ostream &os) const {
 
 // -------------------------- send_packet_event class -------------------------
 
+send_packet_event::send_packet_event() : event(), flow(NULL) { }
+
 send_packet_event::send_packet_event(double time, simulation &sim,
 		netflow &flow, packet &pkt) :
 	event(time, sim), flow(&flow), pkt(pkt) { }
@@ -142,6 +146,8 @@ void start_flow_event::printHelper(ostream &os) const {
 }
 
 // ----------------------------- timeout_event class --------------------------
+
+timeout_event::timeout_event() : event(), flow(NULL) { }
 
 timeout_event::timeout_event(double time, simulation &sim, netflow &flow) :
 	event(time, sim), flow(&flow) { }

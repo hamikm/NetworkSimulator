@@ -8,7 +8,9 @@
 
 // ------------------------------ netelement class ----------------------------
 
-netelement::netelement (string name) : name(name) { }
+netelement::netelement() : name("") { }
+
+netelement::netelement(string name) : name(name) { }
 
 netelement::~netelement() { }
 
@@ -106,16 +108,16 @@ void netrouter::printHelper(ostream &os) const {
 
 // ------------------------------- netflow class ------------------------------
 
-void netflow::constructorHelper (double start_time, float size_mb,
+void netflow::constructorHelper (double start_time, double size_mb,
 		nethost &source, nethost &destination, int num_total_packets,
-		float window_size, double timeout_length_ms, simulation &sim) {
+		double window_size, double timeout_length_ms, simulation &sim) {
 
 	this->start_time_sec = start_time;
 	this->size_mb = size_mb;
 	this->source = &source;
 	this->destination = &destination;
 
-	this->highest_ack_seqnum = 0;
+	this->highest_ack_seqnum = 1;
 	this->highest_sent_seqnum = 0;
 	this->window_size = window_size;
 	this->window_start = 1;
@@ -128,7 +130,7 @@ void netflow::constructorHelper (double start_time, float size_mb,
 	this->sim = &sim;
 }
 
-netflow::netflow (string name, float start_time, float size_mb,
+netflow::netflow (string name, double start_time, double size_mb,
 			nethost &source, nethost &destination, simulation &sim) :
 				netelement(name) {
 	constructorHelper(start_time, size_mb, source, destination,
@@ -146,7 +148,7 @@ double netflow::getStartTimeMs() const { return start_time_sec * MS_PER_SEC; }
 
 nethost *netflow::getDestination() const { return destination; }
 
-float netflow::getSizeMb() const { return size_mb; }
+double netflow::getSizeMb() const { return size_mb; }
 
 int netflow::getNumTotalPackets() const {
 	long size_in_bytes = size_mb * BYTES_PER_MEGABIT;
@@ -175,8 +177,44 @@ void netflow::setLastACKNum(int new_seqnum) {
 	highest_ack_seqnum = new_seqnum;
 }
 
-timeout_event *netflow::cancelTimeoutAction(int seq) {
-	timeout_event *t = future_timeouts_events[seq];
+int netflow::getHighestAckSeqnum() const {
+	return highest_ack_seqnum;
+}
+
+int netflow::getHighestSentSeqnum() const {
+	return highest_sent_seqnum;
+}
+
+int netflow::getNumDuplicateAcks() const {
+	return num_duplicate_acks;
+}
+
+const map<int, double>& netflow::getRoundTripTimes() const {
+	return rtts;
+}
+
+double netflow::getWindowSize() const {
+	return window_size;
+}
+
+int netflow::getWindowStart() const {
+	return window_start;
+}
+
+int netflow::getLinGrowthWinsizeThreshold() const {
+	return lin_growth_winsize_threshold;
+}
+
+const map<int, timeout_event>& netflow::getFutureTimeoutsEvents() const {
+	return future_timeouts_events;
+}
+
+const map<int, send_packet_event>& netflow::getFutureSendAckEvents() const {
+	return future_send_ack_events;
+}
+
+timeout_event netflow::cancelTimeoutAction(int seq) {
+	timeout_event t = future_timeouts_events[seq];
 	future_timeouts_events.erase(seq);
 	return t;
 }
@@ -195,7 +233,7 @@ vector<packet> netflow::peekOutstandingPackets() {
 	return outstanding_pkts;
 }
 
-void netflow::popOutstandingPackets(double start_time,
+void netflow::popOutstandingPackets(double start_time_ms,
 		vector<packet> &outstanding_pkts,
 		vector<timeout_event> &timeout_events) {
 
@@ -212,27 +250,28 @@ void netflow::popOutstandingPackets(double start_time,
 	while(it != outstanding_pkts.end()) {
 
 		// Store start time.
-		rtts[it->getSeq()] = -start_time;
+		rtts[it->getSeq()] = -start_time_ms;
 
 		// Make a timeout_event for this packet, store it on out param
 		// and in local map.
-		timeout_event e(start_time + timeout_length_ms + TIMEOUT_DELTA * i++,
-				*sim, *this);
+		timeout_event e(getStartTimeMs() + timeout_length_ms +
+				TIMEOUT_DELTA * i++, *sim, *this);
 		timeout_events.push_back(e);
-		future_timeouts_events[it->getSeq()] = &e;
+		future_timeouts_events[it->getSeq()] = e;
 		it++;
 	}
 
 	highest_sent_seqnum += outstanding_pkts.size();
 }
 
-timeout_event *netflow::receivedAck(packet &pkt, double end_time) {
+void netflow::receivedAck(packet &pkt, double end_time_ms) {
 
 	assert(pkt.getSeq() >= highest_ack_seqnum);
 
 	// Check if sequence number is the same as the last one; if so then
 	// update duplicate ACKs field and potentially get ready to fast retransmit
 	if (pkt.getSeq() == highest_ack_seqnum) {
+
 		// Increment number of duplicate acks and check if more than
 		// allowed number. If so, do fast retransmit by changing last
 		// seen packet to current sequence number and halving window size
@@ -241,6 +280,7 @@ timeout_event *netflow::receivedAck(packet &pkt, double end_time) {
 			highest_sent_seqnum = pkt.getSeq();
 			window_size = window_size / 2 > 1 ? window_size / 2 : 1;
 			lin_growth_winsize_threshold = window_size;
+			num_duplicate_acks = 0;
 		}
 	}
 
@@ -251,14 +291,20 @@ timeout_event *netflow::receivedAck(packet &pkt, double end_time) {
 		// Update the last successfully received ack
 		highest_ack_seqnum = pkt.getSeq();
 
+		// The corresponding FLOW packet had sequence number one less
+		int flow_seqnum = pkt.getSeq() - 1;
+
 		// Make sure we have a departure time for this ACK's corresponding FLOW
 		// packet.
-		assert (rtts.find(pkt.getSeq()) != rtts.end());
+		assert (rtts.find(flow_seqnum) != rtts.end());
+
+		// Make sure the departure time was stored as a negative number.
+		assert (rtts[flow_seqnum] < 0);
 
 		// If we do then get the round-trip time for this packet then delete
 		// its entry from the RTT table.
-		double rtt = rtts[pkt.getSeq()] + end_time;
-		rtts.erase(pkt.getSeq());
+		double rtt = rtts[flow_seqnum] + end_time_ms;
+		rtts.erase(flow_seqnum);
 
 		// If it's the first ACK we don't have an average or deviation for the
 		// round-trip times, so initialize them to the first RTT
@@ -292,9 +338,10 @@ timeout_event *netflow::receivedAck(packet &pkt, double end_time) {
 		}
 
 		// Remove event from the flow's map of future timeout events
-		return cancelTimeoutAction(pkt.getSeq() - 1);
+		// and from the simulation's event queue
+		timeout_event to = cancelTimeoutAction(pkt.getSeq() - 1);
+		sim->removeEvent(to);
 	}
-	return NULL;
 }
 
 double netflow::getTimeoutLengthMs() const { return timeout_length_ms; }
@@ -363,7 +410,7 @@ void netlink::setEndpoint2(netelement &endpoint2) {
 double netlink::getRateBytesPerSec() const { return rate_bpms * MS_PER_SEC; }
 
 double netlink::getRateMbps() const {
-	return ((float) rate_bpms) / BYTES_PER_MEGABIT * MS_PER_SEC;
+	return ((double) rate_bpms) / BYTES_PER_MEGABIT * MS_PER_SEC;
 }
 
 double netlink::getTransmissionTimeMs(const packet &pkt) const {
@@ -414,7 +461,7 @@ long packet::id_gen = 1;
 
 void packet::constructorHelper(packet_type type, const string &source_ip,
 			   const string &dest_ip, int seqnum,
-			   netflow *parent_flow, float size) {
+			   netflow *parent_flow, double size) {
 	this->type = type;
 	this->source_ip = source_ip;
 	this->dest_ip = dest_ip;
@@ -424,12 +471,16 @@ void packet::constructorHelper(packet_type type, const string &source_ip,
 	this->pkt_id = id_gen++;
 }
 
+packet::packet() :
+		netelement(), pkt_id(0), type(FLOW), source_ip(""), dest_ip(""),
+		parent_flow(NULL), size(FLOW_PACKET_SIZE), seqnum(0) { }
+
 packet::packet(packet_type type, const string &source_ip,
 		const string &dest_ip) : netelement("") {
 	switch (type) {
 	case ROUTING:
 		constructorHelper(type, source_ip, dest_ip, SEQNUM_FOR_NONFLOWS,
-				NULL, ((float)ROUTING_PACKET_SIZE) / BYTES_PER_MEGABIT);
+				NULL, ((double)ROUTING_PACKET_SIZE) / BYTES_PER_MEGABIT);
 		break;
 	default:
 		assert(type == ROUTING); // other types not allowed in this constructor
@@ -444,13 +495,13 @@ packet::packet(packet_type type, netflow &parent_flow, int seqnum) :
 		constructorHelper(type, parent_flow.getSource()->getName(),
 				parent_flow.getDestination()->getName(), seqnum,
 						&parent_flow,
-						((float)FLOW_PACKET_SIZE) / BYTES_PER_MEGABIT);
+						((double)FLOW_PACKET_SIZE) / BYTES_PER_MEGABIT);
 		break;
 	case ACK:
 		constructorHelper(type, parent_flow.getDestination()->getName(),
-				parent_flow.getSource()->getName(), SEQNUM_FOR_NONFLOWS,
+				parent_flow.getSource()->getName(), seqnum,
 						&parent_flow,
-						((float)ACK_PACKET_SIZE) / BYTES_PER_MEGABIT);
+						((double)ACK_PACKET_SIZE) / BYTES_PER_MEGABIT);
 		break;
 	default:
 		assert(type == FLOW || type == ACK); // no other packets types allowed
@@ -469,7 +520,7 @@ long packet::getId() const { return pkt_id; }
 
 packet_type packet::getType() const { return type; }
 
-float packet::getSizeMb() const { return size; }
+double packet::getSizeMb() const { return size; }
 
 long packet::getSizeBytes() const { return size * BYTES_PER_MEGABIT; }
 

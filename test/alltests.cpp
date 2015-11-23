@@ -21,6 +21,7 @@
 #include "test_event.cpp"
 #include "test_packet.cpp"
 #include "test_link.cpp"
+#include "test_flow.cpp"
 
 using namespace testing;
 

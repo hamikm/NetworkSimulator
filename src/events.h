@@ -26,7 +26,6 @@ class start_flow_event;
 class send_packet_event;
 class receive_packet_event;
 class timeout_event;
-class send_ack_event;
 class simulation;
 class eventTimeSorter;
 
@@ -62,6 +61,8 @@ public:
 
 	/** Unique ID number generator. Initialized in corresponding cpp file. */
 	static long id_generator;
+
+	event();
 
 	/**
 	 * Initializes this event's time to the given one and sets the event id
@@ -204,6 +205,8 @@ private:
 
 public:
 
+	send_packet_event();
+
 	/**
 	 * Initializes this event's time to the given one, sets the event ID,
 	 * sets the flow from which this packet originates, and sets the packet.
@@ -281,6 +284,8 @@ private:
 
 public:
 
+	timeout_event();
+
 	/**
 	 * Initializes this event's time to the given one, sets the event ID,
 	 * and sets the router from which this router discovery event should run.
@@ -290,7 +295,8 @@ public:
 	~timeout_event();
 
 	/**
-	 * Runs the Bellman-Ford algorithm from this router.
+	 * Sends the same packet, drops the window size to 1, resets the linear
+	 * window size change threshold, and chains (queues another) timeout_event.
 	 */
 	void runEvent();
 

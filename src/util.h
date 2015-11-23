@@ -30,7 +30,7 @@ enum packet_type {
 	ROUTING
 };
 
-/** A sentinel used for the sequence numbers of routing and ACK packets. */
+/** A sentinel used for the sequence numbers of routing packets. */
 const int SEQNUM_FOR_NONFLOWS = -1;
 
 #endif // UTIL_H

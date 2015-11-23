@@ -76,7 +76,7 @@ TEST_F(packetTest, constructorTest) {
 	ASSERT_FLOAT_EQ(64.0 / 1024 / 1024 * 8, p2.getSizeMb());
 
 	ASSERT_EQ(3, p1.getSeq());
-	ASSERT_LT(p2.getSeq(), 0);
+	ASSERT_EQ(p2.getSeq(), 5);
 	ASSERT_LT(p4.getSeq(), 0);
 }
 
