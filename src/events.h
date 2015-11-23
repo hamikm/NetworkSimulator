@@ -230,9 +230,9 @@ public:
 // ---------------------------- start_flow_event class ------------------------
 
 /**
- * Event that runs when a flow is about to start. Initializes a flow's state
- * variables and queues a timeout event, since a timeout just takes the window
- * size to one then sends a packet. TODO bring in line with document on gdriv
+ * Event that runs when a flow is about to start. Sends the first packet and
+ * has the flow register a timeout event internally and queue it up in the
+ * simulation's event queue.
  */
 class start_flow_event : public event {
 
@@ -245,14 +245,15 @@ public:
 
 	/**
 	 * Initializes this event's time to the given one, sets the event ID,
-	 * and sets the router from which this router discovery event should run.
+	 * and sets the flow that this start_flow_event is going to start.
 	 */
 	start_flow_event(double time, simulation &sim, netflow &flow);
 
 	~start_flow_event();
 
 	/**
-	 * Sends the first packet in this event's flow.
+	 * Sends the first packet in this event's flow and queues a timeout_event
+	 * internally and on the simulation event queue.
 	 */
 	void runEvent();
 
@@ -266,20 +267,19 @@ public:
 // ---------------------------- timeout_event class ---------------------------
 
 /**
- * Event that takes the window size to one then sends a packet by trying to
- * queue a packet arrival event; if the link buffer can't support the
- * additional packet the packet gets dropped though. This event also queues
- * another timeout event.
+ * Event that sets the window size to one then sends a packet. This event
+ * queues another timeout_event; timeout_events are chained so that the
+ * flow will keep trying to send packets in the face of timeouts indefinitely.
  */
 class timeout_event : public event {
 
 private:
 
-	/**
-	 * Flow whose window size will change and from which a packet will be
-	 * sent.
-	 */
+	/** Flow to which to register a timeout. */
 	netflow *flow;
+
+	/** The packet that timed out. */
+	packet timedout_pkt;
 
 public:
 
@@ -287,15 +287,17 @@ public:
 
 	/**
 	 * Initializes this event's time to the given one, sets the event ID,
-	 * and sets the router from which this router discovery event should run.
+	 * and the flow to which this timeout_event belongs.
 	 */
-	timeout_event(double time, simulation &sim, netflow &flow);
+	timeout_event(double time, simulation &sim, netflow &flow, packet &to_pkt);
 
 	~timeout_event();
 
 	/**
-	 * Sends the same packet, drops the window size to 1, resets the linear
-	 * window size change threshold, and chains (queues another) timeout_event.
+	 * Registers a timeout with the flow, which means it changes its window
+	 * size and linear growth threshold internally. This function also chains
+	 * (queues another) timeout_event and sends a packet by queueing a new
+	 * send_packet_event.
 	 */
 	void runEvent();
 

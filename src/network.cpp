@@ -165,10 +165,6 @@ void netflow::setSource(nethost &source) {
 	this->source = &source;
 }
 
-int netflow::incrDuplicateAcks() {
-	return ++num_duplicate_acks;
-}
-
 int netflow::getLastAck() const {
 	return highest_ack_seqnum;
 }
@@ -250,7 +246,7 @@ vector<packet> netflow::popOutstandingPackets(double start_time_ms) {
 		// Make a timeout_event for this packet, store it on out param
 		// and in local map.
 		timeout_event e(start_time_ms + timeout_length_ms +
-				TIMEOUT_DELTA * i++, *sim, *this);
+				TIMEOUT_DELTA * i++, *sim, *this, *it);
 		sim->addEvent(e);
 		future_timeouts_events[it->getSeq()] = e;
 		it++;
@@ -264,8 +260,9 @@ void netflow::receivedAck(packet &pkt, double end_time_ms) {
 
 	assert(pkt.getSeq() >= highest_ack_seqnum);
 
-	// Check if sequence number is the same as the last one; if so then
-	// update duplicate ACKs field and potentially get ready to fast retransmit
+	// Check if sequence number is the same as the last one (i.e., duplicate
+	// ACK); if so then update duplicate ACKs field and potentially get ready
+	// to fast retransmit.
 	if (pkt.getSeq() == highest_ack_seqnum) {
 
 		// Increment number of duplicate acks and check if more than
@@ -280,10 +277,11 @@ void netflow::receivedAck(packet &pkt, double end_time_ms) {
 		}
 	}
 
-	// Otherwise we had a successful transmission, so slide and grow the
-	// window, adjust the average and std of RTTs so the timeout length
-	// can be set, and remove the corresponding timeout event from the flow.
-	else {
+	// Otherwise if the ACK number is one more than highest ACK we've seen we
+	// had a successful transmission, so slide and grow the window, adjust the
+	// average and std of RTTs so the timeout length can be set, and remove
+	// the corresponding timeout event from the flow.
+	else if (pkt.getSeq() == highest_ack_seqnum + 1) {
 		// Update the last successfully received ack
 		highest_ack_seqnum = pkt.getSeq();
 
@@ -338,13 +336,22 @@ void netflow::receivedAck(packet &pkt, double end_time_ms) {
 		timeout_event to = cancelTimeoutAction(pkt.getSeq() - 1);
 		sim->removeEvent(to);
 	}
+
+	// If the ACK number is more than 1 more than the highest ACK number seen
+	// or is less than the highest ACK number seen then we're getting
+	// out-of-order ACKs. For now we won't handle this case.
+	else {
+		assert(false);
+	}
 }
 
 double netflow::getTimeoutLengthMs() const { return timeout_length_ms; }
 
-void netflow::timeoutOccurred() {
+void netflow::timeoutOccurred(const packet &to_pkt) {
 	lin_growth_winsize_threshold = window_size / 2;
 	window_size = 1;
+	assert(highest_ack_seqnum + 1 == to_pkt.getSeq());
+	cancelTimeoutAction(to_pkt.getSeq());
 }
 
 void netflow::printHelper(ostream &os) const {

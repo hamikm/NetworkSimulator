@@ -287,6 +287,15 @@ private:
 			nethost &source, nethost &destination, int num_total_packets,
 			double window_size, double timeout_length_ms, simulation &sim);
 
+	/**
+	 * Invoke after an ACK is received or another timeout is processed and a
+	 * new one generated.
+	 * @param seq sequence number corresponding to the packet that would have
+	 * been retransmitted after a timeout
+	 * @return the timeout event that was cancelled
+	 */
+	timeout_event cancelTimeoutAction(int seq);
+
 public:
 
 	/** Size of a flow packet in bytes. */
@@ -355,12 +364,6 @@ public:
 	/** @return dynamically adjusted timeout length in milliseconds. */
 	double getTimeoutLengthMs() const;
 
-	/**
-	 * Print helper function which partially overrides the one in @c netdevice.
-	 * @param os The output stream to which to write.
-	 */
-	virtual void printHelper(ostream &os) const;
-
 	int getHighestAckSeqnum() const;
 
 	int getHighestSentSeqnum() const;
@@ -380,17 +383,17 @@ public:
 
 	const map<int, send_packet_event>& getFutureSendAckEvents() const;
 
+	/**
+	 * Print helper function which partially overrides the one in @c netdevice.
+	 * @param os The output stream to which to write.
+	 */
+	virtual void printHelper(ostream &os) const;
+
 	// --------------------------- Mutators -----------------------------------
 
 	void setSource(nethost &source);
 
 	void setDestination(nethost &destination);
-
-	/**
-	 * Increments the number of duplicate ACK number then returns it
-	 * @return new duplicate ACK number
-	 */
-	int incrDuplicateAcks();
 
 	void setLastACKNum(int new_seqnum);
 
@@ -416,6 +419,9 @@ public:
 	 */
 	vector<packet> popOutstandingPackets(double start_time_ms);
 
+	// TODO handle out-of-order ACKs (e.g. ACK 3 might get routed a slow way),
+	// ACK 4 might get routed a fast way.
+
 	/**
 	 * When an ACK is received this function must be called so the window will
 	 * slide and resize, so duplicate ACKs will register, so the timeout
@@ -431,17 +437,12 @@ public:
 
 	/**
 	 * This function should be called after a timeout so the window size can
-	 * change accordingly.
+	 * change accordingly and so the old timeout_event can be cancelled. It's
+	 * the caller's responsibility to make and queue a new send_packet_event
+	 * and a new timeout_event.
+	 * @param to_pkt the packet that timed out
 	 */
-	void timeoutOccurred();
-
-	/**
-	 * Invoke after an ACK is received to to cancel a pending timeout.
-	 * @param seq sequence number corresponding to the packet that would have
-	 * been retransmitted after a timeout
-	 * @return the timeout event that was cancelled
-	 */
-	timeout_event cancelTimeoutAction(int seq);
+	void timeoutOccurred(const packet &to_pkt);
 };
 
 // ------------------------------- netlink class ------------------------------

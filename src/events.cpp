@@ -11,7 +11,7 @@
 
 long event::id_generator = 1;
 
-event::event() { }
+event::event() : time(-1), id(-1), sim(NULL) { }
 
 event::event(double time, simulation &sim) :
 		time(time), id(id_generator++), sim(&sim) { }
@@ -89,11 +89,11 @@ send_packet_event::~send_packet_event() { }
 
 void send_packet_event::runEvent() {
 
-	// TODO
-
 	if(debug) {
 		debug_os << "STARTING: " << *this << endl;
 	}
+
+
 }
 
 void send_packet_event::printHelper(ostream &os) const {
@@ -118,18 +118,17 @@ void start_flow_event::runEvent() {
 	}
 
 	// Get the current (i.e. the first) window's packet(s) to send.
-	vector<packet> pkts_to_send;
-	pkts_to_send = flow->popOutstandingPackets(getTime());
+	vector<packet> pkts_to_send = flow->popOutstandingPackets(getTime());
 
 	// Iterate over the packets to send, making a send_packet_event for each.
-	// The timout_events have already been added by the flow object.
+	// The timout_events have already been added to the flow and to the
+	// simulation's queue.
 	vector<packet>::iterator pkt_it = pkts_to_send.begin();
 	while(pkt_it != pkts_to_send.end()) {
 		nethost *starting_host = flow->getSource();
-		send_packet_event e(
-				getTime(), *sim, *flow, *pkt_it, *starting_host->getLink());
+		send_packet_event e(getTime(), *sim, *flow,
+				*pkt_it, *starting_host->getLink());
 		sim->addEvent(e);
-
 		pkt_it++;
 	}
 }
@@ -142,22 +141,40 @@ void start_flow_event::printHelper(ostream &os) const {
 
 // ----------------------------- timeout_event class --------------------------
 
-timeout_event::timeout_event() : event(), flow(NULL) { }
+timeout_event::timeout_event() :
+		event(), flow(NULL), timedout_pkt(packet()) { }
 
-timeout_event::timeout_event(double time, simulation &sim, netflow &flow) :
-	event(time, sim), flow(&flow) { }
+timeout_event::timeout_event(
+		double time, simulation &sim, netflow &flow, packet &to_pkt) :
+				event(time, sim), flow(&flow), timedout_pkt(to_pkt) { }
 
 timeout_event::~timeout_event() { }
 
-/**
- * Runs the Bellman-Ford algorithm from this router.
- */
 void timeout_event::runEvent() {
-
-	// TODO
 
 	if(debug) {
 		debug_os << "STARTING: " << *this << endl;
+	}
+
+	// Resize the window, set the linear growth threshold, cancel the
+	// corresponding timeout locally (this event running means it was
+	// dequeued in the events queue).
+	flow->timeoutOccurred(timedout_pkt);
+
+	// Now send the timed out packet again.
+	vector<packet> pkts_to_send =
+			flow->popOutstandingPackets(getTime()); // queues new timeout too
+
+	// Iterate over the packets to send, making a send_packet_event for each.
+	// The timout_events have already been added to the flow and to the
+	// simulation's queue.
+	vector<packet>::iterator pkt_it = pkts_to_send.begin();
+	while(pkt_it != pkts_to_send.end()) {
+		nethost *starting_host = flow->getSource();
+		send_packet_event e(getTime(), *sim, *flow,
+				*pkt_it, *starting_host->getLink());
+		sim->addEvent(e);
+		pkt_it++;
 	}
 }
 
