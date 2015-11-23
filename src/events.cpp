@@ -79,11 +79,11 @@ void router_discovery_event::printHelper(ostream &os) const {
 
 // -------------------------- send_packet_event class -------------------------
 
-send_packet_event::send_packet_event() : event(), flow(NULL) { }
+send_packet_event::send_packet_event() : event(), flow(NULL), link(NULL) { }
 
 send_packet_event::send_packet_event(double time, simulation &sim,
-		netflow &flow, packet &pkt) :
-	event(time, sim), flow(&flow), pkt(pkt) { }
+		netflow &flow, packet &pkt, netlink &link) :
+	event(time, sim), flow(&flow), pkt(pkt), link(&link) { }
 
 send_packet_event::~send_packet_event() { }
 
@@ -119,23 +119,18 @@ void start_flow_event::runEvent() {
 
 	// Get the current (i.e. the first) window's packet(s) to send.
 	vector<packet> pkts_to_send;
-	vector<timeout_event> timeout_events;
-	flow->popOutstandingPackets(getTime(), pkts_to_send, timeout_events);
+	pkts_to_send = flow->popOutstandingPackets(getTime());
 
-	assert(pkts_to_send.size() == timeout_events.size());
-
-	// Iterate over the packets to send, making a send_packet_event for each
-	// and queueing it along with its corresponding timeout_event
+	// Iterate over the packets to send, making a send_packet_event for each.
+	// The timout_events have already been added by the flow object.
 	vector<packet>::iterator pkt_it = pkts_to_send.begin();
-	vector<timeout_event>::iterator to_it = timeout_events.begin();
-	while(pkt_it != pkts_to_send.end() && to_it != timeout_events.end()) {
-
-		send_packet_event e(getTime(), *sim, *flow, *pkt_it);
+	while(pkt_it != pkts_to_send.end()) {
+		nethost *starting_host = flow->getSource();
+		send_packet_event e(
+				getTime(), *sim, *flow, *pkt_it, *starting_host->getLink());
 		sim->addEvent(e);
-		sim->addEvent(*to_it);
 
 		pkt_it++;
-		to_it++;
 	}
 }
 

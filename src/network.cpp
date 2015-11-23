@@ -201,7 +201,7 @@ int netflow::getWindowStart() const {
 	return window_start;
 }
 
-int netflow::getLinGrowthWinsizeThreshold() const {
+double netflow::getLinGrowthWinsizeThreshold() const {
 	return lin_growth_winsize_threshold;
 }
 
@@ -233,14 +233,9 @@ vector<packet> netflow::peekOutstandingPackets() {
 	return outstanding_pkts;
 }
 
-void netflow::popOutstandingPackets(double start_time_ms,
-		vector<packet> &outstanding_pkts,
-		vector<timeout_event> &timeout_events) {
+vector<packet> netflow::popOutstandingPackets(double start_time_ms) {
 
-	assert (outstanding_pkts.size() == 0);
-	assert (timeout_events.size() == 0);
-
-	outstanding_pkts = peekOutstandingPackets();
+	vector<packet> outstanding_pkts = peekOutstandingPackets();
 
 	// Iterate over the packets about to be sent, keeping their start times
 	// so round_trip_times can be computed later. Also making a timeout_event
@@ -254,14 +249,15 @@ void netflow::popOutstandingPackets(double start_time_ms,
 
 		// Make a timeout_event for this packet, store it on out param
 		// and in local map.
-		timeout_event e(getStartTimeMs() + timeout_length_ms +
+		timeout_event e(start_time_ms + timeout_length_ms +
 				TIMEOUT_DELTA * i++, *sim, *this);
-		timeout_events.push_back(e);
+		sim->addEvent(e);
 		future_timeouts_events[it->getSeq()] = e;
 		it++;
 	}
 
 	highest_sent_seqnum += outstanding_pkts.size();
+	return outstanding_pkts;
 }
 
 void netflow::receivedAck(packet &pkt, double end_time_ms) {
@@ -349,7 +345,6 @@ double netflow::getTimeoutLengthMs() const { return timeout_length_ms; }
 void netflow::timeoutOccurred() {
 	lin_growth_winsize_threshold = window_size / 2;
 	window_size = 1;
-
 }
 
 void netflow::printHelper(ostream &os) const {

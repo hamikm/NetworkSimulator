@@ -193,15 +193,14 @@ class send_packet_event : public event {
 
 private:
 
-	/**
-	 * Flow to which the packet is being sent.
-	 */
+	/** Parent flow of this packet, null if ROUTING type. */
 	netflow *flow;
 
-	/**
-	 * Packet being sent.
-	 */
+	/** The packet being sent. */
 	packet pkt;
+
+	/** The link being used in this leg of the packet's journey. */
+	netlink *link;
 
 public:
 
@@ -212,7 +211,7 @@ public:
 	 * sets the flow from which this packet originates, and sets the packet.
 	 */
 	send_packet_event(double time, simulation &sim,
-			netflow &flow, packet &pkt);
+			netflow &flow, packet &pkt, netlink &link);
 
 	~send_packet_event();
 

@@ -235,7 +235,7 @@ private:
 	 * threshold then linear growth happens after. If this is negative then
 	 * it hasn't been set due to a timeout.
 	 */
-	int lin_growth_winsize_threshold;
+	double lin_growth_winsize_threshold;
 
 	/**
 	 * Average round-trip time for a packet in this flow. If zero should be
@@ -374,7 +374,7 @@ public:
 	/** @return the packet on which the window starts. */
 	int getWindowStart() const;
 
-	int getLinGrowthWinsizeThreshold() const;
+	double getLinGrowthWinsizeThreshold() const;
 
 	const map<int, timeout_event>& getFutureTimeoutsEvents() const;
 
@@ -406,19 +406,15 @@ public:
 	 * Gets all the packets in this window that must be sent. This function
 	 * assumes the user WILL send them, so it DOES change the last sent packet
 	 * number. It also stores the starting time for each packet so RTTs
-	 * can be computed later. It also returns corresponding timeout events
-	 * for all the returned packets.
+	 * can be computed later. It stores corresponding timeout events locally
+	 * and puts them on the simulation's event queue too.
 	 * @param start_time_ms time in millisaeconds at which the packets are put
 	 * on the initial link buffer
-	 * @param[out] outstanding_pkts should come in empty so it can be
-	 * populated with packets to send
-	 * @param[out] timeout_events should likewise come in empty so it can be
-	 * populated with corresponding timeout events
 	 * @return all the outstanding packets in the window
+	 * @post timeout events have been added locally and pushed onto simulation
+	 * event queue
 	 */
-	void popOutstandingPackets(double start_time_ms,
-			vector<packet> &outstanding_pkts,
-			vector<timeout_event> &timeout_events);
+	vector<packet> popOutstandingPackets(double start_time_ms);
 
 	/**
 	 * When an ACK is received this function must be called so the window will
