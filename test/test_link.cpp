@@ -28,10 +28,12 @@ protected:
 	netlink link;
 	nethost h1, h2;
 	netflow flow;
-	// packet p1, p2, p3, p4, p5, p6; TODO prob. not necessary
+	packet p1, p2, p3;
 
-	linkTest() : link("L1", 5, 10, 64), h1("H1", link), h2("H2", link),
-			flow("F1", 1, 20, h1, h2) {
+	// Note that the link's buffer size is tiny--just 2kb
+	linkTest() : link("L1", 5, 10, 2), h1("H1", link), h2("H2", link),
+			flow("F1", 1, 20, h1, h2), p1(FLOW, flow, 1), p2(FLOW, flow, 2),
+			p3(ACK, flow, 3) {
 		link.setEndpoint1(h1);
 		link.setEndpoint2(h2);
 	}
@@ -52,25 +54,86 @@ TEST_F(linkTest, constructionTest) {
 	ASSERT_STREQ("H2", link.getEndpoint2()->getName().c_str());
 
 	// Necessary because there are lots of unit conversions in link class.
-	ASSERT_EQ(64 * 1024, link.getBuflen());
-	ASSERT_EQ(64, link.getBuflenKB());
+	ASSERT_EQ(2 * 1024, link.getBuflen());
+	ASSERT_EQ(2, link.getBuflenKB());
 	ASSERT_FLOAT_EQ(5, link.getRateMbps());
 	ASSERT_FLOAT_EQ(5 * 1024 * 1024 / 8, link.getRateBytesPerSec());
 }
 
 /*
- * Tests that the buffer occupancy is given correctly.
+ * Tests that the buffer occupancy is given correctly for well-spaced packets.
  */
-TEST_F(linkTest, bufferOccupancyTest) {
+TEST_F(linkTest, wellSpacedPacketsBufferTest) {
 
+	// With the current link rate of 5 mbps and link delay of 10 ms the
+	// source to destination total transmission time is 11.5625 ms.
+	// Note that link buffer is only 2kb (2 packets' worth) in size.
+
+	ASSERT_FLOAT_EQ(0, link.getWaitTimeIntervalMs());
+	ASSERT_EQ(0, link.getBufferOccupancy());
+	ASSERT_TRUE(link.sendPacket(p1));              // send p1
+	ASSERT_EQ(1024, link.getBufferOccupancy());
+	ASSERT_FLOAT_EQ(11.5625, link.getWaitTimeIntervalMs());
+
+	ASSERT_FALSE(link.receivedPacket(p2.getId())); // wrong id
+	ASSERT_FALSE(link.receivedPacket(p3.getId())); // wrong id
+	ASSERT_TRUE(link.receivedPacket(p1.getId()));  // correct
+	ASSERT_FALSE(link.receivedPacket(p1.getId())); // empty now
+
+	ASSERT_EQ(0, link.getBufferOccupancy());
+	ASSERT_FLOAT_EQ(0, link.getWaitTimeIntervalMs());
+
+	ASSERT_TRUE(link.sendPacket(p2));              // send p2
+	ASSERT_EQ(1024, link.getBufferOccupancy());
+	ASSERT_FLOAT_EQ(11.5625, link.getWaitTimeIntervalMs());
+
+	ASSERT_FALSE(link.receivedPacket(p1.getId())); // wrong id
+	ASSERT_FALSE(link.receivedPacket(p3.getId())); // wrong id
+	ASSERT_TRUE(link.receivedPacket(p2.getId()));  // correct
+	ASSERT_FALSE(link.receivedPacket(p1.getId())); // empty now & wrong
+
+	ASSERT_EQ(0, link.getBufferOccupancy());
+	ASSERT_FLOAT_EQ(0, link.getWaitTimeIntervalMs());
 }
 
 /*
- * Tests that the arrival time of a packet is given correctly by the
- * sendPacket function.
+ * Now test that packets buffer correctly when sent quickly (with overflows)
  */
 TEST_F(linkTest, sendPacketTest) {
 
+	ASSERT_FLOAT_EQ(0, link.getWaitTimeIntervalMs());
+	ASSERT_EQ(0, link.getBufferOccupancy());
+	ASSERT_TRUE(link.sendPacket(p1));              // send p1
+	ASSERT_EQ(1024, link.getBufferOccupancy());
+	ASSERT_FLOAT_EQ(11.5625, link.getWaitTimeIntervalMs());
+
+	ASSERT_TRUE(link.sendPacket(p2));              // send p2
+	ASSERT_FLOAT_EQ(23.125, link.getWaitTimeIntervalMs());
+	ASSERT_EQ(2048, link.getBufferOccupancy());
+
+	ASSERT_FALSE(link.sendPacket(p3));              // try to send p3, no room
+	ASSERT_FLOAT_EQ(23.125, link.getWaitTimeIntervalMs());
+
+	ASSERT_FALSE(link.receivedPacket(p2.getId())); // wrong id
+	ASSERT_FALSE(link.receivedPacket(p3.getId())); // wrong id
+	ASSERT_TRUE(link.receivedPacket(p1.getId()));  // correct
+	ASSERT_FALSE(link.receivedPacket(p1.getId())); // already dequeued
+
+	ASSERT_EQ(1024, link.getBufferOccupancy());
+
+	ASSERT_FLOAT_EQ(11.5625, link.getWaitTimeIntervalMs());
+	ASSERT_TRUE(link.sendPacket(p3));              // send p3
+	ASSERT_EQ(1088, link.getBufferOccupancy());
+	ASSERT_FLOAT_EQ(21.66015625, link.getWaitTimeIntervalMs());
+
+	ASSERT_TRUE(link.sendPacket(p3));              // send p3 again
+	ASSERT_EQ(1152, link.getBufferOccupancy());
+	ASSERT_FLOAT_EQ(31.7578125, link.getWaitTimeIntervalMs());
+
+	ASSERT_TRUE(link.receivedPacket(p2.getId()));  // correct
+	ASSERT_TRUE(link.receivedPacket(p3.getId()));  // correct
+	ASSERT_TRUE(link.receivedPacket(p3.getId()));  // correct
+	ASSERT_FALSE(link.receivedPacket(p1.getId()));  // buffer was empty
 }
 
 #endif // TEST_LINK_CPP

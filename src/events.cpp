@@ -2,7 +2,10 @@
  * See header file for comments.
  */
 
+// Custom headers.
 #include "events.h"
+#include "simulation.h"
+#include "network.h"
 
 // -------------------------------- event class -------------------------------
 
@@ -27,14 +30,14 @@ void event::printHelper(ostream &os) const {
 
 receive_packet_event::receive_packet_event(double time, simulation &sim,
 			netflow &flow, packet &pkt, netnode &step_destination) :
-		event(time, sim), flow(&flow), pkt(&pkt),
+		event(time, sim), flow(&flow), pkt(pkt),
 		step_destination(&step_destination) { }
 
 receive_packet_event::~receive_packet_event() { }
 
 void receive_packet_event::runEvent() {
 
-	step_destination->receivePacket(getTime(), *sim, *flow, *pkt);
+	step_destination->receivePacket(getTime(), *sim, *flow, pkt);
 
 	if(debug) {
 		debug_os << "STARTING: " << *this << endl;
@@ -45,7 +48,7 @@ void receive_packet_event::printHelper(ostream &os) const {
 	event::printHelper(os);
 	os << " --> [receive_packet_event. flow: " << endl
 			<< "  " << *flow << endl << ", packet: " << endl
-			<< "  " << *pkt << endl << "]";
+			<< "  " << pkt << endl << "]";
 }
 
 // ------------------------- router_discovery_event class ---------------------
@@ -75,7 +78,7 @@ void router_discovery_event::printHelper(ostream &os) const {
 
 send_packet_event::send_packet_event(double time, simulation &sim,
 		netflow &flow, packet &pkt) :
-	event(time, sim), flow(&flow), pkt(&pkt) { }
+	event(time, sim), flow(&flow), pkt(pkt) { }
 
 send_packet_event::~send_packet_event() { }
 
@@ -92,7 +95,7 @@ void send_packet_event::printHelper(ostream &os) const {
 	event::printHelper(os);
 	os << " --> [send_packet_event. flow: " << endl
 			<< "  " << *flow << endl << ", packet: " << endl
-			<< "  " << *pkt << endl << "]";
+			<< "  " << pkt << endl << "]";
 }
 
 // --------------------------- start_flow_event class -------------------------

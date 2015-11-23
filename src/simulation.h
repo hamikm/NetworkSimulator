@@ -75,7 +75,7 @@ private:
 	/** All flows in network. */
 	map<string, netflow *> flows;
 
-	/** Event queue (implemented with a map which is sorted by key).
+	/** Event queue (implemented with a multimap which is sorted by key).
 	 * Keys represent time in milliseconds. */
 	multimap<double, event> events;
 
@@ -143,6 +143,10 @@ public:
 	 */
 	void addEvent(event &e);
 
+	/**
+	 * Removes the given event from the simulation's event map.
+	 * @param e event to remove
+	 */
 	void removeEvent(event &e);
 };
 

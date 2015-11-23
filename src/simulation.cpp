@@ -274,9 +274,7 @@ void simulation::removeEvent(event &e) {
 		// input.
 		if ((*it).second.getId() == e.getId()) {
 			events.erase(it);
-			return;
 		}
 		it++;
 	}
-
 }

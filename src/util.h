@@ -23,14 +23,6 @@ const int BYTES_PER_MEGABIT =
 /** Milliseconds per second. */
 const int MS_PER_SEC = 1000;
 
-/**
- * Some negative number is used at the return value from functions which
- * normally return the arrival time of a packet; the client should check
- * if the returned value was negative rather than using equality comparison
- * with this sentinel value.
- */
-const double PKT_DROPPED_SENTINEL = -1;
-
 /** Types of packets in this simulation. */
 enum packet_type {
 	FLOW,
@@ -38,16 +30,7 @@ enum packet_type {
 	ROUTING
 };
 
-/** Size of a flow packet in bytes. */
-static const long FLOW_PACKET_SIZE = 1024;
-
-/** Size of an ACK packet in bytes. */
-static const long ACK_PACKET_SIZE = 64;
-
-/** Size of a routing packet in bytes. */
-static const long ROUTING_PACKET_SIZE = 64;
-
 /** A sentinel used for the sequence numbers of routing and ACK packets. */
-static const int SEQNUM_FOR_NONFLOWS = -1;
+const int SEQNUM_FOR_NONFLOWS = -1;
 
 #endif // UTIL_H

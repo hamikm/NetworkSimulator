@@ -12,20 +12,27 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <queue>
+
+// Custom headers
+#include "util.h"
 
 // Forward declarations.
+class netevent;
 class netlink;
 class netflow;
 class netnode;
 class nethost;
 class netrouter;
 class packet;
+class router_discovery_event;
+class start_flow_event;
+class send_packet_event;
+class receive_packet_event;
 class timeout_event;
 class send_ack_event;
-
-// Custom headers.
-#include "util.h"
-#include "simulation.h"
+class simulation;
+class eventTimeSorter;
 
 using namespace std;
 
@@ -141,12 +148,22 @@ public:
 	/** 
 	 * Receives a packet by checking whether it is a flow or ack packet, and 
 	 * then calling the appropriate function. Ignores routing packets.
+	 * @param time time of receipt
+	 * @param sim enclosing simulation
+	 * @param packet being received
 	 */
-	void receivePacket(double time, simulation &sim, netflow &flow, packet &pkt);
+	void receivePacket(
+			double time, simulation &sim, netflow &flow, packet &pkt);
 
-	void receiveAckPacket(double time, simulation &sim, netflow &flow, packet &pkt);
+	/**
+	 * Encodes the behavior of a host on receipt of an ACK. In particular we
+	 * we update
+	 */
+	void receiveAckPacket(
+			double time, simulation &sim, netflow &flow, packet &pkt);
 
-	void receiveFlowPacket(double time, simulation &sim, netflow &flow, packet &pkt);
+	void receiveFlowPacket(
+			double time, simulation &sim, netflow &flow, packet &pkt);
 
 	/**
 	 * Print helper function which partially overrides the one in @c netdevice.
@@ -158,7 +175,7 @@ public:
 // ------------------------------ netrouter class -----------------------------
 
 /**
- * Represents a router in a simple network. TODO add detail to this comment.
+ * Represents a router in a simple network.
  */
 class netrouter : public netnode {
 
@@ -187,7 +204,7 @@ public:
 // ------------------------------- netflow class ------------------------------
 
 /**
- * Represents a flow in a simple network. TODO add detail to this comment.
+ * Represents a flow in a simple network.
  */
 class netflow : public netelement {
 
@@ -263,10 +280,17 @@ private:
 
 public:
 
-	/**
-	 * Size of each packet's payload in bytes.
-	 */
-	static const int PACKET_PAYLOAD_SIZE = 1024;
+	/** Size of a flow packet in bytes. */
+	static const long FLOW_PACKET_SIZE = 1024;
+
+	/** Size of an ACK packet in bytes. */
+	static const long ACK_PACKET_SIZE = 64;
+
+	/** Size of a routing packet in bytes. */
+	static const long ROUTING_PACKET_SIZE = 64;
+
+	/** Number of duplicate ACKs before fast retransmit is used. */
+	static const int FAST_RETRANSMIT_DUPLICATE_ACK_THRESHOLD = 3;
 
 	/**
 	 * The timeout value for the very first packet sent in a flow; the
@@ -278,45 +302,57 @@ public:
 	netflow (string name, float start_time, float size_mb,
 			nethost &source, nethost &destination);
 
-	nethost *getDestination() const;
+	// --------------------------- Accessors ----------------------------------
 
 	/** @return start time in seconds from beginning of simulation. */
-	float getStartTimeSec() const;
+	double getStartTimeSec() const;
 
 	/**  @return start time in milliseconds from beginning of simulation. */
-	float getStartTimeMs() const;
-
-	void setDestination(nethost &destination);
+	double getStartTimeMs() const;
 
 	/** @return size in megabits */
 	float getSizeMb() const;
 
+	nethost *getDestination() const;
+
 	nethost *getSource() const;
 
-	void setSource(nethost &source);
-
-	int incrDuplicateAcks();
-
-	int getLastAck();
-
-	void updateLastAck(int new_seqnum);
-
-	timeout_event* removeTimeoutEvent(int seq);
+	/**  @return last ACK's sequence number. */
+	int getLastAck() const;
 
 	/**
 	 * Print helper function which partially overrides the one in @c netdevice.
 	 * @param os The output stream to which to write.
-	 *
-	 * TODO if more instance variables are added might want to add them to this
-	 * printer for debugging help.
 	 */
 	virtual void printHelper(ostream &os) const;
+
+	// --------------------------- Mutators -----------------------------------
+
+	void setSource(nethost &source);
+
+	void setDestination(nethost &destination);
+
+	/**
+	 * Increments the number of duplicate ACK number then returns it
+	 * @return new duplicate ACK number
+	 */
+	int incrDuplicateAcks();
+
+	void setLastACKNum(int new_seqnum);
+
+	/**
+	 * Invoke after an ACK is received to to cancel a pending timeout.
+	 * @param seq sequence number corresponding to the packet that would have
+	 * been retransmitted after a timeout
+	 * @return pointer to the timeout event that was cancelled
+	 */
+	timeout_event *cancelTimeoutAction(int seq);
 };
 
 // ------------------------------- netlink class ------------------------------
 
 /**
- * Represents a link in a simple network. TODO add detail to this comment.
+ * Represents a link in a simple network.
  */
 class netlink : public netelement {
 
@@ -328,8 +364,8 @@ private:
 	/** Signal propagation delay for this link in ms. */
 	int delay_ms;
 
-	/** Buffer size in bytes. */
-	int buflen_bytes;
+	/** Buffer capacity in bytes. */
+	int buffer_capacity;
 
 	/** Pointer to one end of this link. */
 	netelement *endpoint1;
@@ -337,20 +373,21 @@ private:
 	/** Pointer to the other end of this link. */
 	netelement *endpoint2;
 
-	/** The link will be free after this (absolute, not relative) time (ms). */
-	double available_at_time_ms;
+	/**
+	 * The sum of the end-to-end transmission times of all the packets in
+	 * link buffer.
+	 */
+	double wait_time;
+
+	/** The sum of the packet sizes in this buffer. */
+	int buffer_occupancy;
 
 	/**
-	 * The number of packets on the buffer. Used with @c available_at_time
-	 * to deduce buffer occupancy.
+	 * This link's FIFO buffer. Note that packets don't have real payloads
+	 * so the size of this buffer in memory is small even though packets are
+	 * stored by value.
 	 */
-	int num_packets_waiting;
-
-	/**
-	 * Used for error checking: each packet passed to the sendPacket function
-	 * must have a time >= this last known time.
-	 */
-	double last_known_time;
+	queue<packet> buffer;
 
 	/**
 	 * Helper for the constructors. Converts the buffer length from kilobytes
@@ -383,6 +420,8 @@ public:
 	 */
 	netlink (string name, double rate_mbps, int delay_ms, int buflen_kb);
 
+	// --------------------------- Accessors ----------------------------------
+
 	/** @return buffer length in bytes. */
 	long getBuflen() const;
 
@@ -402,46 +441,53 @@ public:
 	/** @return link rate in megabits per second. */
 	double getRateMbps() const;
 
-	void setEndpoint1(netelement &endpoint1);
-
-	void setEndpoint2(netelement &endpoint2);
+	/**
+	 * @return end-to-end time in milliseconds for the given packet on this
+	 * link.
+	 */
+	double getTransmissionTimeMs(const packet &pkt) const;
 
 	/**
-	 * Returns the buffer occupancy at a particular time.
-	 * @param current_time time at which invoking event occurs
-	 * @return number of bytes in use in the buffer (assuming a magically
-	 * unfragmentable buffer)
+	 * @return time INTERVAL in milliseconds until this link will be available
+	 * for the next packet.
+	 * @warning does not return an absolute time
 	 */
-	long getBufferOccupancy(double current_time) const;
+	double getWaitTimeIntervalMs() const;
 
 	/**
-	 * If the link buffer has space the link's future availability time
-	 * @c available_at_time is updated and the number of packets on the
-	 * buffer, @c num_packets_waiting, is incremented. If the
-	 * buffer can't accommodate this packet then neither field is updated,
-	 * which models the behavior of packet dropping. Updates @c last_known_time
-	 * @param pkt the packet to send
-	 * @param current_time the simulation's current time as contained in event
-	 * @return the time at which the given packet will be RECEIVED. If the
-	 * packet is dropped because the buffer is full returns
-	 * @c PKT_DROPPED_SENTINEL, which is a negative number. The caller should
-	 * check for a negative return value instead of doing equality comparison
-	 * with the sentinel.
+	 * @return the buffer occupancy
 	 */
-	double sendPacket(const packet &pkt, double current_time);
-
-	/**
-	 * Called when a packet is received to free the link for subsequent
-	 * packets; just decrements the number of packets on the buffer.
-	 * @post @c num_packets_waiting is decremented
-	 */
-	void receivedPacket();
+	int getBufferOccupancy() const;
 
 	/**
 	 * Print helper function which partially overrides the one in @c netdevice.
 	 * @param os The output stream to which to write.
 	 */
 	virtual void printHelper(ostream &os) const;
+
+	// --------------------------- Mutators -----------------------------------
+
+	void setEndpoint1(netelement &endpoint1);
+
+	void setEndpoint2(netelement &endpoint2);
+
+	/**
+	 * If the link buffer has space the given packet is added to the buffer
+	 * and the rolling wait time and buffer occupancy are increased.
+	 * @param pkt the packet to add to the buffer
+	 * @return true if added to buffer successfully, false if dropped
+	 */
+	bool sendPacket(const packet &pkt);
+
+	/**
+	 * Called when a packet is received to free the link for subsequent
+	 * packets; just dequeues the packet from the buffer.
+	 * @param pkt_id the given packet ID number must match the ID of the
+	 * packet about to be dequeued.
+	 * @return true if the packet was dequeued (i.e. the given id matched
+	 * and the buffer wasn't empty)
+	 */
+	bool receivedPacket(long pkt_id);
 };
 
 // -------------------------------- packet class ------------------------------
@@ -454,6 +500,9 @@ public:
 class packet : public netelement {
 
 private:
+
+	/** Unique ID number for this packet. */
+	long pkt_id;
 
 	/**
 	 * Type of packet: either payload transmission, acknowledgement, or
@@ -470,7 +519,6 @@ private:
 	/** IP address of destination host, which is similarly just a name. */
 	string dest_ip;
 
-	// TODO was told this is necessary but not sure why...
 	/** Flow to which this packet belongs. */
 	netflow *parent_flow;
 
@@ -489,6 +537,18 @@ private:
 				   netflow *parent_flow, float size);
 
 public:
+
+	/** Unique ID number generator. Initialized in corresponding cpp file. */
+	static long id_gen;
+
+	/** Size of a flow packet in bytes. */
+	static const long FLOW_PACKET_SIZE = 1024;
+
+	/** Size of an ACK packet in bytes. */
+	static const long ACK_PACKET_SIZE = 64;
+
+	/** Size of a routing packet in bytes. */
+	static const long ROUTING_PACKET_SIZE = 64;
 
 	/**
 	 * This constructor infers the size of a packet from the given type, which
@@ -525,6 +585,8 @@ public:
 
 	int getSeq() const;
 
+	long getId() const;
+
 	netflow *getParentFlow() const;
 
 	packet_type getType() const;
@@ -533,7 +595,7 @@ public:
 	float getSizeMb() const;
 
 	/** @return size in bytes. */
-	float getSizeBytes() const;
+	long getSizeBytes() const;
 
 	/**
 	 * Print helper function which partially overrides the one in @c netdevice.

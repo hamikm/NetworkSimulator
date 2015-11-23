@@ -9,17 +9,26 @@
 // Standard includes.
 #include <iostream>
 
+// Custom headers
+#include "util.h"
+#include "network.h"
+
 // Forward declarations.
+class netevent;
+class netlink;
+class netflow;
+class netnode;
+class nethost;
+class netrouter;
+class packet;
 class router_discovery_event;
 class start_flow_event;
 class send_packet_event;
 class receive_packet_event;
 class timeout_event;
+class send_ack_event;
 class simulation;
-
-// Custom headers.
-#include "simulation.h"
-#include "network.h"
+class eventTimeSorter;
 
 using namespace std;
 
@@ -110,7 +119,7 @@ private:
 	/**
 	 * Packet received by the flow.
 	 */
-	packet *pkt;
+	packet pkt;
 
 	/**
 	 * Host or router that is receiving the packet.
@@ -191,7 +200,7 @@ private:
 	/**
 	 * Packet being sent.
 	 */
-	packet *pkt;
+	packet pkt;
 
 public:
 

@@ -2,7 +2,9 @@
  * See header file for comments.
  */
 
+// Custom headers.
 #include "network.h"
+#include "simulation.h"
 
 // ------------------------------ netelement class ----------------------------
 
@@ -75,11 +77,10 @@ void nethost::receiveAckPacket(double time, simulation &sim,
 	if (pkt.getSeq() == flow.getLastAck()) {
 		// Increment number of duplicate acks and check if more than 
 		// allowed number. If so, do fast retransmit.
-		if (flow.incrDuplicateAcks() >= 3) {
-			// TODO: use a constant for maximum no. allowed duplicates
-			// instead of hardcoding it above.
+		if (flow.incrDuplicateAcks() >=
+				netflow::FAST_RETRANSMIT_DUPLICATE_ACK_THRESHOLD) {
 
-			// Fast retransmit: instantly try to resend packet
+			// Fast retransmit: try to resend packet instantly
 			packet resent_pkt(FLOW, flow, pkt.getSeq());
 			send_packet_event retransmit(time, sim, flow, resent_pkt);
 			sim.addEvent(retransmit);
@@ -88,15 +89,15 @@ void nethost::receiveAckPacket(double time, simulation &sim,
 
 	else {
 		// Update the last successfully received ack
-		flow.updateLastAck(pkt.getSeq());
+		flow.setLastACKNum(pkt.getSeq());
 
-		/** Remove the timeout action event for this packet from the queue
-		 * since the corresponding flow packet does not need to be resent */
+		// Remove the timeout action event for this packet from the queue
+		// since the corresponding flow packet does not need to be resent.
 
 		// Remove event from the flow's map of future timeout events
-		timeout_event *t_event = flow.removeTimeoutEvent(pkt.getSeq() - 1);
+		timeout_event *t_event = flow.cancelTimeoutAction(pkt.getSeq() - 1);
 
-		// Remove event from global queue
+		// Remove event from global event "queue" (implemented as a map)
 		sim.removeEvent((*t_event));
 
 	}
@@ -105,7 +106,7 @@ void nethost::receiveAckPacket(double time, simulation &sim,
 void nethost::receiveFlowPacket(double time, simulation &sim,
 		netflow &flow, packet &pkt) {
 
-	/** TODO */
+	// TODO
 
 }
 
@@ -122,15 +123,17 @@ netrouter::netrouter (string name) : netnode(name) { }
 netrouter::netrouter (string name, vector<netlink *> links) :
 	netnode(name, links) { }
 
-void netrouter::receivePacket(double time, simulation &sim, netflow &flow, packet &pkt) {
+void netrouter::receivePacket(double time, simulation &sim,
+		netflow &flow, packet &pkt) {
 	if (pkt.getType() == ROUTING) {
-		// TODO: Handle routing packets later
+		// TODO Handle routing packets later
 	}
 	else
 		netrouter::forwardPacket(time, sim, flow, pkt);
 }
 
-void netrouter::forwardPacket(double time, simulation &sim, netflow &flow, packet &pkt) {
+void netrouter::forwardPacket(double time, simulation &sim,
+		netflow &flow, packet &pkt) {
 	// TODO
 }
 
@@ -171,7 +174,7 @@ netflow::netflow (string name, float start_time, float size_mb,
 			nethost &source, nethost &destination) :
 				netelement(name) {
 	constructorHelper(start_time, size_mb, source, destination,
-			size_mb / PACKET_PAYLOAD_SIZE + 1, 0, 1, 0,
+			size_mb / packet::FLOW_PACKET_SIZE + 1, 0, 1, 0,
 			DEFAULT_INITIAL_TIMEOUT);
 }
 
@@ -179,9 +182,9 @@ nethost *netflow::getSource() const {
 	return source;
 }
 
-float netflow::getStartTimeSec() const { return start_time_sec; }
+double netflow::getStartTimeSec() const { return start_time_sec; }
 
-float netflow::getStartTimeMs() const { return start_time_sec * MS_PER_SEC; }
+double netflow::getStartTimeMs() const { return start_time_sec * MS_PER_SEC; }
 
 nethost *netflow::getDestination() const { return destination; }
 
@@ -199,15 +202,15 @@ int netflow::incrDuplicateAcks() {
 	return ++num_duplicate_acks;
 }
 
-int netflow::getLastAck() {
+int netflow::getLastAck() const {
 	return last_received_ack_seqnum;
 }
 
-void netflow::updateLastAck(int new_seqnum) {
+void netflow::setLastACKNum(int new_seqnum) {
 	last_received_ack_seqnum = new_seqnum;
 }
 
-timeout_event* netflow::removeTimeoutEvent(int seq) {
+timeout_event *netflow::cancelTimeoutAction(int seq) {
 	timeout_event *t = future_timeouts_events[seq];
 	future_timeouts_events.erase(seq);
 	return t;
@@ -230,12 +233,11 @@ void netlink::constructor_helper(double rate_mbps, int delay_ms, int buflen_kb,
 		netelement *endpoint1, netelement *endpoint2) {
 	this->rate_bpms = rate_mbps * BYTES_PER_MEGABIT / MS_PER_SEC;
 	this->delay_ms = delay_ms;
-	this->buflen_bytes = buflen_kb * BYTES_PER_KB;
+	this->buffer_capacity = buflen_kb * BYTES_PER_KB;
 	this->endpoint1 = endpoint1 == NULL ? NULL : endpoint1;
 	this->endpoint2 = endpoint2 == NULL ? NULL : endpoint2;
-	this->available_at_time_ms = 0;
-	this->num_packets_waiting = 0;
-	this->last_known_time = 0;
+	this->wait_time = 0;
+	this->buffer_occupancy = 0;
 }
 
 netlink::netlink(string name, double rate_mbps, int delay_ms, int buflen_kb,
@@ -249,9 +251,9 @@ netlink::netlink (string name, double rate_mbps, int delay_ms, int buflen_kb) :
 	constructor_helper(rate_mbps, delay_ms, buflen_kb, NULL, NULL);
 }
 
-long netlink::getBuflen() const { return buflen_bytes; }
+long netlink::getBuflen() const { return buffer_capacity; }
 
-long netlink::getBuflenKB() const { return buflen_bytes / BYTES_PER_KB; }
+long netlink::getBuflenKB() const { return buffer_capacity / BYTES_PER_KB; }
 
 int netlink::getDelay() const { return delay_ms; }
 
@@ -275,32 +277,37 @@ double netlink::getRateMbps() const {
 	return ((float) rate_bpms) / BYTES_PER_MEGABIT * MS_PER_SEC;
 }
 
-
-long netlink::getBufferOccupancy(double current_time) const {
-	assert(current_time >= last_known_time);
-	return rate_bpms *
-			((available_at_time_ms - current_time) -
-					delay_ms * num_packets_waiting);
+double netlink::getTransmissionTimeMs(const packet &pkt) const {
+	return pkt.getSizeBytes() / rate_bpms + delay_ms;
 }
 
-double netlink::sendPacket(const packet &pkt, double current_time) {
+double netlink::getWaitTimeIntervalMs() const {
+	return wait_time;
+}
 
-	assert(current_time >= last_known_time);
-	last_known_time = current_time;
+int netlink::getBufferOccupancy() const { return buffer_occupancy; }
 
-	// Check if the buffer has space. If it doesn't then return infinity.
-	long pkt_size_bytes = (long)(pkt.getSizeMb() * BYTES_PER_MEGABIT);
-	if (getBufferOccupancy(current_time) + pkt_size_bytes > buflen_bytes) {
-		return PKT_DROPPED_SENTINEL;
+bool netlink::sendPacket(const packet &pkt) {
+
+	// Check if the buffer has space. If it doesn't then return false.
+	if (getBufferOccupancy() + pkt.getSizeBytes() > buffer_capacity) {
+		return false;
 	}
 
-	num_packets_waiting++;
-	available_at_time_ms += (pkt_size_bytes / rate_bpms + delay_ms);
-
-	return available_at_time_ms;
+	buffer.push(pkt);
+	wait_time += getTransmissionTimeMs(pkt);
+	buffer_occupancy += pkt.getSizeBytes();
+	return true;
 }
 
-void netlink::receivedPacket() { num_packets_waiting--; }
+bool netlink::receivedPacket(long pkt_id) {
+	if(buffer.size() == 0 || buffer.front().getId() != pkt_id)
+		return false;
+	wait_time -= getTransmissionTimeMs(buffer.front());
+	buffer_occupancy -= buffer.front().getSizeBytes();
+	buffer.pop();
+	return true;
+}
 
 void netlink::printHelper(ostream &os) const {
 	netelement::printHelper(os);
@@ -314,6 +321,8 @@ void netlink::printHelper(ostream &os) const {
 
 // -------------------------------- packet class ------------------------------
 
+long packet::id_gen = 1;
+
 void packet::constructorHelper(packet_type type, const string &source_ip,
 			   const string &dest_ip, int seqnum,
 			   netflow *parent_flow, float size) {
@@ -323,6 +332,7 @@ void packet::constructorHelper(packet_type type, const string &source_ip,
 	this->seqnum = seqnum;
 	this->parent_flow = parent_flow;
 	this->size = size;
+	this->pkt_id = id_gen++;
 }
 
 packet::packet(packet_type type, const string &source_ip,
@@ -366,11 +376,13 @@ int packet::getSeq() const { return seqnum; }
 
 netflow *packet::getParentFlow() const { return parent_flow; }
 
+long packet::getId() const { return pkt_id; }
+
 packet_type packet::getType() const { return type; }
 
 float packet::getSizeMb() const { return size; }
 
-float packet::getSizeBytes() const { return size * BYTES_PER_MEGABIT;; }
+long packet::getSizeBytes() const { return size * BYTES_PER_MEGABIT; }
 
 void packet::printHelper(ostream &os) const {
 	netelement::printHelper(os);
