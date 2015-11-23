@@ -37,7 +37,8 @@ receive_packet_event::~receive_packet_event() { }
 
 void receive_packet_event::runEvent() {
 
-	step_destination->receivePacket(getTime(), *sim, *flow, pkt);
+	// TODO
+	// step_destination->receivePacket(getTime(), *sim, *flow, pkt);
 
 	if(debug) {
 		debug_os << "STARTING: " << *this << endl;
@@ -100,17 +101,37 @@ void send_packet_event::printHelper(ostream &os) const {
 
 // --------------------------- start_flow_event class -------------------------
 
-start_flow_event::start_flow_event(double time, simulation &sim, netflow &flow) :
-	event(time, sim), flow(&flow) { }
+start_flow_event::start_flow_event(
+		double time, simulation &sim, netflow &flow) :
+				event(time, sim), flow(&flow) { }
 
 start_flow_event::~start_flow_event() { }
 
 void start_flow_event::runEvent() {
 
-	// TODO
-
 	if(debug) {
 		debug_os << "STARTING: " << *this << endl;
+	}
+
+	// Get the current (i.e. the first) window's packet(s) to send.
+	vector<packet> pkts_to_send;
+	vector<timeout_event> timeout_events;
+	flow->popOutstandingPackets(getTime(), pkts_to_send, timeout_events);
+
+	assert(pkts_to_send.size() == timeout_events.size());
+
+	// Iterate over the packets to send, making a send_packet_event for each
+	// and queueing it along with its corresponding timeout_event
+	vector<packet>::iterator pkt_it = pkts_to_send.begin();
+	vector<timeout_event>::iterator to_it = timeout_events.begin();
+	while(pkt_it != pkts_to_send.end() && to_it != timeout_events.end()) {
+
+		send_packet_event e(getTime(), *sim, *flow, *pkt_it);
+		sim->addEvent(e);
+		sim->addEvent(*to_it);
+
+		pkt_it++;
+		to_it++;
 	}
 }
 

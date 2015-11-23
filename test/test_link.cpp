@@ -2,7 +2,7 @@
  * @file
  * @author Jessica Li, Jingwen Wang, Hamik Mukelyan
  *
- * Tests the packet class.
+ * Tests the netlink class.
  */
 
 #ifndef TEST_LINK_CPP
@@ -24,7 +24,7 @@ using namespace std;
  */
 class linkTest : public ::testing::Test {
 protected:
-
+	simulation sim;
 	netlink link;
 	nethost h1, h2;
 	netflow flow;
@@ -32,8 +32,8 @@ protected:
 
 	// Note that the link's buffer size is tiny--just 2kb
 	linkTest() : link("L1", 5, 10, 2), h1("H1", link), h2("H2", link),
-			flow("F1", 1, 20, h1, h2), p1(FLOW, flow, 1), p2(FLOW, flow, 2),
-			p3(ACK, flow, 3) {
+			flow("F1", 1, 20, h1, h2, sim), p1(FLOW, flow, 1),
+			p2(FLOW, flow, 2), p3(ACK, flow, 3) {
 		link.setEndpoint1(h1);
 		link.setEndpoint2(h2);
 	}

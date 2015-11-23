@@ -34,12 +34,14 @@ protected:
  * Just tests that static ID number generation happens as expected.
  */
 TEST_F(packetTest, constructorTest) {
+	simulation sim;
+
 	netlink l1("L1", 5, 10, 64);
 	nethost h1("H1", l1);
 	nethost h2("H2", l1);
 	l1.setEndpoint1(h1);
 	l1.setEndpoint1(h2);
-	netflow testflow("F1", 1, 20, h1, h2);
+	netflow testflow("F1", 1, 20, h1, h2, sim);
 
 	packet p1(FLOW, testflow, 3);
 	packet p2(ACK, testflow, 5);

@@ -125,7 +125,7 @@ public:
 
 	/**
 	 * Runs the simulation by loading some initial events into the @c events
-	 * queue then starts a loop over queue events, calling the @c runEvent
+	 * queue then starts a loop over the events, calling the @c runEvent
 	 * function on each of them, and continues until the @c events queue
 	 * empties. Note that each event can (1) modify the host, flow, router,
 	 * or link data structures in this simulation object, (2) add new events

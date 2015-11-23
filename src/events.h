@@ -250,7 +250,7 @@ public:
 	~start_flow_event();
 
 	/**
-	 * TODO
+	 * Sends the first packet in this event's flow.
 	 */
 	void runEvent();
 

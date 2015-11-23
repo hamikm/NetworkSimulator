@@ -224,11 +224,13 @@ TEST_F(simulationInputTest, JsonFileInput) {
 
 		ASSERT_TRUE(srcIsHost && dstIsHost);
 
+		simulation sim;
+
 		netflow *curr_flow =
 				new netflow (flowname,
 						(float) thisflow["start"].GetDouble(),
 						(float) thisflow["size"].GetDouble(),
-						*source_host, *destination_host);
+						*source_host, *destination_host, sim);
 		flows[flowname] = curr_flow;
 	}
 

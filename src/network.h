@@ -13,6 +13,7 @@
 #include <vector>
 #include <map>
 #include <queue>
+#include <cmath>
 
 // Custom headers
 #include "util.h"
@@ -104,12 +105,13 @@ public:
 
 	const vector<netlink *> &getLinks() const;
 
-	// TODO virtual send packet function
+	// TODO reconsider necessity of receive packet, send packet functions here
 
 	/** Receive packet method that is overridden by hosts and routers.
 	 * Packet type-checking is performed by the host or router. */
-	virtual void receivePacket(double time, simulation &sim,
-		netflow &flow, packet &pkt) = 0;
+	//virtual void receivePacket(double time, simulation &sim,
+	//	netflow &flow, packet &pkt) = 0;
+
 
 	/**
 	 * Print helper function. Partially overrides superclass's.
@@ -144,26 +146,6 @@ public:
 	 * @param link link to add after deleteing the others
 	 */
 	void setLink(netlink &link);
-
-	/** 
-	 * Receives a packet by checking whether it is a flow or ack packet, and 
-	 * then calling the appropriate function. Ignores routing packets.
-	 * @param time time of receipt
-	 * @param sim enclosing simulation
-	 * @param packet being received
-	 */
-	void receivePacket(
-			double time, simulation &sim, netflow &flow, packet &pkt);
-
-	/**
-	 * Encodes the behavior of a host on receipt of an ACK. In particular we
-	 * we update
-	 */
-	void receiveAckPacket(
-			double time, simulation &sim, netflow &flow, packet &pkt);
-
-	void receiveFlowPacket(
-			double time, simulation &sim, netflow &flow, packet &pkt);
 
 	/**
 	 * Print helper function which partially overrides the one in @c netdevice.
@@ -222,25 +204,49 @@ private:
 	/** Pointer to the other end of this link. */
 	nethost *destination;
 
-	/**
-	 * Just the flow size divided by the size of each packet.
-	 */
-	int num_total_packets;
+	/** Highest received ACK sequence number. */
+	int highest_ack_seqnum;
 
-	/**
-	 * Sequence number of the last ACK received by the source host.
-	 */
-	int last_received_ack_seqnum;
+	/** Highest sent FLOW packet sequence number */
+	int highest_sent_seqnum;
 
-	/**
-	 * The TCP protocol's window size.
-	 */
-	int window_size;
+	/** The TCP protocol's window size. */
+	float window_size;
 
-	/**
-	 * Number of duplicate ACKs seen.
-	 */
+	/** Sequence number at which the current transmission window starts. */
+	int window_start;
+
+	/** Number of duplicate ACKs seen. */
 	int num_duplicate_acks;
+
+	/**
+	 * This is the maximum length of time in milliseconds that can pass between
+	 * a send_packet_event and its corresponding receive_ack_event before
+	 * a timeout_event will run. This timeout length is dynamically
+	 * readjusted with the (recursively determined) average RTT and
+	 * deviation of RTT.
+	 */
+	double timeout_length_ms;
+
+	/**
+	 * Half of the window size when a timeout happens; remembered so that in
+	 * the next window resizing phase exponential growth happens until this
+	 * threshold then linear growth happens after. If this is negative then
+	 * it hasn't been set due to a timeout.
+	 */
+	int lin_growth_winsize_threshold;
+
+	/**
+	 * Average round-trip time for a packet in this flow. If zero should be
+	 * initialized to first RTT.
+	 */
+	double avg_RTT;
+
+	/**
+	 * Standard deviation of round-trip time for a packet in this flow. If 0
+	 * should be initialized to first RTT.
+	 */
+	double std_RTT;
 
 	/**
 	 * This is a map from sequence numbers of packets to their future,
@@ -265,18 +271,19 @@ private:
 	map<int, send_ack_event *> future_send_ack_events;
 
 	/**
-	 * This is the maximum length of time in milliseconds that can pass between
-	 * a send_packet_event and its corresponding receive_ack_event before
-	 * a timeout_event will run. This timeout length is be dynamically
-	 * readjusted with the (recursively determined) average RTT and
-	 * deviation of RTT.
+	 * Map from sequence numbers to round-trip times of those packets. If a
+	 * value is negative then it's the FLOW packet departure time; the
+	 * corresponding ACK hasn't arrived yet. When it does its arrival
+	 * time will be added to the negative number.
 	 */
-	double timeout_length_ms;
+	map<int, double> rtts;
 
-	void constructorHelper (double start_time, float size_mb, nethost &source,
-			nethost &destination, int num_total_packets,
-			int last_received_ack_seqnum, int window_size,
-			int num_duplicate_acks, double timeout_length);
+	/** Pointer to simulation so timeout_events can be made in this class. */
+	simulation *sim;
+
+	void constructorHelper (double start_time, float size_mb,
+			nethost &source, nethost &destination, int num_total_packets,
+			float window_size, double timeout_length_ms, simulation &sim);
 
 public:
 
@@ -299,8 +306,22 @@ public:
 	 */
 	static const double DEFAULT_INITIAL_TIMEOUT = 1000.0;
 
+	/** The constant 'b' from the recursive average and std formulas. */
+	static const double B_TIMEOUT_CALC = 0.1;
+
+	/**
+	 * Interval between execution times of consecutive packets' timeouts (if
+	 * the packets are sent at the same time.
+	 */
+	static const double TIMEOUT_DELTA = 0.0000000001;
+
+	/**
+	 * Initializes the flow's basic attributes as well as attributes required
+	 * to perform TCP Reno transmissions, like window size, last ACK seen,
+	 * number of duplicate ACKs, etc.
+	 */
 	netflow (string name, float start_time, float size_mb,
-			nethost &source, nethost &destination);
+			nethost &source, nethost &destination, simulation &sim);
 
 	// --------------------------- Accessors ----------------------------------
 
@@ -321,6 +342,18 @@ public:
 	int getLastAck() const;
 
 	/**
+	 * Getter for number of packets used in a flawless transmission of this
+	 * flow. In reality some packets may be dropped or lost, so this is really
+	 * the largest packet sequence number in this flow, where the first packet
+	 * has a sequence number of 1.
+	 * @return number of packets in this flow
+	 */
+	int getNumTotalPackets() const;
+
+	/** @return dynamically adjusted timeout length in milliseconds. */
+	double getTimeoutLengthMs() const;
+
+	/**
 	 * Print helper function which partially overrides the one in @c netdevice.
 	 * @param os The output stream to which to write.
 	 */
@@ -339,6 +372,51 @@ public:
 	int incrDuplicateAcks();
 
 	void setLastACKNum(int new_seqnum);
+
+	/**
+	 * Gets all the packets in this window that must be sent. This function
+	 * assumes the user isn't going to send them, so it doesn't change the
+	 * last packet sent number.
+	 * @return all the outstanding packets in the window
+	 */
+	vector<packet> peekOutstandingPackets();
+
+	/**
+	 * Gets all the packets in this window that must be sent. This function
+	 * assumes the user WILL send them, so it DOES change the last sent packet
+	 * number. It also stores the starting time for each packet so RTTs
+	 * can be computed later. It also returns corresponding timeout events
+	 * for all the returned packets.
+	 * @param start_time time at which the packets are put on the initial
+	 * link buffer
+	 * @param[out] outstanding_pkts should come in empty so it can be
+	 * populated with packets to send
+	 * @param[out] timeout_events should likewise come in empty so it can be
+	 * populated with corresponding timeout events
+	 * @return all the outstanding packets in the window
+	 */
+	void popOutstandingPackets(double start_time,
+			vector<packet> &outstanding_pkts,
+			vector<timeout_event> &timeout_events);
+
+	/**
+	 * When an ACK is received this function must be called so the window will
+	 * slide and resize, so duplicate ACKs will register, so the timeout
+	 * length will adjust, and so the corresonding timeout event will be
+	 * removed from this flow. DOESN'T SEND PACKETS, use popOutstandingPackets
+	 * to get the packets to send after this function is called.
+	 * @param pkt the received ACK packet.
+	 * @param time at which this ACK was received; used to calculate RTTs.
+	 * @return the @c timeout_event that should be removed from the events
+	 * queue, or NULL if none
+	 */
+	timeout_event *receivedAck(packet &pkt, double end_time);
+
+	/**
+	 * This function should be called after a timeout so the window size can
+	 * change accordingly.
+	 */
+	void timeoutOccurred();
 
 	/**
 	 * Invoke after an ACK is received to to cancel a pending timeout.

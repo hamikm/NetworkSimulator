@@ -183,7 +183,7 @@ void simulation::parse_JSON_input (string jsonstring) {
 				new netflow (flowname,
 						(float) thisflow["start"].GetDouble(),
 						(float) thisflow["size"].GetDouble(),
-						*source_host, *destination_host);
+						*source_host, *destination_host, *this);
 		flows[flowname] = curr_flow;
 	}
 }
