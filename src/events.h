@@ -26,6 +26,7 @@ class start_flow_event;
 class send_packet_event;
 class receive_packet_event;
 class timeout_event;
+class duplicate_ack_event;
 class simulation;
 class eventTimeSorter;
 
@@ -34,7 +35,7 @@ using namespace std;
 extern bool debug;
 extern ostream &debug_os;
 
-// ---------------------- event class and event sorter ------------------------
+// -------------------------------- event class -------------------------------
 
 /**
  * Base class for events in an event-driven network simulation.
@@ -106,7 +107,9 @@ inline ostream & operator<<(ostream &os, const event &e) {
 // --------------------------- receive_packet_event class ---------------------
 
 /**
- * TODO
+ * Event that represents the arrival of a packet at either an intermediate
+ * node (router) or a final destination (host). The packet can be a FLOW,
+ * ACK, or ROUTING packet.
  */
 class receive_packet_event : public event {
 
@@ -139,7 +142,16 @@ public:
 	~receive_packet_event();
 
 	/**
-	 * TODO
+	 * If this arrival event is at a router then we consult the routing
+	 * table for the link to use for this packet's destination and use
+	 * it to generate a send_packet_event down that link.
+	 *
+	 * If the packet is arriving at a host then we create an ACK packet, make
+	 * and queue a send_packet_event for the ACK, and queue a future
+	 * send_packet_event for a duplicate ACK in case we don't see the next
+	 * packet in the sequence. We also remove the flow's pending duplicate
+	 * ACK send_packet_event for the packet with the preceding sequence
+	 * number.
 	 */
 	void runEvent();
 
@@ -187,8 +199,10 @@ public:
 // --------------------------- send_packet_event class ------------------------
 
 /**
- * Send a packet from a given departure node and down a given link whether
- * it's an ACK, FLOW, or ROUTING packet.
+ * Sends a packet from a given departure node and down a given link whether
+ * it's an ACK, FLOW, or ROUTING packet. Assumes that timeout_events
+ * and other flow attributes like highest_sent_seqnum have been dealt with
+ * before this event runs.
  */
 class send_packet_event : public event {
 
@@ -298,7 +312,7 @@ public:
 
 	/**
 	 * Initializes this event's time to the given one, sets the event ID,
-	 * and the flow to which this timeout_event belongs.
+	 * and sets the flow to which this timeout_event belongs.
 	 */
 	timeout_event(double time, simulation &sim, netflow &flow, packet &to_pkt);
 
@@ -309,6 +323,51 @@ public:
 	 * size and linear growth threshold internally. This function also chains
 	 * (queues another) timeout_event and sends a packet by queueing a new
 	 * send_packet_event.
+	 */
+	void runEvent();
+
+	/**
+	 * Print helper function.
+	 * @param os The output stream to which to write event information.
+	 */
+	void printHelper(ostream &os) const;
+};
+
+// ------------------------- duplicate_ack_event class ------------------------
+
+/**
+ * This event should be queued when a destination host wants to send an ACK
+ * (not just duplicate ACKs--any ACKS). The event automatically queues another
+ * duplicate_ack_event so that duplicate ACKs will be sent in the future
+ * if the destination doesn't get the correct FLOW packets. Pending
+ * duplicate_ack_events should be cancelled when the destination gets the
+ * correct FLOW packet.
+ */
+class duplicate_ack_event : public event {
+
+private:
+
+	/** Flow to which to register a duplicate ACK. */
+	netflow *flow;
+
+	/** The duplicate ACK. */
+	packet dup_pkt;
+
+public:
+
+	duplicate_ack_event();
+
+	/**
+	 * Initializes this event's time to the given one, sets the event ID,
+	 * and sets the flow to which this duplicate_ack_event belongs.
+	 */
+	duplicate_ack_event(double time, simulation &sim,
+			netflow &flow, packet &dup_pkt);
+
+	~duplicate_ack_event();
+
+	/**
+	 * Send an ACK packet then chains (queues another) duplicate_ack_event.
 	 */
 	void runEvent();
 

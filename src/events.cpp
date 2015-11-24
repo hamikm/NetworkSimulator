@@ -43,8 +43,41 @@ void receive_packet_event::runEvent() {
 		debug_os << "STARTING: " << *this << endl;
 	}
 
-	// TODO
-	// step_destination->receivePacket(getTime(), *sim, *flow, pkt);
+	/*
+	 * If this arrival event is at a router then forward the packet. The
+	 * router class takes care of that by consulting the routing
+	 * table for the link, then this function uses it to generate a
+	 * send_packet_event down that link.
+	 *
+	 * TODO This likely works for ACK, FLOW, as well as ROUTING packets, since
+	 * the receivePacket function just returns all the packets to send and
+	 * corresponding links to follow.
+	 */
+	if (step_destination->isRoutingNode()) {
+		netrouter *router = dynamic_cast<netrouter *>(step_destination);
+		map<netlink *, packet> link_pkt_map =
+				router->receivePacket(getTime(), *sim, *flow, pkt);
+
+		// Iterate over all the packets that must be sent, making a
+		// send packet event for each.
+		map<netlink *, packet>::iterator it = link_pkt_map.begin();
+		while (it != link_pkt_map.end()) {
+			send_packet_event e(getTime(), *sim, *flow, pkt, *(it->first),
+					*step_destination);
+			sim->addEvent(e);
+			it++;
+		}
+	}
+
+	/*
+	 * If the packet is arriving at a host then we create an ACK packet, make
+	 * and queue a duplicate_ack_event to send the first ACK, and queue a
+	 * future duplicate_ack_event in case the correct successor packet never
+	 * arrives. We also remove the flow's pending duplicate_ack_events.
+	 */
+	else {
+		flow->receivedFlowPacket(pkt, getTime());
+	}
 }
 
 void receive_packet_event::printHelper(ostream &os) const {
@@ -64,11 +97,10 @@ router_discovery_event::~router_discovery_event() { }
 
 void router_discovery_event::runEvent() {
 
-	// TODO
-
 	if(debug) {
 		debug_os << "STARTING: " << *this << endl;
 	}
+	// TODO
 }
 
 void router_discovery_event::printHelper(ostream &os) const {
@@ -215,9 +247,9 @@ void timeout_event::runEvent() {
 	// simulation's queue.
 	vector<packet>::iterator pkt_it = pkts_to_send.begin();
 	while(pkt_it != pkts_to_send.end()) {
-		nethost *starting_host = flow->getSource();
 		send_packet_event e(getTime(), *sim, *flow,
-				*pkt_it, *starting_host->getLink(), *starting_host);
+				*pkt_it, *(flow->getSource()->getLink()),
+				*(flow->getSource()));
 		sim->addEvent(e);
 		pkt_it++;
 	}
@@ -229,6 +261,41 @@ void timeout_event::runEvent() {
  */
 void timeout_event::printHelper(ostream &os) const {
 	event::printHelper(os);
-	os << " --> [timeout_event. flow: " << endl
-			<< "  " << *flow << endl << "]";
+	os << " --> [timeout_event. timedout_pkt: " << timedout_pkt <<
+			", flow: " << endl << "  " << *flow << endl << "]";
+}
+
+// ------------------------- duplicate_ack_event class ------------------------
+
+duplicate_ack_event::duplicate_ack_event() :
+		event(), flow(NULL), dup_pkt(packet()) { }
+
+duplicate_ack_event::duplicate_ack_event(double time, simulation &sim,
+		netflow &flow, packet &dup_pkt) :
+				event(time, sim), flow(&flow), dup_pkt(dup_pkt) { }
+
+duplicate_ack_event::~duplicate_ack_event() { }
+
+void duplicate_ack_event::runEvent() {
+
+	if(debug) {
+		debug_os << "STARTING: " << *this << endl;
+	}
+
+	// Make and queue the ACK's send_packet_event.
+	send_packet_event e(getTime(), *sim, *flow, dup_pkt,
+			*(flow->getDestination()->getLink()), *(flow->getDestination()));
+	sim->addEvent(e);
+
+	// N.B. we wait the same amount of time to send a duplicate ACK as we do
+	// a timeout_event, since the destination can just perform the same
+	// computations as the source.
+	flow->registerSendDuplicateAckAction(dup_pkt.getSeq(),
+			getTime() + flow->getTimeoutLengthMs());
+}
+
+void duplicate_ack_event::printHelper(ostream &os) const {
+	event::printHelper(os);
+	os << " --> [duplicate_ack_event. timedout_pkt: " << dup_pkt <<
+			", flow: " << endl << "  " << *flow << endl << "]";
 }

@@ -31,6 +31,7 @@ class start_flow_event;
 class send_packet_event;
 class receive_packet_event;
 class timeout_event;
+class duplicate_ack_event;
 class simulation;
 class eventTimeSorter;
 
@@ -108,13 +109,8 @@ public:
 
 	const vector<netlink *> &getLinks() const;
 
-	// TODO reconsider necessity of receive packet, send packet functions here
-
-	/** Receive packet method that is overridden by hosts and routers.
-	 * Packet type-checking is performed by the host or router. */
-	//virtual void receivePacket(double time, simulation &sim,
-	//	netflow &flow, packet &pkt) = 0;
-
+	/** @return true if this node is capable of routing packets. */
+	virtual bool isRoutingNode() const;
 
 	/**
 	 * Print helper function. Partially overrides superclass's.
@@ -137,6 +133,8 @@ public:
 	nethost (string name);
 
 	nethost (string name, netlink &link);
+
+	bool isRoutingNode() const;
 
 	/**
 	 * Gets the first (and only, since this is a host) link.
@@ -175,9 +173,23 @@ public:
 
 	netrouter (string name, vector<netlink *> links);
 
-	void receivePacket(double time, simulation &sim, netflow &flow, packet &pkt);
+	virtual bool isRoutingNode() const;
 
-	void forwardPacket(double time, simulation &sim, netflow &flow, packet &pkt);
+	/**
+	 * If this is an ACK or FLOW packet this function forwards it along the
+	 * best link for it to get to its destination as determined by the routing
+	 * table; if it's a ROUTING packet then... TODO
+	 *
+	 * Note that it's the caller's responsibility to generate the actual
+	 * send_packet_events based on the returned map.
+	 * @param time of packet receipt
+	 * @param sim
+	 * @param flow parent flow, NULL if ROUTING type
+	 * @param pkt the arriving packet
+	 * @return a map from the links to use for the corresponding packets
+	 */
+	map<netlink *, packet> receivePacket(double time, simulation &sim,
+			netflow &flow, packet &pkt);
 
 	/**
 	 * Print helper function which partially overrides the one in @c netdevice.
@@ -207,11 +219,14 @@ private:
 	/** Pointer to the other end of this link. */
 	nethost *destination;
 
-	/** Highest received ACK sequence number. */
-	int highest_ack_seqnum;
+	/** Highest received ACK sequence number (at source). */
+	int highest_received_ack_seqnum;
 
-	/** Highest sent FLOW packet sequence number */
-	int highest_sent_seqnum;
+	/** Highest sent FLOW packet sequence number (at source). */
+	int highest_sent_flow_seqnum;
+
+	/** Highest received FLOW sequence number (at destination). */
+	int highest_received_flow_seqnum;
 
 	/** The TCP protocol's window size. */
 	double window_size;
@@ -264,15 +279,15 @@ private:
 	map<int, timeout_event> future_timeouts_events;
 
 	/**
-	 * Every time a send_ack_event is pushed onto the global events queue we
-	 * also push another send_ack_event (for a later time) onto the events
-	 * queue. The second event is for duplicate acks. If a future
-	 * receive_packet_event runs before the duplicate send_ack_event for
-	 * the previous packet, the duplicate send_ack_event must be looked
-	 * up in this map then deleted from the global events queue (by time and id
-	 * number).
+	 * Every time an ACK send_packet_event is pushed onto the global events
+	 * queue we also push a duplicate_ack_event onto the events
+	 * queue. When the duplicate_ack_event runs it chains (queues) another
+	 * duplicate_ack_event onto this map and onto the gloval events queue.
+	 * If the correct FLOW packet is received in the future then pending
+	 * duplicate_ack_events are deleted from this map and from the global
+	 * events queue.
 	 */
-	map<int, send_packet_event> future_send_ack_events;
+	map<int, duplicate_ack_event> future_send_ack_events;
 
 	/**
 	 * Map from sequence numbers to round-trip times of those packets. If a
@@ -288,15 +303,6 @@ private:
 	void constructorHelper (double start_time, double size_mb,
 			nethost &source, nethost &destination, int num_total_packets,
 			double window_size, double timeout_length_ms, simulation &sim);
-
-	/**
-	 * Invoke after an ACK is received or another timeout is processed and a
-	 * new one generated.
-	 * @param seq sequence number corresponding to the packet that would have
-	 * been retransmitted after a timeout
-	 * @return the timeout event that was cancelled
-	 */
-	timeout_event cancelTimeoutAction(int seq);
 
 public:
 
@@ -383,7 +389,7 @@ public:
 
 	const map<int, timeout_event>& getFutureTimeoutsEvents() const;
 
-	const map<int, send_packet_event>& getFutureSendAckEvents() const;
+	const map<int, duplicate_ack_event>& getFutureSendAckEvents() const;
 
 	/**
 	 * Print helper function which partially overrides the one in @c netdevice.
@@ -398,6 +404,52 @@ public:
 	void setDestination(nethost &destination);
 
 	void setLastACKNum(int new_seqnum);
+
+	/**
+	 * Cancels the timeout action corresponding the given sequence number
+	 * by removing it from the local map and from the simulation's evnet
+	 * queue. Invoke after an ACK is received or after another timeout is
+	 * processed and a new one generated.
+	 * @param seq sequence number corresponding to the packet that would have
+	 * been retransmitted after a timeout
+	 * @return the timeout event that was cancelled
+	 * @post timeout_event erased from local map and from the global events
+	 * queue.
+	 */
+	timeout_event cancelTimeoutAction(int seq);
+
+	/**
+	 * Makes a timeout_event and puts it in the local map and on the
+	 * simulation's event queue.
+	 * @param seq the timeout_event will contain a FLOW packet with this
+	 * sequence number
+	 * @time time at which the timeout event should run
+	 * @post timeout_event added to the local map and to the global events
+	 * queue
+	 */
+	void registerTimeoutAction(int seq, double time);
+
+	/**
+	 * Cancels a future duplicate_ack_event. Invoke after an in-order FLOW
+	 * packet is received, nullifying the pending duplicate_ack_event.
+	 * @param seq sequence number corresponding to the pending
+	 * duplicate_ack_event
+	 * @return the duplicate_ack_event that was cancelled
+	 * @post duplicate_ack_event erased from the local map and from the global
+	 * events queue.
+	 */
+	duplicate_ack_event cancelSendDuplicateAckAction(int seq);
+
+	/**
+	 * Makes a duplicate_ack_event and puts it in the local map and on the
+	 * simulation's event queue.
+	 * @param seq the duplicate_ack_event will contain an ACK packet with this
+	 * sequence number
+	 * @time time at which the duplicate_ack_event should run
+	 * @post duplicate_ack_event added to the local map and to the global
+	 * events queue.
+	 */
+	void registerSendDuplicateAckAction(int seq, double time);
 
 	/**
 	 * Gets all the packets in this window that must be sent. This function
@@ -415,7 +467,7 @@ public:
 	 * and puts them on the simulation's event queue too.
 	 * @param start_time_ms time in millisaeconds at which the packets are put
 	 * on the initial link buffer
-	 * @return all the outstanding packets in the window
+	 * @return all the outstanding FLOW packets in the window
 	 * @post timeout events have been added locally and pushed onto simulation
 	 * event queue
 	 */
@@ -425,7 +477,8 @@ public:
 	// ACK 4 might get routed a fast way.
 
 	/**
-	 * When an ACK is received this function must be called so the window will
+	 * When an ACK is received (it's assumed that the packet is arriving
+	 * at this flow's source) this function must be called so the window will
 	 * slide and resize, so duplicate ACKs will register, so the timeout
 	 * length will adjust, and so the corresonding timeout event will be
 	 * removed from this flow and simulation.
@@ -436,6 +489,19 @@ public:
 	 * packets to send after this function is called.
 	 */
 	void receivedAck(packet &pkt, double end_time_ms);
+
+	/**
+	 * When a FLOW packet is received (it's assumed that the packet is
+	 * arriving at this flow's destination) this function should be called
+	 * to make and queue an immediate duplicate_ack_event. When the
+	 * duplicate_ack_event runs it will send an ACK packet immediately and
+	 * will also chain (queue) a future duplicate_ack_event in case the next
+	 * FLOW packet never comes. This function also removes the previous
+	 * packet's corresponding duplicate_ack_event from the local map.
+	 * @param pkt arriving FLOW packet
+	 * @param arrival_time
+	 */
+	void receivedFlowPacket(packet &pkt, double arrival_time);
 
 	/**
 	 * This function should be called after a timeout so the window size can
@@ -678,6 +744,15 @@ public:
 	 * @warning assertion is triggered if the packet type is not ACK or FLOW.
 	 */
 	packet(packet_type type, netflow &parent_flow, int seqnum);
+
+	/**
+	 * Some functions are forced to return a packet value, so the default
+	 * packet constructor makes packets with ids of 0, and they're considered
+	 * null in calling functions. This function just checks if a given packet
+	 * is a "fake" packet.
+	 * @return
+	 */
+	bool isNullPacket() const;
 
 	string getSource() const;
 
