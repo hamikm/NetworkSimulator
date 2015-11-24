@@ -37,7 +37,7 @@ const vector<netlink *> &netnode::getLinks() const { return links; }
 
 void netnode::printHelper(ostream &os) const {
 	netelement::printHelper(os);
-	os << " ---> [node. links: { ";
+	os << " <-- [node. links: { ";
 	for (unsigned int i = 0;
 			i < (links.size() == 0 ? 0 : links.size() - 1); i++) {
 		os << links[i]->getName() << ", ";
@@ -71,7 +71,7 @@ void nethost::setLink(netlink &link) {
 
 void nethost::printHelper(ostream &os) const {
 	netnode::printHelper(os);
-	os << " ---> [host. link: "
+	os << " <-- [host. link: "
 			<< (getLink() == NULL ? "NULL" : getLink()->getName()) << "]";
 }
 
@@ -104,15 +104,15 @@ map<netlink *, packet> netrouter::receivePacket(double time, simulation &sim,
 void netrouter::printHelper(ostream &os) const {
 	netnode::printHelper(os);
 	bool first = true;
-	os << " ---> [router. routing table: [ ";
+	os << " <-- [router. routing table: [ ";
 	map<string, netlink *>::const_iterator itr;
 	for (itr = rtable.begin(); itr != rtable.end(); itr++) {
 		if (first) {
-			os << itr->first << "-->" << itr->second;
+			os << itr->first << "<--" << itr->second;
 			first = false;
 			continue;
 		}
-		os << ", " << itr->first << "-->" << itr->second;
+		os << ", " << itr->first << "<--" << itr->second;
 	}
 	os << " ]";
 }
@@ -236,6 +236,10 @@ void netflow::registerTimeoutAction(int seq, double time) {
 }
 
 duplicate_ack_event *netflow::cancelSendDuplicateAckAction(int seq) {
+
+	if(future_send_ack_events.find(seq) == future_send_ack_events.end())
+		return NULL;
+
 	duplicate_ack_event *e = future_send_ack_events.at(seq);
 	future_send_ack_events.erase(seq);
 	sim->removeEvent(e); // this frees the memory
@@ -418,7 +422,9 @@ void netflow::receivedFlowPacket(packet &pkt, double arrival_time) {
 
 	// Remove the previous packet's corresponding duplicate ACK
 	// send_packet_event from the local map and global events queue
-	cancelSendDuplicateAckAction(ackpack.getSeq() - 1);
+	if (cancelSendDuplicateAckAction(ackpack.getSeq() - 1) == NULL && debug) {
+		debug_os << "No pending duplicate_ack_event to delete." << endl;
+	}
 }
 
 double netflow::getTimeoutLengthMs() const { return timeout_length_ms; }
@@ -432,7 +438,7 @@ void netflow::timeoutOccurred(const packet &to_pkt) {
 
 void netflow::printHelper(ostream &os) const {
 	netelement::printHelper(os);
-	os << " ---> [flow. start time(sec): " <<
+	os << " <-- [flow. start time(sec): " <<
 			start_time_sec << ", size(mb): " << size_mb
 			<< ", source: "
 			<< (source == NULL ? "NULL" : source->getName())
@@ -525,7 +531,7 @@ bool netlink::receivedPacket(long pkt_id) {
 
 void netlink::printHelper(ostream &os) const {
 	netelement::printHelper(os);
-	os << " ---> [link. rate(mbps): " << getRateMbps() << ", delay: "
+	os << " <-- [link. rate(mbps): " << getRateMbps() << ", delay: "
 			<< delay_ms << ", buffer length(kB): " << getBuflenKB()
 			<< ", endpoint 1: "
 			<< (endpoint1 == NULL ? "NULL" : endpoint1->getName())
@@ -623,7 +629,7 @@ void packet::printHelper(ostream &os) const {
 		break;
 	}
 
-	os << " ---> [packet. src: " << source_ip << ", dst: " << dest_ip
+	os << " <-- [packet. src: " << source_ip << ", dst: " << dest_ip
 			<< ", type: " << typestr << ", seq_num: " << seqnum
 			<< ", size(bytes): " << getSizeBytes() << "]";
 }

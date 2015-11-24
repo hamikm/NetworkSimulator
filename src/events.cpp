@@ -25,7 +25,7 @@ double event::getTime() const { return time; }
 long event::getId() const { return id; }
 
 void event::printHelper(ostream &os) const {
-	os << "[event. id: " << id << ", time: " << time << "]";
+	os << "event. id: " << id << ", time: " << time << " ";
 }
 
 // ------------------------- receive_packet_event class -----------------------
@@ -71,21 +71,35 @@ void receive_packet_event::runEvent() {
 	}
 
 	/*
-	 * If the packet is arriving at a host then we create an ACK packet, make
-	 * and queue a duplicate_ack_event to send the first ACK, and queue a
+	 * If we have a FLOW packet arriving at a host then we create an ACK packet,
+	 * make and queue a duplicate_ack_event to send the first ACK, and queue a
 	 * future duplicate_ack_event in case the correct successor packet never
 	 * arrives. We also remove the flow's pending duplicate_ack_events.
 	 */
-	else {
+	else if (pkt.getType() == FLOW) {
 		flow->receivedFlowPacket(pkt, getTime());
+	}
+	/*
+	 * If we're an ACK packet arriving at a source then we need to trigger the
+	 * ACK-handling behavior in the flow class.
+	 */
+	else if (pkt.getType() == ACK) {
+		flow->receivedAck(pkt, getTime());
+	}
+	else if (pkt.getType() == ROUTING) {
+		// should have been handled by the "am at a router" condition
+		assert(false);
+	}
+	else {
+		assert(false);
 	}
 }
 
 void receive_packet_event::printHelper(ostream &os) const {
 	event::printHelper(os);
-	os << " --> [receive_packet_event." << endl <<
+	os << "<-- receive_packet_event. {" << endl <<
 			"  flow: " << *flow << endl <<
-			"  packet: " << pkt << endl << "]";
+			"  packet: " << pkt << endl << "}";
 }
 
 // ------------------------- router_discovery_event class ---------------------
@@ -106,8 +120,8 @@ void router_discovery_event::runEvent() {
 
 void router_discovery_event::printHelper(ostream &os) const {
 	event::printHelper(os);
-	os << " --> [router_discovery_event." << endl <<
-			"  router: " << *router << endl << "]";
+	os << "<-- router_discovery_event. {" << endl <<
+			"  router: " << *router << endl << "}";
 }
 
 // -------------------------- send_packet_event class -------------------------
@@ -176,9 +190,9 @@ void send_packet_event::runEvent() {
 
 void send_packet_event::printHelper(ostream &os) const {
 	event::printHelper(os);
-	os << " --> [send_packet_event." << endl <<
+	os << "<-- send_packet_event. {" << endl <<
 			"  flow: " << *flow << endl <<
-			"  packet: " << pkt << endl << "]";
+			"  packet: " << pkt << endl << "}";
 }
 
 // --------------------------- start_flow_event class -------------------------
@@ -213,8 +227,8 @@ void start_flow_event::runEvent() {
 
 void start_flow_event::printHelper(ostream &os) const {
 	event::printHelper(os);
-	os << " --> [start_flow_event." << endl <<
-			"  flow: " << *flow << endl << "]";
+	os << "<-- start_flow_event {" << endl <<
+			"  flow: " << *flow << endl << "}";
 }
 
 // ----------------------------- timeout_event class --------------------------
@@ -262,9 +276,9 @@ void timeout_event::runEvent() {
  */
 void timeout_event::printHelper(ostream &os) const {
 	event::printHelper(os);
-	os << " --> [timeout_event." << endl <<
+	os << "<-- timeout_event. {" << endl <<
 			"  timedout_pkt: " << timedout_pkt << endl <<
-			"  flow: " << *flow << endl << "]";
+			"  flow: " << *flow << endl << "}";
 }
 
 // ------------------------- duplicate_ack_event class ------------------------
@@ -299,6 +313,7 @@ void duplicate_ack_event::runEvent() {
 
 void duplicate_ack_event::printHelper(ostream &os) const {
 	event::printHelper(os);
-	os << " --> [duplicate_ack_event. timedout_pkt: " << dup_pkt <<
-			", flow: " << endl << "  " << *flow << endl << "]";
+	os << "<-- duplicate_ack_event. {" << endl <<
+			"  timedout_pkt: " << dup_pkt << endl <<
+			"  flow: " << *flow << endl << "}";
 }
