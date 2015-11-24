@@ -199,10 +199,15 @@ public:
 // --------------------------- send_packet_event class ------------------------
 
 /**
+<<<<<<< HEAD
  * Sends a packet from a given departure node and down a given link whether
  * it's an ACK, FLOW, or ROUTING packet. Assumes that timeout_events
  * and other flow attributes like highest_sent_seqnum have been dealt with
  * before this event runs.
+=======
+ * Send a packet from a given departure node and down a given link whether
+ * it's an ACK, FLOW, or ROUTING packet.
+>>>>>>> branch 'hm' of https://github.com/hamikm/cit_cs143_network_sim.git
  */
 class send_packet_event : public event {
 
