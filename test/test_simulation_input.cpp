@@ -117,9 +117,9 @@ TEST_F(simulationInputTest, JsonFileInput) {
 		string endpt1name = thislink["endpt_1"].GetString();
 		string endpt2name = thislink["endpt_2"].GetString();
 
-		netelement *endpoint1;
+		netnode *endpoint1;
 		bool endpt1IsHost = false;
-		netelement *endpoint2;
+		netnode *endpoint2;
 		bool endpt2IsHost = false;
 
 		// if this endpoint is a host

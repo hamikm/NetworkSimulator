@@ -39,12 +39,12 @@ receive_packet_event::~receive_packet_event() { }
 
 void receive_packet_event::runEvent() {
 
-	// TODO
-	// step_destination->receivePacket(getTime(), *sim, *flow, pkt);
-
 	if(debug) {
 		debug_os << "STARTING: " << *this << endl;
 	}
+
+	// TODO
+	// step_destination->receivePacket(getTime(), *sim, *flow, pkt);
 }
 
 void receive_packet_event::printHelper(ostream &os) const {
@@ -79,13 +79,40 @@ void router_discovery_event::printHelper(ostream &os) const {
 
 // -------------------------- send_packet_event class -------------------------
 
-send_packet_event::send_packet_event() : event(), flow(NULL), link(NULL) { }
+send_packet_event::send_packet_event() :
+		event(), flow(NULL), link(NULL), departure_node(NULL) { }
 
 send_packet_event::send_packet_event(double time, simulation &sim,
-		netflow &flow, packet &pkt, netlink &link) :
-	event(time, sim), flow(&flow), pkt(pkt), link(&link) { }
+		netflow &flow, packet &pkt, netlink &link, netnode &departure_node) :
+				event(time, sim), flow(&flow), pkt(pkt), link(&link),
+				departure_node(&departure_node) {
+
+	// Make sure the given departure node matches one of the endpoints of the
+	// given link.
+	assert((strcmp(this->departure_node->getName().c_str(),
+				   this->link->getEndpoint1()->getName().c_str()) == 0) ||
+		   (strcmp(this->departure_node->getName().c_str(),
+				   this->link->getEndpoint2()->getName().c_str()) == 0));
+}
 
 send_packet_event::~send_packet_event() { }
+
+netnode *send_packet_event::getDestinationNode() const {
+
+	if (strcmp(departure_node->getName().c_str(),
+			link->getEndpoint1()->getName().c_str()) == 0) {
+		return link->getEndpoint2();
+	}
+	else if (strcmp(departure_node->getName().c_str(),
+			link->getEndpoint2()->getName().c_str()) == 0) {
+		return link->getEndpoint1();
+	}
+	else {
+		assert(false);
+	}
+
+	return NULL;
+}
 
 void send_packet_event::runEvent() {
 
@@ -93,6 +120,24 @@ void send_packet_event::runEvent() {
 		debug_os << "STARTING: " << *this << endl;
 	}
 
+	// Find (absolute) arrival time to the next node from the given departure
+	// node down the given link.
+	double arrival_time = link->getWaitTimeIntervalMs() + getTime();
+
+	// Use the arrival time to queue a receive_packet_event (does nothing if
+	// the link buffer has no room, thereby dropping the packet).
+	if (link->sendPacket(pkt)) {
+		receive_packet_event e(arrival_time, *sim, *flow, pkt,
+				*getDestinationNode());
+		sim->addEvent(e);
+	}
+	else { // packet was dropped
+
+		if (debug) {
+			debug_os << "This packet was DROPPED: " << pkt << endl;
+		}
+		// do nothing, don't make or queue a receive_packet_event
+	}
 
 }
 
@@ -127,7 +172,7 @@ void start_flow_event::runEvent() {
 	while(pkt_it != pkts_to_send.end()) {
 		nethost *starting_host = flow->getSource();
 		send_packet_event e(getTime(), *sim, *flow,
-				*pkt_it, *starting_host->getLink());
+				*pkt_it, *starting_host->getLink(), *starting_host);
 		sim->addEvent(e);
 		pkt_it++;
 	}
@@ -172,7 +217,7 @@ void timeout_event::runEvent() {
 	while(pkt_it != pkts_to_send.end()) {
 		nethost *starting_host = flow->getSource();
 		send_packet_event e(getTime(), *sim, *flow,
-				*pkt_it, *starting_host->getLink());
+				*pkt_it, *starting_host->getLink(), *starting_host);
 		sim->addEvent(e);
 		pkt_it++;
 	}
