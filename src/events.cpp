@@ -18,11 +18,11 @@ event::event(double time, simulation &sim) :
 
 event::~event() {}
 
+void event::runEvent() { }
+
 double event::getTime() const { return time; }
 
 long event::getId() const { return id; }
-
-void event::runEvent() {}
 
 void event::printHelper(ostream &os) const {
 	os << "[event. id: " << id << ", time: " << time << "]";
@@ -62,7 +62,8 @@ void receive_packet_event::runEvent() {
 		// send packet event for each.
 		map<netlink *, packet>::iterator it = link_pkt_map.begin();
 		while (it != link_pkt_map.end()) {
-			send_packet_event e(getTime(), *sim, *flow, pkt, *(it->first),
+			send_packet_event *e = new send_packet_event(
+					getTime(), *sim, *flow, pkt, *(it->first),
 					*step_destination);
 			sim->addEvent(e);
 			it++;
@@ -82,9 +83,9 @@ void receive_packet_event::runEvent() {
 
 void receive_packet_event::printHelper(ostream &os) const {
 	event::printHelper(os);
-	os << " --> [receive_packet_event. flow: " << endl
-			<< "  " << *flow << endl << ", packet: " << endl
-			<< "  " << pkt << endl << "]";
+	os << " --> [receive_packet_event." << endl <<
+			"  flow: " << *flow << endl <<
+			"  packet: " << pkt << endl << "]";
 }
 
 // ------------------------- router_discovery_event class ---------------------
@@ -105,8 +106,8 @@ void router_discovery_event::runEvent() {
 
 void router_discovery_event::printHelper(ostream &os) const {
 	event::printHelper(os);
-	os << " --> [router_discovery_event. router: " << endl
-			<< "  " << *router << endl << "]";
+	os << " --> [router_discovery_event." << endl <<
+			"  router: " << *router << endl << "]";
 }
 
 // -------------------------- send_packet_event class -------------------------
@@ -159,8 +160,8 @@ void send_packet_event::runEvent() {
 	// Use the arrival time to queue a receive_packet_event (does nothing if
 	// the link buffer has no room, thereby dropping the packet).
 	if (link->sendPacket(pkt)) {
-		receive_packet_event e(arrival_time, *sim, *flow, pkt,
-				*getDestinationNode());
+		receive_packet_event *e = new receive_packet_event(arrival_time, *sim,
+				*flow, pkt, *getDestinationNode());
 		sim->addEvent(e);
 	}
 	else { // packet was dropped
@@ -175,9 +176,9 @@ void send_packet_event::runEvent() {
 
 void send_packet_event::printHelper(ostream &os) const {
 	event::printHelper(os);
-	os << " --> [send_packet_event. flow: " << endl
-			<< "  " << *flow << endl << ", packet: " << endl
-			<< "  " << pkt << endl << "]";
+	os << " --> [send_packet_event." << endl <<
+			"  flow: " << *flow << endl <<
+			"  packet: " << pkt << endl << "]";
 }
 
 // --------------------------- start_flow_event class -------------------------
@@ -202,9 +203,9 @@ void start_flow_event::runEvent() {
 	// simulation's queue.
 	vector<packet>::iterator pkt_it = pkts_to_send.begin();
 	while(pkt_it != pkts_to_send.end()) {
-		nethost *starting_host = flow->getSource();
-		send_packet_event e(getTime(), *sim, *flow,
-				*pkt_it, *starting_host->getLink(), *starting_host);
+		send_packet_event *e = new send_packet_event(getTime(), *sim, *flow,
+				*pkt_it, *(flow->getSource()->getLink()),
+				*(flow->getSource()));
 		sim->addEvent(e);
 		pkt_it++;
 	}
@@ -212,8 +213,8 @@ void start_flow_event::runEvent() {
 
 void start_flow_event::printHelper(ostream &os) const {
 	event::printHelper(os);
-	os << " --> [start_flow_event. flow: " << endl
-			<< "  " << *flow << endl << "]";
+	os << " --> [start_flow_event." << endl <<
+			"  flow: " << *flow << endl << "]";
 }
 
 // ----------------------------- timeout_event class --------------------------
@@ -247,7 +248,7 @@ void timeout_event::runEvent() {
 	// simulation's queue.
 	vector<packet>::iterator pkt_it = pkts_to_send.begin();
 	while(pkt_it != pkts_to_send.end()) {
-		send_packet_event e(getTime(), *sim, *flow,
+		send_packet_event *e = new send_packet_event(getTime(), *sim, *flow,
 				*pkt_it, *(flow->getSource()->getLink()),
 				*(flow->getSource()));
 		sim->addEvent(e);
@@ -261,8 +262,9 @@ void timeout_event::runEvent() {
  */
 void timeout_event::printHelper(ostream &os) const {
 	event::printHelper(os);
-	os << " --> [timeout_event. timedout_pkt: " << timedout_pkt <<
-			", flow: " << endl << "  " << *flow << endl << "]";
+	os << " --> [timeout_event." << endl <<
+			"  timedout_pkt: " << timedout_pkt << endl <<
+			"  flow: " << *flow << endl << "]";
 }
 
 // ------------------------- duplicate_ack_event class ------------------------
@@ -283,8 +285,9 @@ void duplicate_ack_event::runEvent() {
 	}
 
 	// Make and queue the ACK's send_packet_event.
-	send_packet_event e(getTime(), *sim, *flow, dup_pkt,
-			*(flow->getDestination()->getLink()), *(flow->getDestination()));
+	send_packet_event *e = new send_packet_event(getTime(), *sim, *flow,
+			dup_pkt, *(flow->getDestination()->getLink()),
+			*(flow->getDestination()));
 	sim->addEvent(e);
 
 	// N.B. we wait the same amount of time to send a duplicate ACK as we do

@@ -213,38 +213,38 @@ double netflow::getLinGrowthWinsizeThreshold() const {
 	return lin_growth_winsize_threshold;
 }
 
-const map<int, timeout_event>& netflow::getFutureTimeoutsEvents() const {
+const map<int, timeout_event *>& netflow::getFutureTimeoutsEvents() const {
 	return future_timeouts_events;
 }
 
-const map<int, duplicate_ack_event>& netflow::getFutureSendAckEvents() const {
+const map<int, duplicate_ack_event *>& netflow::getFutureSendAckEvents() const {
 	return future_send_ack_events;
 }
 
-timeout_event netflow::cancelTimeoutAction(int seq) {
-	timeout_event t = future_timeouts_events[seq];
+timeout_event *netflow::cancelTimeoutAction(int seq) {
+	timeout_event *t = future_timeouts_events[seq];
 	future_timeouts_events.erase(seq);
-	sim->removeEvent(t);
+	sim->removeEvent(t); // this frees the memory
 	return t;
 }
 
 void netflow::registerTimeoutAction(int seq, double time) {
 	packet p = packet(FLOW, *this, seq);
-	timeout_event e(time, *sim, *this, p);
+	timeout_event *e = new timeout_event(time, *sim, *this, p);
 	sim->addEvent(e);
 	future_timeouts_events[seq] = e;
 }
 
-duplicate_ack_event netflow::cancelSendDuplicateAckAction(int seq) {
-	duplicate_ack_event e = future_send_ack_events.at(seq);
+duplicate_ack_event *netflow::cancelSendDuplicateAckAction(int seq) {
+	duplicate_ack_event *e = future_send_ack_events.at(seq);
 	future_send_ack_events.erase(seq);
-	sim->removeEvent(e);
+	sim->removeEvent(e); // this frees the memory
 	return e;
 }
 
 void netflow::registerSendDuplicateAckAction(int seq, double time) {
 	packet p = packet(ACK, *this, seq);
-	duplicate_ack_event e = duplicate_ack_event(time, *sim, *this, p);
+	duplicate_ack_event *e = new duplicate_ack_event(time, *sim, *this, p);
 	future_send_ack_events[seq] = e;
 	sim->addEvent(e);
 }
@@ -384,7 +384,7 @@ void netflow::receivedAck(packet &pkt, double end_time_ms) {
 
 		// Remove event from the flow's map of future timeout events
 		// and from the simulation's event queue
-		timeout_event to = cancelTimeoutAction(pkt.getSeq() - 1);
+		cancelTimeoutAction(pkt.getSeq() - 1);
 	}
 
 	// If the ACK number is more than 1 more than the highest ACK number seen
@@ -606,7 +606,24 @@ long packet::getSizeBytes() const { return size * BYTES_PER_MEGABIT; }
 
 void packet::printHelper(ostream &os) const {
 	netelement::printHelper(os);
-	os << " ---> [packet. src: " << source_ip << ", dst: " << dest_ip <<
-			", type: " << type << ", seq_num: " << seqnum << ", size: " <<
-			size << "]";
+
+	string typestr = "";
+	switch(type) {
+	case ACK:
+		typestr = "ACK";
+		break;
+	case FLOW:
+		typestr = "FLOW";
+		break;
+	case ROUTING:
+		typestr = "ROUTING";
+		break;
+	default:
+		typestr = "ERROR_TYPE";
+		break;
+	}
+
+	os << " ---> [packet. src: " << source_ip << ", dst: " << dest_ip
+			<< ", type: " << typestr << ", seq_num: " << seqnum
+			<< ", size(bytes): " << getSizeBytes() << "]";
 }

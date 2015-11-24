@@ -244,36 +244,44 @@ void simulation::runSimulation() {
 	for (map<string, netflow *>::iterator itr = flows.begin();
 			itr != flows.end(); itr++) {
 		netflow *flow = itr->second;
-		start_flow_event fevent(flow->getStartTimeSec(), *this, *flow);
+		start_flow_event *fevent = new
+				start_flow_event(flow->getStartTimeSec(), *this, *flow);
 		addEvent(fevent);
 	}
 
 	// Loop over the events in the events queue, running the one with the
 	// smallest start time.
 	while (!events.empty()) {
-		multimap<double, event>::iterator it = events.begin();
-		event curr_event = (*it).second;
+		multimap<double, event *>::iterator it = events.begin();
+		event *curr_event = (*it).second;
 		events.erase(it);
-		curr_event.runEvent();
+
+		if (debug) {
+			debug_os << endl << "In runSimulation loop. Current event ID: " <<
+					curr_event->getId() << endl;
+		}
+
+		curr_event->runEvent();
 	}
 }
 
-void simulation::addEvent(event &e) {
-	events.insert( pair<double, event> (e.getTime(), e) );
+void simulation::addEvent(event *e) {
+	events.insert( pair<double, event *> (e->getTime(), e) );
 }
 
-void simulation::removeEvent(event &e) {
+void simulation::removeEvent(event *e) {
 		
 	// Find the first occurrence of the input time. Since map is sorted
 	// by time, all simultaneous events (if any) will be lumped together
-	multimap<double, event>::iterator it = events.find(e.getTime());
+	multimap<double, event *>::iterator it = events.find(e->getTime());
 
-	while ((*it).first == e.getTime()) {
+	while ((*it).first == e->getTime()) {
 
 		// Check that the event we are removing has the same id as the
 		// input.
-		if ((*it).second.getId() == e.getId()) {
+		if ((*it).second->getId() == e->getId()) {
 			events.erase(it);
+			delete e;
 		}
 		it++;
 	}

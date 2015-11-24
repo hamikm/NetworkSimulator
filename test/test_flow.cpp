@@ -87,12 +87,12 @@ TEST_F(flowTest, popOutstandingPacketsTest) {
 
 	vector<packet> pkts;
 	pkts = flow.popOutstandingPackets(1000);
-	map<int, timeout_event> tevents = flow.getFutureTimeoutsEvents();
+	map<int, timeout_event *> tevents = flow.getFutureTimeoutsEvents();
 
 	ASSERT_EQ(1, pkts.size());
 	ASSERT_EQ(1, tevents.size());
 	ASSERT_FLOAT_EQ(
-			2000, tevents[1].getTime()); // flow starts @1, timeout starts @ 1
+			2000, tevents[1]->getTime()); // flow starts @1, timeout starts @ 1
 	ASSERT_EQ(1, flow.getHighestSentSeqnum()); // highest sent num changed
 	ASSERT_FLOAT_EQ(-1000, flow.getRoundTripTimes().at(1)); // sent time logged
 }
@@ -158,7 +158,7 @@ TEST_F(flowTest, receiveAckWindowResizingAndShiftingTest) {
 	 */
 
 	vector<packet> pkts2 = flow.popOutstandingPackets(1000 + rtt_pkt);
-	map<int, timeout_event> tevents = flow.getFutureTimeoutsEvents();
+	map<int, timeout_event *> tevents = flow.getFutureTimeoutsEvents();
 	ASSERT_EQ(2, pkts2.size());
 	ASSERT_EQ(2, tevents.size()); // first was erased by now, so 2 instead of 3
 
@@ -166,10 +166,10 @@ TEST_F(flowTest, receiveAckWindowResizingAndShiftingTest) {
 	// the first round of packet sends is avg + 4 * std = 5 * RTT
 	ASSERT_FLOAT_EQ(rtt_pkt + 4 * rtt_pkt, flow.getTimeoutLengthMs());
 	ASSERT_FLOAT_EQ((1000 + rtt_pkt) + (rtt_pkt + 4 * rtt_pkt),
-			tevents[2].getTime());
+			tevents[2]->getTime());
 	ASSERT_FLOAT_EQ((1000 + rtt_pkt) +
 			(rtt_pkt + 4 * rtt_pkt) + netflow::TIMEOUT_DELTA,
-			tevents[3].getTime());
+			tevents[3]->getTime());
 	ASSERT_EQ(3, flow.getHighestSentSeqnum()); // highest sent num changed
 
 	ASSERT_FLOAT_EQ(-(1000 + rtt_pkt), flow.getRoundTripTimes().at(2));

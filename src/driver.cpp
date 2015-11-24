@@ -60,25 +60,22 @@ ostream &debug_os = cout;
  * Reads a JSON file from disk, populates in-memory collections of hosts,
  * routers, links, and flows, starts a simulation, then logs data.
  *
- * TODO describe how we log data to disk. Multiple files? To stdout intending
+ * TODO describe how we log data to disk. Multiple files? To cout intending
  * that it will get redirected to a single file?
  */
 int main (int argc, char **argv) {
 
 	char *infile = process_console_args(argc, argv);
 
-	// TODO make data logger object (not in its own thread...)
+	// TODO make data logger object here (not in its own thread...) and pass it
+	// into the simulation constructor.
 
 	// Load hosts, routers, links, and flows from the JSON input file.
-	// TODO pass in the data logger object. Make sure the data logger
-	// appends data to the file on disk each time the logger function is
-	// called at the end of a runEvent invocation on an event
 	simulation sim(infile);
 
 	// Invoke the simulation loop, which should terminate when all events
 	// have been processed.
 	sim.runSimulation();
-
 
 	return 0;
 }
@@ -88,6 +85,7 @@ int main (int argc, char **argv) {
 void print_usage_statement (char *progname) {
 	cerr << "Usage: " << progname << " <JSON input file> [-d]" << endl;
 	cerr << "  -d to print debugging statements to stdout." << endl;
+
 	// TODO update when we decide where to send output.
 }
 

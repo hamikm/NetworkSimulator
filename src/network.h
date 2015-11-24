@@ -276,7 +276,7 @@ private:
 	 * timeout_event from the global events queue by looking up the
 	 * timeout_event in this map then deleting by event id number and time.
 	 */
-	map<int, timeout_event> future_timeouts_events;
+	map<int, timeout_event *> future_timeouts_events;
 
 	/**
 	 * Every time an ACK send_packet_event is pushed onto the global events
@@ -287,7 +287,7 @@ private:
 	 * duplicate_ack_events are deleted from this map and from the global
 	 * events queue.
 	 */
-	map<int, duplicate_ack_event> future_send_ack_events;
+	map<int, duplicate_ack_event *> future_send_ack_events;
 
 	/**
 	 * Map from sequence numbers to round-trip times of those packets. If a
@@ -387,9 +387,9 @@ public:
 
 	double getLinGrowthWinsizeThreshold() const;
 
-	const map<int, timeout_event>& getFutureTimeoutsEvents() const;
+	const map<int, timeout_event *>& getFutureTimeoutsEvents() const;
 
-	const map<int, duplicate_ack_event>& getFutureSendAckEvents() const;
+	const map<int, duplicate_ack_event*>& getFutureSendAckEvents() const;
 
 	/**
 	 * Print helper function which partially overrides the one in @c netdevice.
@@ -416,7 +416,7 @@ public:
 	 * @post timeout_event erased from local map and from the global events
 	 * queue.
 	 */
-	timeout_event cancelTimeoutAction(int seq);
+	timeout_event *cancelTimeoutAction(int seq);
 
 	/**
 	 * Makes a timeout_event and puts it in the local map and on the
@@ -438,7 +438,7 @@ public:
 	 * @post duplicate_ack_event erased from the local map and from the global
 	 * events queue.
 	 */
-	duplicate_ack_event cancelSendDuplicateAckAction(int seq);
+	duplicate_ack_event *cancelSendDuplicateAckAction(int seq);
 
 	/**
 	 * Makes a duplicate_ack_event and puts it in the local map and on the

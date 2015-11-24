@@ -75,16 +75,13 @@ private:
 	/** All flows in network. */
 	map<string, netflow *> flows;
 
-	/** Event queue (implemented with a multimap which is sorted by key).
-	 * Keys represent time in milliseconds. */
-	multimap<double, event> events;
-
 	/**
-	 * Helper for the destructor.
-	 *
-	 * TODO make sure to update this function if other stuff is stuff is
-	 * dynamically allocated.
+	 * Event queue (implemented with a multimap which is sorted by key).
+	 * Keys represent time in milliseconds.
 	 */
+	multimap<double, event *> events;
+
+	/** Helper for the destructor. */
 	void free_network_devices ();
 
 public:
@@ -141,13 +138,13 @@ public:
 	 * generate by invoking this function.
 	 * @param e event to add to the simulation's @c events queue
 	 */
-	void addEvent(event &e);
+	void addEvent(event *e);
 
 	/**
 	 * Removes the given event from the simulation's event map.
 	 * @param e event to remove
 	 */
-	void removeEvent(event &e);
+	void removeEvent(event *e);
 };
 
 #endif // SIMULATION_H
