@@ -22,6 +22,8 @@ void netelement::printHelper(std::ostream &os) const {
 
 // ------------------------------- netnode class ------------------------------
 
+netnode::netnode () : netelement() {}
+
 netnode::netnode (string name) : netelement(name) { }
 
 netnode::netnode (string name, vector<netlink *> links) :
@@ -368,7 +370,7 @@ void netflow::printHelper(ostream &os) const {
 // ------------------------------- netlink class ------------------------------
 
 void netlink::constructor_helper(double rate_mbps, int delay_ms, int buflen_kb,
-		netelement *endpoint1, netelement *endpoint2) {
+		netnode *endpoint1, netnode *endpoint2) {
 	this->rate_bpms = rate_mbps * BYTES_PER_MEGABIT / MS_PER_SEC;
 	this->delay_ms = delay_ms;
 	this->buffer_capacity = buflen_kb * BYTES_PER_KB;
@@ -379,7 +381,7 @@ void netlink::constructor_helper(double rate_mbps, int delay_ms, int buflen_kb,
 }
 
 netlink::netlink(string name, double rate_mbps, int delay_ms, int buflen_kb,
-		netelement &endpoint1, netelement &endpoint2) : netelement(name) {
+		netnode &endpoint1, netnode &endpoint2) : netelement(name) {
 	constructor_helper(
 			rate_mbps, delay_ms, buflen_kb, &endpoint1, &endpoint2);
 }
@@ -395,17 +397,17 @@ long netlink::getBuflenKB() const { return buffer_capacity / BYTES_PER_KB; }
 
 int netlink::getDelay() const { return delay_ms; }
 
-netelement *netlink::getEndpoint1() const { return endpoint1; }
+netnode *netlink::getEndpoint1() const { return endpoint1; }
 
-void netlink::setEndpoint1(netelement &endpoint1) {
+void netlink::setEndpoint1(netnode &endpoint1) {
 	this->endpoint1 = &endpoint1;
 }
 
-netelement *netlink::getEndpoint2() const {
+netnode *netlink::getEndpoint2() const {
 	return endpoint2;
 }
 
-void netlink::setEndpoint2(netelement &endpoint2) {
+void netlink::setEndpoint2(netnode &endpoint2) {
 	this->endpoint2 = &endpoint2;
 }
 

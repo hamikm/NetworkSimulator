@@ -187,13 +187,14 @@ public:
 // --------------------------- send_packet_event class ------------------------
 
 /**
- * TODO
+ * Send a packet from a given departure node and down a given link whether
+ * it's an ACK, FLOW, or ROUTING packet.
  */
 class send_packet_event : public event {
 
 private:
 
-	/** Parent flow of this packet, null if ROUTING type. */
+	/** Parent flow of this packet, null if packet has ROUTING type. */
 	netflow *flow;
 
 	/** The packet being sent. */
@@ -201,6 +202,12 @@ private:
 
 	/** The link being used in this leg of the packet's journey. */
 	netlink *link;
+
+	/** Node from which the packet is going to leave. */
+	netnode *departure_node;
+
+	/** @return node at which this packet arrives. */
+	netnode *getDestinationNode() const;
 
 public:
 
@@ -210,13 +217,17 @@ public:
 	 * Initializes this event's time to the given one, sets the event ID,
 	 * sets the flow from which this packet originates, and sets the packet.
 	 */
-	send_packet_event(double time, simulation &sim,
-			netflow &flow, packet &pkt, netlink &link);
+	send_packet_event(double time, simulation &sim, netflow &flow,
+			packet &pkt, netlink &link, netnode &departure_node);
 
 	~send_packet_event();
 
 	/**
-	 * TODO
+	 * Finds time of arrival to next node from the given departure node down
+	 * the given link and uses the arrival time to queue a receive_packet_event
+	 * (does nothing if the link buffer has no room, thereby dropping the
+	 * packet). Doesn't make or queue timeout events because they should have
+	 * been made and queued in parallel with the send_packet_event.
 	 */
 	void runEvent();
 

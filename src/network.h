@@ -98,6 +98,8 @@ protected:
 
 public:
 
+	netnode ();
+
 	netnode (string name);
 
 	netnode (string name, vector<netlink *> links);
@@ -464,10 +466,10 @@ private:
 	int buffer_capacity;
 
 	/** Pointer to one end of this link. */
-	netelement *endpoint1;
+	netnode *endpoint1;
 
 	/** Pointer to the other end of this link. */
-	netelement *endpoint2;
+	netnode *endpoint2;
 
 	/**
 	 * The sum of the end-to-end transmission times of all the packets in
@@ -490,7 +492,7 @@ private:
 	 * to bytes and the rate from megabits per second to bytes per second.
 	 */
 	void constructor_helper(double rate_mbps, int delay, int buflen_kb,
-			netelement *endpoint1, netelement *endpoint2);
+			netnode *endpoint1, netnode *endpoint2);
 
 public:
 
@@ -504,7 +506,7 @@ public:
 	 * @param endpoint2 the host or router on the other side of this link
 	 */
 	netlink(string name, double rate_mbps, int delay_ms, int buflen_kb,
-			netelement &endpoint1, netelement &endpoint2);
+			netnode &endpoint1, netnode &endpoint2);
 
 	/**
 	 * Sets the endpoints of this link to NULL.
@@ -527,9 +529,9 @@ public:
 	/** @return delay in milliseconds. */
 	int getDelay() const;
 
-	netelement *getEndpoint1() const;
+	netnode *getEndpoint1() const;
 
-	netelement *getEndpoint2() const;
+	netnode *getEndpoint2() const;
 
 	/** @return link rate in bytes per second. */
 	double getRateBytesPerSec() const;
@@ -563,9 +565,9 @@ public:
 
 	// --------------------------- Mutators -----------------------------------
 
-	void setEndpoint1(netelement &endpoint1);
+	void setEndpoint1(netnode &endpoint1);
 
-	void setEndpoint2(netelement &endpoint2);
+	void setEndpoint2(netnode &endpoint2);
 
 	/**
 	 * If the link buffer has space the given packet is added to the buffer
