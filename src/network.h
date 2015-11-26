@@ -201,7 +201,8 @@ public:
 // ------------------------------- netflow class ------------------------------
 
 /**
- * Represents a flow in a simple network.
+ * Represents a flow in a simple network. Assumes that flow sizes are multiples
+ * of 1024 bytes.
  */
 class netflow : public netelement {
 
@@ -212,6 +213,9 @@ private:
 
 	/** Transmission size in megabits. */
 	double size_mb;
+
+	/** Number of megabits sent. */
+	double amt_sent_mb;
 
 	/** Pointer to one end of this link. */
 	nethost *source;

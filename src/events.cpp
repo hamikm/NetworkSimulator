@@ -83,10 +83,28 @@ void receive_packet_event::runEvent() {
 	}
 	/*
 	 * If we're an ACK packet arriving at a source then we need to trigger the
-	 * ACK-handling behavior in the flow class.
+	 * ACK-handling behavior in the flow class and send a new window-load
+	 * of FLOW packets.
 	 */
 	else if (pkt.getType() == ACK) {
 		flow->receivedAck(pkt, getTime());
+
+		// Get the current window's packet(s) to send.
+		vector<packet> pkts_to_send = flow->popOutstandingPackets(getTime());
+
+		// TODO refactor following into the receivedAck method.
+
+		// Iterate over the packets to send, making send_packet_events for
+		// each. The timout_events have already been added to the flow and to
+		// the simulation's queue.
+		vector<packet>::iterator pkt_it = pkts_to_send.begin();
+		while(pkt_it != pkts_to_send.end()) {
+			send_packet_event *e = new send_packet_event(getTime(), *sim,
+					*flow, *pkt_it, *(flow->getSource()->getLink()),
+					*(flow->getSource()));
+			sim->addEvent(e);
+			pkt_it++;
+		}
 	}
 	else if (pkt.getType() == ROUTING) {
 		// should have been handled by the "am at a router" condition

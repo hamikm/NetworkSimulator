@@ -127,6 +127,7 @@ void netflow::constructorHelper (double start_time, double size_mb,
 	this->source = &source;
 	this->destination = &destination;
 
+	this->amt_sent_mb = 0;
 	this->highest_received_ack_seqnum = 1;
 	this->highest_sent_flow_seqnum = 0;
 	this->highest_received_flow_seqnum = 0;
@@ -254,6 +255,11 @@ void netflow::registerSendDuplicateAckAction(int seq, double time) {
 
 vector<packet> netflow::peekOutstandingPackets() {
 
+	// If we're done sending this flow's data then return nothing.
+	if (amt_sent_mb >= size_mb) {
+		return vector<packet>();
+	}
+
 	vector<packet> outstanding_pkts;
 
 	// Iterate over the sequence numbers that haven't had corresponding
@@ -267,6 +273,11 @@ vector<packet> netflow::peekOutstandingPackets() {
 }
 
 vector<packet> netflow::popOutstandingPackets(double start_time_ms) {
+
+	// If we're done sending this flow's data then return nothing.
+	if (amt_sent_mb >= size_mb) {
+		return vector<packet>();
+	}
 
 	vector<packet> outstanding_pkts = peekOutstandingPackets();
 
@@ -288,6 +299,9 @@ vector<packet> netflow::popOutstandingPackets(double start_time_ms) {
 	}
 
 	highest_sent_flow_seqnum += outstanding_pkts.size();
+	amt_sent_mb += packet::FLOW_PACKET_SIZE / BYTES_PER_MEGABIT *
+			outstanding_pkts.size();
+
 	return outstanding_pkts;
 }
 
@@ -437,13 +451,17 @@ void netflow::timeoutOccurred(const packet &to_pkt) {
 
 void netflow::printHelper(ostream &os) const {
 	netelement::printHelper(os);
-	os << " <-- [flow. start time: " <<
-			start_time_sec << " seconds, size: " << size_mb
-			<< " megabits, source: \""
+	os << " <-- [flow. start: " <<
+			start_time_sec << " secs, size: " << size_mb
+			<< " megabits, src: \""
 			<< (source == NULL ? "NULL" : source->getName())
-			<< "\", destination: \""
+			<< "\", dst: \""
 			<< (destination == NULL ? "NULL" : destination->getName())
-			<< "\"]";
+			<< "\", data sent: " << amt_sent_mb << " megabits, "
+			<< "win start: " << window_start << ", win size: "
+			<< window_size << ", lin growth thresh: "
+			<< lin_growth_winsize_threshold << ", timeout len: "
+			<< timeout_length_ms << " ms" << "]";
 }
 
 // ------------------------------- netlink class ------------------------------
