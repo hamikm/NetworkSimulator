@@ -17,7 +17,7 @@ netelement::~netelement() { }
 const string &netelement::getName() const { return name; }
 
 void netelement::printHelper(std::ostream &os) const {
-	os << "[device. name: " << name << "]";
+	os << "[netelement. name: \"" << name << "\"]";
 }
 
 // ------------------------------- netnode class ------------------------------
@@ -71,8 +71,7 @@ void nethost::setLink(netlink &link) {
 
 void nethost::printHelper(ostream &os) const {
 	netnode::printHelper(os);
-	os << " <-- [host. link: "
-			<< (getLink() == NULL ? "NULL" : getLink()->getName()) << "]";
+	os << " <-- [host.]";
 }
 
 // ------------------------------ netrouter class -----------------------------
@@ -217,7 +216,7 @@ const map<int, timeout_event *>& netflow::getFutureTimeoutsEvents() const {
 	return future_timeouts_events;
 }
 
-const map<int, duplicate_ack_event *>& netflow::getFutureSendAckEvents() const {
+const map<int, ack_event *>& netflow::getFutureSendAckEvents() const {
 	return future_send_ack_events;
 }
 
@@ -235,12 +234,12 @@ void netflow::registerTimeoutAction(int seq, double time) {
 	future_timeouts_events[seq] = e;
 }
 
-duplicate_ack_event *netflow::cancelSendDuplicateAckAction(int seq) {
+ack_event *netflow::cancelSendDuplicateAckAction(int seq) {
 
 	if(future_send_ack_events.find(seq) == future_send_ack_events.end())
 		return NULL;
 
-	duplicate_ack_event *e = future_send_ack_events.at(seq);
+	ack_event *e = future_send_ack_events.at(seq);
 	future_send_ack_events.erase(seq);
 	sim->removeEvent(e); // this frees the memory
 	return e;
@@ -248,7 +247,7 @@ duplicate_ack_event *netflow::cancelSendDuplicateAckAction(int seq) {
 
 void netflow::registerSendDuplicateAckAction(int seq, double time) {
 	packet p = packet(ACK, *this, seq);
-	duplicate_ack_event *e = new duplicate_ack_event(time, *sim, *this, p);
+	ack_event *e = new ack_event(time, *sim, *this, p);
 	future_send_ack_events[seq] = e;
 	sim->addEvent(e);
 }
@@ -438,13 +437,13 @@ void netflow::timeoutOccurred(const packet &to_pkt) {
 
 void netflow::printHelper(ostream &os) const {
 	netelement::printHelper(os);
-	os << " <-- [flow. start time(sec): " <<
-			start_time_sec << ", size(mb): " << size_mb
-			<< ", source: "
+	os << " <-- [flow. start time: " <<
+			start_time_sec << " seconds, size: " << size_mb
+			<< " megabits, source: \""
 			<< (source == NULL ? "NULL" : source->getName())
-			<< ", destination: "
+			<< "\", destination: \""
 			<< (destination == NULL ? "NULL" : destination->getName())
-			<< "]";
+			<< "\"]";
 }
 
 // ------------------------------- netlink class ------------------------------
@@ -531,12 +530,14 @@ bool netlink::receivedPacket(long pkt_id) {
 
 void netlink::printHelper(ostream &os) const {
 	netelement::printHelper(os);
-	os << " <-- [link. rate(mbps): " << getRateMbps() << ", delay: "
-			<< delay_ms << ", buffer length(kB): " << getBuflenKB()
-			<< ", endpoint 1: "
+	os << " <-- [link. rate: " << getRateMbps() << " megabits/second, delay: "
+			<< delay_ms << "ms, buffer length: " << getBuflenKB()
+			<< " kilobytes, endpoint 1: \""
 			<< (endpoint1 == NULL ? "NULL" : endpoint1->getName())
-			<< ", endpoint 2: "
-			<< (endpoint2 == NULL ? "NULL" : endpoint2->getName()) << "]";
+			<< "\", endpoint 2: \""
+			<< (endpoint2 == NULL ? "NULL" : endpoint2->getName()) << "\", "
+			<< "#pkts in buf: " << buffer.size() << ", buf_use: "
+			<< buffer_occupancy << "]";
 }
 
 // -------------------------------- packet class ------------------------------
@@ -610,26 +611,27 @@ double packet::getSizeMb() const { return size; }
 
 long packet::getSizeBytes() const { return size * BYTES_PER_MEGABIT; }
 
+string packet::getTypeString() const {
+	switch(type) {
+	case ACK:
+		return "ACK";
+		break;
+	case FLOW:
+		return"FLOW";
+		break;
+	case ROUTING:
+		return "ROUTING";
+		break;
+	default:
+		return "ERROR_TYPE";
+		break;
+	}
+}
+
 void packet::printHelper(ostream &os) const {
 	netelement::printHelper(os);
 
-	string typestr = "";
-	switch(type) {
-	case ACK:
-		typestr = "ACK";
-		break;
-	case FLOW:
-		typestr = "FLOW";
-		break;
-	case ROUTING:
-		typestr = "ROUTING";
-		break;
-	default:
-		typestr = "ERROR_TYPE";
-		break;
-	}
-
-	os << " <-- [packet. src: " << source_ip << ", dst: " << dest_ip
-			<< ", type: " << typestr << ", seq_num: " << seqnum
-			<< ", size(bytes): " << getSizeBytes() << "]";
+	os << " <-- [packet. src: \"" << source_ip << "\", dst: \"" << dest_ip
+			<< "\", type: " << getTypeString() << ", seq_num: " << seqnum
+			<< ", size: " << getSizeBytes() << " bytes]";
 }

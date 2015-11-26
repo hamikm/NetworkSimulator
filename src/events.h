@@ -26,7 +26,7 @@ class start_flow_event;
 class send_packet_event;
 class receive_packet_event;
 class timeout_event;
-class duplicate_ack_event;
+class ack_event;
 class simulation;
 class eventTimeSorter;
 
@@ -115,20 +115,17 @@ class receive_packet_event : public event {
 
 private:
 
-	/**
-	 * Flow to which the received packet belongs.
-	 */
+	/**  Flow to which the received packet belongs. */
 	netflow *flow;
 
-	/**
-	 * Packet received by the flow.
-	 */
+	/** Packet received by the flow. */
 	packet pkt;
 
-	/**
-	 * Host or router that is receiving the packet.
-	 */
+	/** Host or router that is receiving the packet. */
 	netnode *step_destination;
+
+	/** Link on which this packet arrived. */
+	netlink *link;
 
 public:
 
@@ -137,7 +134,8 @@ public:
 	 * sets the flow from which this packet originates, and sets the packet.
 	 */
 	receive_packet_event(double time, simulation &sim,
-			netflow &flow, packet &pkt, netnode &step_destination);
+			netflow &flow, packet &pkt, netnode &step_destination,
+			netlink &link);
 
 	~receive_packet_event();
 
@@ -199,15 +197,10 @@ public:
 // --------------------------- send_packet_event class ------------------------
 
 /**
-<<<<<<< HEAD
  * Sends a packet from a given departure node and down a given link whether
  * it's an ACK, FLOW, or ROUTING packet. Assumes that timeout_events
  * and other flow attributes like highest_sent_seqnum have been dealt with
  * before this event runs.
-=======
- * Send a packet from a given departure node and down a given link whether
- * it's an ACK, FLOW, or ROUTING packet.
->>>>>>> branch 'hm' of https://github.com/hamikm/cit_cs143_network_sim.git
  */
 class send_packet_event : public event {
 
@@ -338,17 +331,17 @@ public:
 	void printHelper(ostream &os) const;
 };
 
-// ------------------------- duplicate_ack_event class ------------------------
+// ------------------------- ack_event class ------------------------
 
 /**
  * This event should be queued when a destination host wants to send an ACK
  * (not just duplicate ACKs--any ACKS). The event automatically queues another
- * duplicate_ack_event so that duplicate ACKs will be sent in the future
+ * ack_event so that duplicate ACKs will be sent in the future
  * if the destination doesn't get the correct FLOW packets. Pending
- * duplicate_ack_events should be cancelled when the destination gets the
+ * ack_events should be cancelled when the destination gets the
  * correct FLOW packet.
  */
-class duplicate_ack_event : public event {
+class ack_event : public event {
 
 private:
 
@@ -360,19 +353,19 @@ private:
 
 public:
 
-	duplicate_ack_event();
+	ack_event();
 
 	/**
 	 * Initializes this event's time to the given one, sets the event ID,
-	 * and sets the flow to which this duplicate_ack_event belongs.
+	 * and sets the flow to which this ack_event belongs.
 	 */
-	duplicate_ack_event(double time, simulation &sim,
+	ack_event(double time, simulation &sim,
 			netflow &flow, packet &dup_pkt);
 
-	~duplicate_ack_event();
+	~ack_event();
 
 	/**
-	 * Send an ACK packet then chains (queues another) duplicate_ack_event.
+	 * Send an ACK packet then chains (queues another) ack_event.
 	 */
 	void runEvent();
 

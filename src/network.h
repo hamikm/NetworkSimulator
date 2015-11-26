@@ -31,7 +31,7 @@ class start_flow_event;
 class send_packet_event;
 class receive_packet_event;
 class timeout_event;
-class duplicate_ack_event;
+class ack_event;
 class simulation;
 class eventTimeSorter;
 
@@ -287,7 +287,7 @@ private:
 	 * duplicate_ack_events are deleted from this map and from the global
 	 * events queue.
 	 */
-	map<int, duplicate_ack_event *> future_send_ack_events;
+	map<int, ack_event *> future_send_ack_events;
 
 	/**
 	 * Map from sequence numbers to round-trip times of those packets. If a
@@ -389,7 +389,7 @@ public:
 
 	const map<int, timeout_event *>& getFutureTimeoutsEvents() const;
 
-	const map<int, duplicate_ack_event*>& getFutureSendAckEvents() const;
+	const map<int, ack_event*>& getFutureSendAckEvents() const;
 
 	/**
 	 * Print helper function which partially overrides the one in @c netdevice.
@@ -438,7 +438,7 @@ public:
 	 * @post duplicate_ack_event erased from the local map and from the global
 	 * events queue.
 	 */
-	duplicate_ack_event *cancelSendDuplicateAckAction(int seq);
+	ack_event *cancelSendDuplicateAckAction(int seq);
 
 	/**
 	 * Makes a duplicate_ack_event and puts it in the local map and on the
@@ -771,6 +771,9 @@ public:
 
 	/** @return size in bytes. */
 	long getSizeBytes() const;
+
+	/** @return type as a string */
+	string getTypeString() const;
 
 	/**
 	 * Print helper function which partially overrides the one in @c netdevice.

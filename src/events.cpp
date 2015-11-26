@@ -31,16 +31,18 @@ void event::printHelper(ostream &os) const {
 // ------------------------- receive_packet_event class -----------------------
 
 receive_packet_event::receive_packet_event(double time, simulation &sim,
-			netflow &flow, packet &pkt, netnode &step_destination) :
+			netflow &flow, packet &pkt, netnode &step_destination,
+			netlink &link) :
 		event(time, sim), flow(&flow), pkt(pkt),
-		step_destination(&step_destination) { }
+		step_destination(&step_destination), link(&link) { }
 
 receive_packet_event::~receive_packet_event() { }
 
 void receive_packet_event::runEvent() {
 
 	if(debug) {
-		debug_os << "STARTING: " << *this << endl;
+		debug_os << "RECEIVING " << pkt.getTypeString() << " PACKET: "
+				<< *this << endl;
 	}
 
 	/*
@@ -72,9 +74,9 @@ void receive_packet_event::runEvent() {
 
 	/*
 	 * If we have a FLOW packet arriving at a host then we create an ACK packet,
-	 * make and queue a duplicate_ack_event to send the first ACK, and queue a
-	 * future duplicate_ack_event in case the correct successor packet never
-	 * arrives. We also remove the flow's pending duplicate_ack_events.
+	 * make and queue a ack_event to send the first ACK, and queue a
+	 * future ack_event in case the correct successor packet never
+	 * arrives. We also remove the flow's pending ack_events.
 	 */
 	else if (pkt.getType() == FLOW) {
 		flow->receivedFlowPacket(pkt, getTime());
@@ -93,13 +95,18 @@ void receive_packet_event::runEvent() {
 	else {
 		assert(false);
 	}
+
+	// No matter what the packet type or node type we need to tell the link
+	// that we're done using it.
+	link->receivedPacket(pkt.getId());
 }
 
 void receive_packet_event::printHelper(ostream &os) const {
 	event::printHelper(os);
 	os << "<-- receive_packet_event. {" << endl <<
 			"  flow: " << *flow << endl <<
-			"  packet: " << pkt << endl << "}";
+			"  packet: " << pkt << endl <<
+			"  link: " << *link << endl << "}";
 }
 
 // ------------------------- router_discovery_event class ---------------------
@@ -113,7 +120,7 @@ router_discovery_event::~router_discovery_event() { }
 void router_discovery_event::runEvent() {
 
 	if(debug) {
-		debug_os << "STARTING: " << *this << endl;
+		debug_os << "ROUTING: " << *this << endl;
 	}
 	// TODO
 }
@@ -164,18 +171,20 @@ netnode *send_packet_event::getDestinationNode() const {
 void send_packet_event::runEvent() {
 
 	if(debug) {
-		debug_os << "STARTING: " << *this << endl;
+		debug_os << "SENDING " << pkt.getTypeString() << " PACKET: "
+				<< *this << endl;
 	}
 
 	// Find (absolute) arrival time to the next node from the given departure
 	// node down the given link.
-	double arrival_time = link->getWaitTimeIntervalMs() + getTime();
+	double arrival_time = link->getWaitTimeIntervalMs() +
+			link->getTransmissionTimeMs(pkt) + getTime();
 
 	// Use the arrival time to queue a receive_packet_event (does nothing if
 	// the link buffer has no room, thereby dropping the packet).
 	if (link->sendPacket(pkt)) {
 		receive_packet_event *e = new receive_packet_event(arrival_time, *sim,
-				*flow, pkt, *getDestinationNode());
+				*flow, pkt, *getDestinationNode(), *link);
 		sim->addEvent(e);
 	}
 	else { // packet was dropped
@@ -192,7 +201,8 @@ void send_packet_event::printHelper(ostream &os) const {
 	event::printHelper(os);
 	os << "<-- send_packet_event. {" << endl <<
 			"  flow: " << *flow << endl <<
-			"  packet: " << pkt << endl << "}";
+			"  packet: " << pkt << endl <<
+			"  link: " << *link << endl << "}";
 }
 
 // --------------------------- start_flow_event class -------------------------
@@ -206,7 +216,7 @@ start_flow_event::~start_flow_event() { }
 void start_flow_event::runEvent() {
 
 	if(debug) {
-		debug_os << "STARTING: " << *this << endl;
+		debug_os << "STARTING FLOW: " << *this << endl;
 	}
 
 	// Get the current (i.e. the first) window's packet(s) to send.
@@ -245,7 +255,7 @@ timeout_event::~timeout_event() { }
 void timeout_event::runEvent() {
 
 	if(debug) {
-		debug_os << "STARTING: " << *this << endl;
+		debug_os << "TIMEOUT TRIGGERED: " << *this << endl;
 	}
 
 	// Resize the window, set the linear growth threshold, cancel the
@@ -281,21 +291,21 @@ void timeout_event::printHelper(ostream &os) const {
 			"  flow: " << *flow << endl << "}";
 }
 
-// ------------------------- duplicate_ack_event class ------------------------
+// ------------------------- ack_event class ------------------------
 
-duplicate_ack_event::duplicate_ack_event() :
+ack_event::ack_event() :
 		event(), flow(NULL), dup_pkt(packet()) { }
 
-duplicate_ack_event::duplicate_ack_event(double time, simulation &sim,
+ack_event::ack_event(double time, simulation &sim,
 		netflow &flow, packet &dup_pkt) :
 				event(time, sim), flow(&flow), dup_pkt(dup_pkt) { }
 
-duplicate_ack_event::~duplicate_ack_event() { }
+ack_event::~ack_event() { }
 
-void duplicate_ack_event::runEvent() {
+void ack_event::runEvent() {
 
 	if(debug) {
-		debug_os << "STARTING: " << *this << endl;
+		debug_os << "ACK TRIGGERED: " << *this << endl;
 	}
 
 	// Make and queue the ACK's send_packet_event.
@@ -311,9 +321,9 @@ void duplicate_ack_event::runEvent() {
 			getTime() + flow->getTimeoutLengthMs());
 }
 
-void duplicate_ack_event::printHelper(ostream &os) const {
+void ack_event::printHelper(ostream &os) const {
 	event::printHelper(os);
-	os << "<-- duplicate_ack_event. {" << endl <<
-			"  timedout_pkt: " << dup_pkt << endl <<
+	os << "<-- ack_event. {" << endl <<
+			"  ack_pkt: " << dup_pkt << endl <<
 			"  flow: " << *flow << endl << "}";
 }

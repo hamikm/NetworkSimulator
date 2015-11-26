@@ -245,7 +245,7 @@ void simulation::runSimulation() {
 			itr != flows.end(); itr++) {
 		netflow *flow = itr->second;
 		start_flow_event *fevent = new
-				start_flow_event(flow->getStartTimeSec(), *this, *flow);
+				start_flow_event(flow->getStartTimeMs(), *this, *flow);
 		addEvent(fevent);
 	}
 
@@ -257,8 +257,7 @@ void simulation::runSimulation() {
 		events.erase(it);
 
 		if (debug) {
-			debug_os << endl << "In runSimulation loop. Current event ID: " <<
-					curr_event->getId() << endl;
+			debug_os << endl;
 		}
 
 		curr_event->runEvent();
