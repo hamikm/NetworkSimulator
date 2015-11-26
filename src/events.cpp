@@ -24,7 +24,7 @@ double event::getTime() const { return time; }
 
 long event::getId() const { return id; }
 
-void event::printHelper(ostream &os) const {
+void event::printHelper(ostream &os) {
 	os << "event. id: " << id << ", time: " << time << " ";
 }
 
@@ -41,6 +41,7 @@ receive_packet_event::~receive_packet_event() { }
 void receive_packet_event::runEvent() {
 
 	if(debug) {
+
 		debug_os << "RECEIVING " << pkt.getTypeString() << " PACKET: "
 				<< *this << endl;
 	}
@@ -119,12 +120,21 @@ void receive_packet_event::runEvent() {
 	link->receivedPacket(pkt.getId());
 }
 
-void receive_packet_event::printHelper(ostream &os) const {
+void receive_packet_event::printHelper(ostream &os) {
 	event::printHelper(os);
+
+	flow->setNestingDepth(1);
+	link->setNestingDepth(1);
+	pkt.setNestingDepth(1);
+
 	os << "<-- receive_packet_event. {" << endl <<
 			"  flow: " << *flow << endl <<
 			"  packet: " << pkt << endl <<
 			"  link: " << *link << endl << "}";
+
+	flow->setNestingDepth(0);
+	link->setNestingDepth(0);
+	pkt.setNestingDepth(0);
 }
 
 // ------------------------- router_discovery_event class ---------------------
@@ -143,10 +153,15 @@ void router_discovery_event::runEvent() {
 	// TODO
 }
 
-void router_discovery_event::printHelper(ostream &os) const {
+void router_discovery_event::printHelper(ostream &os) {
 	event::printHelper(os);
+
+	router->setNestingDepth(1);
+
 	os << "<-- router_discovery_event. {" << endl <<
 			"  router: " << *router << endl << "}";
+
+	router->setNestingDepth(0);
 }
 
 // -------------------------- send_packet_event class -------------------------
@@ -215,12 +230,21 @@ void send_packet_event::runEvent() {
 
 }
 
-void send_packet_event::printHelper(ostream &os) const {
+void send_packet_event::printHelper(ostream &os) {
 	event::printHelper(os);
+
+	flow->setNestingDepth(1);
+	link->setNestingDepth(1);
+	pkt.setNestingDepth(1);
+
 	os << "<-- send_packet_event. {" << endl <<
 			"  flow: " << *flow << endl <<
 			"  packet: " << pkt << endl <<
 			"  link: " << *link << endl << "}";
+
+	flow->setNestingDepth(0);
+	link->setNestingDepth(0);
+	pkt.setNestingDepth(0);
 }
 
 // --------------------------- start_flow_event class -------------------------
@@ -253,7 +277,7 @@ void start_flow_event::runEvent() {
 	}
 }
 
-void start_flow_event::printHelper(ostream &os) const {
+void start_flow_event::printHelper(ostream &os) {
 	event::printHelper(os);
 	os << "<-- start_flow_event {" << endl <<
 			"  flow: " << *flow << endl << "}";
@@ -302,11 +326,18 @@ void timeout_event::runEvent() {
  * Print helper function.
  * @param os The output stream to which to write event information.
  */
-void timeout_event::printHelper(ostream &os) const {
+void timeout_event::printHelper(ostream &os) {
 	event::printHelper(os);
+
+	flow->setNestingDepth(1);
+	timedout_pkt.setNestingDepth(1);
+
 	os << "<-- timeout_event. {" << endl <<
 			"  timedout_pkt: " << timedout_pkt << endl <<
 			"  flow: " << *flow << endl << "}";
+
+	flow->setNestingDepth(0);
+	timedout_pkt.setNestingDepth(0);
 }
 
 // ------------------------- ack_event class ------------------------
@@ -339,9 +370,16 @@ void ack_event::runEvent() {
 			getTime() + flow->getTimeoutLengthMs());
 }
 
-void ack_event::printHelper(ostream &os) const {
+void ack_event::printHelper(ostream &os) {
 	event::printHelper(os);
+
+	flow->setNestingDepth(1);
+	dup_pkt.setNestingDepth(1);
+
 	os << "<-- ack_event. {" << endl <<
 			"  ack_pkt: " << dup_pkt << endl <<
 			"  flow: " << *flow << endl << "}";
+
+	flow->setNestingDepth(0);
+	dup_pkt.setNestingDepth(0);
 }

@@ -88,7 +88,7 @@ public:
 	 * Print helper function. Derived classes should (partially) override this.
 	 * @param os The output stream to which to write event information.
 	 */
-	virtual void printHelper(ostream &os) const;
+	virtual void printHelper(ostream &os);
 };
 
 /**
@@ -99,7 +99,7 @@ public:
  * @param device The @c event object to write.
  * @return The same output stream for operator chaining.
  */
-inline ostream & operator<<(ostream &os, const event &e) {
+inline ostream & operator<<(ostream &os, event &e) {
 	e.printHelper(os);
 	return os;
 }
@@ -157,7 +157,7 @@ public:
 	 * Print helper function.
 	 * @param os The output stream to which to write event information.
 	 */
-	void printHelper(ostream &os) const;
+	void printHelper(ostream &os);
 };
 
 // ------------------------- router_discovery_event class ---------------------
@@ -191,7 +191,7 @@ public:
 	 * Print helper function.
 	 * @param os The output stream to which to write event information.
 	 */
-	void printHelper(ostream &os) const;
+	void printHelper(ostream &os);
 };
 
 // --------------------------- send_packet_event class ------------------------
@@ -247,7 +247,7 @@ public:
 	 * Print helper function.
 	 * @param os The output stream to which to write event information.
 	 */
-	void printHelper(ostream &os) const;
+	void printHelper(ostream &os);
 };
 
 // ---------------------------- start_flow_event class ------------------------
@@ -284,7 +284,7 @@ public:
 	 * Print helper function.
 	 * @param os The output stream to which to write event information.
 	 */
-	void printHelper(ostream &os) const;
+	void printHelper(ostream &os);
 };
 
 // ---------------------------- timeout_event class ---------------------------
@@ -328,7 +328,7 @@ public:
 	 * Print helper function.
 	 * @param os The output stream to which to write event information.
 	 */
-	void printHelper(ostream &os) const;
+	void printHelper(ostream &os);
 };
 
 // ------------------------- ack_event class ------------------------
@@ -373,7 +373,7 @@ public:
 	 * Print helper function.
 	 * @param os The output stream to which to write event information.
 	 */
-	void printHelper(ostream &os) const;
+	void printHelper(ostream &os);
 };
 
 #endif // EVENTS_H

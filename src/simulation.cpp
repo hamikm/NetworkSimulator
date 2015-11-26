@@ -5,7 +5,8 @@
 #include "simulation.h"
 
 bool eventTimeSorter::operator() (const event &e1, const event &e2) {
-	return e1.getTime() < e2.getTime();
+	return e1.getTime() == e2.getTime() ? e1.getId() < e2.getId() :
+			e1.getTime() < e2.getTime();
 }
 
 simulation::simulation () {}
@@ -218,22 +219,22 @@ void simulation::print_network(ostream &os) const {
 
 	// Print all the hosts
 	for (hitr = hosts.begin(); hitr != hosts.end(); hitr++) {
-		os << *(hitr->second) << endl;
+		os << *(hitr->second) << endl << endl;
 	}
 
 	// Print all the routers
 	for (ritr = routers.begin(); ritr != routers.end(); ritr++) {
-		os << *(ritr->second) << endl;
+		os << *(ritr->second) << endl << endl;
 	}
 
 	// Print all the links
 	for (litr = links.begin(); litr != links.end(); litr++) {
-		os << *(litr->second) << endl;
+		os << *(litr->second) << endl << endl;
 	}
 
 	// Print all the flows
 	for (fitr = flows.begin(); fitr != flows.end(); fitr++) {
-		os << *(fitr->second) << endl;
+		os << *(fitr->second) << endl << endl;
 	}
 }
 

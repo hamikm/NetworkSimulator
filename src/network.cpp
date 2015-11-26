@@ -8,16 +8,26 @@
 
 // ------------------------------ netelement class ----------------------------
 
-netelement::netelement() : name("") { }
+netelement::netelement() : name(""), nest_depth(0) { }
 
-netelement::netelement(string name) : name(name) { }
+netelement::netelement(string name) : name(name), nest_depth(0) { }
 
 netelement::~netelement() { }
 
 const string &netelement::getName() const { return name; }
 
+void netelement::setNestingDepth(int depth) { this->nest_depth = depth; }
+
+string netelement::nestingPrefix(int delta) const {
+	string rtn = "";
+	for (int i = 0; i < nest_depth + delta; i++) {
+		rtn += "  ";
+	}
+	return rtn;
+}
+
 void netelement::printHelper(std::ostream &os) const {
-	os << "[netelement. name: \"" << name << "\"]";
+	os << "netelement. name: \"" << name << "\"";
 }
 
 // ------------------------------- netnode class ------------------------------
@@ -35,9 +45,9 @@ bool netnode::isRoutingNode() const { return false; }
 
 const vector<netlink *> &netnode::getLinks() const { return links; }
 
-void netnode::printHelper(ostream &os) const {
+void netnode::printHelper(ostream &os) const { // TODO automate nesting
 	netelement::printHelper(os);
-	os << " <-- [node. links: { ";
+	os << " <-- node. links: { " << endl << nestingPrefix(1) << "[";
 	for (unsigned int i = 0;
 			i < (links.size() == 0 ? 0 : links.size() - 1); i++) {
 		os << links[i]->getName() << ", ";
@@ -45,7 +55,7 @@ void netnode::printHelper(ostream &os) const {
 	if (links.size() > 0) {
 		os << links[links.size() - 1]->getName();
 	}
-	os << " } ]";
+	os << "]" << endl << nestingPrefix(0) << "}";
 }
 
 // ------------------------------- nethost class ------------------------------
@@ -71,7 +81,7 @@ void nethost::setLink(netlink &link) {
 
 void nethost::printHelper(ostream &os) const {
 	netnode::printHelper(os);
-	os << " <-- [host.]";
+	os << " <-- host";
 }
 
 // ------------------------------ netrouter class -----------------------------
@@ -102,18 +112,18 @@ map<netlink *, packet> netrouter::receivePacket(double time, simulation &sim,
 
 void netrouter::printHelper(ostream &os) const {
 	netnode::printHelper(os);
-	bool first = true;
-	os << " <-- [router. routing table: [ ";
+	os << " <-- router. routing table: ";
+	if (rtable.size() == 0) {
+		os << "{ }";
+		return;
+	}
+	os << "{ " << endl;
 	map<string, netlink *>::const_iterator itr;
 	for (itr = rtable.begin(); itr != rtable.end(); itr++) {
-		if (first) {
-			os << itr->first << "<--" << itr->second;
-			first = false;
-			continue;
-		}
-		os << ", " << itr->first << "<--" << itr->second;
+		os << nestingPrefix(1) << "(" <<
+				itr->first << "<--" << itr->second << ")";
 	}
-	os << " ]";
+	os << nestingPrefix(0) << "}";
 }
 
 // ------------------------------- netflow class ------------------------------
@@ -299,7 +309,7 @@ vector<packet> netflow::popOutstandingPackets(double start_time_ms) {
 	}
 
 	highest_sent_flow_seqnum += outstanding_pkts.size();
-	amt_sent_mb += packet::FLOW_PACKET_SIZE / BYTES_PER_MEGABIT *
+	amt_sent_mb += ((double)packet::FLOW_PACKET_SIZE) / BYTES_PER_MEGABIT *
 			outstanding_pkts.size();
 
 	return outstanding_pkts;
@@ -451,17 +461,29 @@ void netflow::timeoutOccurred(const packet &to_pkt) {
 
 void netflow::printHelper(ostream &os) const {
 	netelement::printHelper(os);
-	os << " <-- [flow. start: " <<
-			start_time_sec << " secs, size: " << size_mb
-			<< " megabits, src: \""
-			<< (source == NULL ? "NULL" : source->getName())
-			<< "\", dst: \""
-			<< (destination == NULL ? "NULL" : destination->getName())
-			<< "\", data sent: " << amt_sent_mb << " megabits, "
-			<< "win start: " << window_start << ", win size: "
-			<< window_size << ", lin growth thresh: "
-			<< lin_growth_winsize_threshold << ", timeout len: "
-			<< timeout_length_ms << " ms" << "]";
+	os << " <-- flow. {" << endl
+			<< nestingPrefix(1) << "start: " <<
+				start_time_sec << " secs," << endl
+			<< nestingPrefix(1) << "size: " <<
+				size_mb << " megabits," << endl
+			<< nestingPrefix(1) << "source: \"" <<
+				(source == NULL ? "NULL" : source->getName()) << "\"," << endl
+			<< nestingPrefix(1) << "destination: \"" <<
+				(destination == NULL ? "NULL" : destination->getName()) <<
+				"\"," << endl
+			<< nestingPrefix(1) << "data sent: " <<
+				amt_sent_mb << " megabits," << endl
+			<< nestingPrefix(1) << "linear growth threshold: " <<
+				lin_growth_winsize_threshold << " packets," << endl
+			<< nestingPrefix(1) << "timeout length: " <<
+				timeout_length_ms << " ms," << endl
+			<< nestingPrefix(1) << "window start: " <<
+				window_start << "-th packet," << endl
+			<< nestingPrefix(1) << "window size: " <<
+				window_size << " packets," << endl
+			<< nestingPrefix(1) << "last seqnum sent: " <<
+				highest_sent_flow_seqnum << "-th packet," << endl
+			<< nestingPrefix(0) << "}";
 }
 
 // ------------------------------- netlink class ------------------------------
@@ -548,14 +570,24 @@ bool netlink::receivedPacket(long pkt_id) {
 
 void netlink::printHelper(ostream &os) const {
 	netelement::printHelper(os);
-	os << " <-- [link. rate: " << getRateMbps() << " megabits/second, delay: "
-			<< delay_ms << "ms, buffer length: " << getBuflenKB()
-			<< " kilobytes, endpoint 1: \""
-			<< (endpoint1 == NULL ? "NULL" : endpoint1->getName())
-			<< "\", endpoint 2: \""
-			<< (endpoint2 == NULL ? "NULL" : endpoint2->getName()) << "\", "
-			<< "#pkts in buf: " << buffer.size() << ", buf_use: "
-			<< buffer_occupancy << "]";
+	os << " <-- link. {" << endl
+			<< nestingPrefix(1) << "rate: " <<
+				getRateMbps() << " megabits/second," << endl
+			<< nestingPrefix(1) << "delay: " <<
+				delay_ms << " ms," << endl
+			<< nestingPrefix(1) << "buffer length: " <<
+				getBuflenKB() << " kilobytes," << endl
+			<< nestingPrefix(1) << "endpoint 1: \"" <<
+				(endpoint1 == NULL ? "NULL" : endpoint1->getName()) <<
+				"\"," << endl
+			<< nestingPrefix(1) << "endpoint 2: \"" <<
+				(endpoint2 == NULL ? "NULL" : endpoint2->getName()) <<
+				"\"," << endl
+			<< nestingPrefix(1) << "number of packets in buffer: " <<
+				buffer.size() << " packets," << endl
+			<< nestingPrefix(1) << "buffer occupancy: " <<
+				buffer_occupancy << " bytes" << endl
+			<< nestingPrefix(0) << "}";
 }
 
 // -------------------------------- packet class ------------------------------
@@ -649,7 +681,11 @@ string packet::getTypeString() const {
 void packet::printHelper(ostream &os) const {
 	netelement::printHelper(os);
 
-	os << " <-- [packet. src: \"" << source_ip << "\", dst: \"" << dest_ip
-			<< "\", type: " << getTypeString() << ", seq_num: " << seqnum
-			<< ", size: " << getSizeBytes() << " bytes]";
+	os << " <-- packet. {" << endl
+			<< nestingPrefix(1) << "source: \"" << source_ip << "\"," << endl
+			<< nestingPrefix(1) << "destination: \"" <<
+				dest_ip << "\"," << endl
+			<< nestingPrefix(1) << "type: " << getTypeString() << "," << endl
+			<< nestingPrefix(1) << "size: " << getSizeBytes() << endl
+			<< nestingPrefix(0) << "}";
 }

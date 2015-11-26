@@ -55,6 +55,9 @@ private:
 	/** E.g. a router or host name like "H1". */
 	string name;
 
+	/** Printouts nested to this depth, 2 spaces per nesting level. */
+	int nest_depth;
+
 public:
 
 	netelement ();
@@ -64,6 +67,14 @@ public:
 	virtual ~netelement();
 
 	const string &getName() const;
+
+	void setNestingDepth(int depth);
+
+	/**
+	 * @param delta effective nesting depth will be actual depth + delta
+	 * @return string with twice as many spaces as nesting depth + delta.
+	 */
+	string nestingPrefix(int delta) const;
 
 	/**
 	 * Print helper function. Derived classes should (partially) override this.
