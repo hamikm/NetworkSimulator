@@ -279,8 +279,13 @@ void start_flow_event::runEvent() {
 
 void start_flow_event::printHelper(ostream &os) {
 	event::printHelper(os);
+
+	flow->setNestingDepth(1);
+
 	os << "<-- start_flow_event {" << endl <<
 			"  flow: " << *flow << endl << "}";
+
+	flow->setNestingDepth(0);
 }
 
 // ----------------------------- timeout_event class --------------------------

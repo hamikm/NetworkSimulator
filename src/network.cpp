@@ -232,6 +232,10 @@ const map<int, ack_event *>& netflow::getFutureSendAckEvents() const {
 }
 
 timeout_event *netflow::cancelTimeoutAction(int seq) {
+	if (future_timeouts_events.find(seq) == future_timeouts_events.end()) {
+		return NULL;
+	}
+
 	timeout_event *t = future_timeouts_events[seq];
 	future_timeouts_events.erase(seq);
 	sim->removeEvent(t); // this frees the memory
@@ -301,8 +305,8 @@ vector<packet> netflow::popOutstandingPackets(double start_time_ms) {
 		// Store start time.
 		rtts[it->getSeq()] = -start_time_ms;
 
-		// Make a timeout_event for this packet, store it on out param
-		// and in local map.
+		// Make a timeout_event for this packet, store it in local map and
+		// push it onto the simulation's event queue.
 		registerTimeoutAction(it->getSeq(),
 				start_time_ms + timeout_length_ms + TIMEOUT_DELTA * i++);
 		it++;
@@ -346,7 +350,7 @@ void netflow::receivedAck(packet &pkt, double end_time_ms) {
 		}
 
 		// Got a duplicate ACK but don't have enough of them to do a fast
-		// retransmit. Push back the timeout event by cancelling the old one
+		// retransmit. Push back the timeout event by canceling the old one
 		// and registering a new one.
 		else {
 			cancelTimeoutAction(pkt.getSeq() + 1);
@@ -455,7 +459,6 @@ double netflow::getTimeoutLengthMs() const { return timeout_length_ms; }
 void netflow::timeoutOccurred(const packet &to_pkt) {
 	lin_growth_winsize_threshold = window_size / 2;
 	window_size = 1;
-	assert(highest_received_ack_seqnum + 1 == to_pkt.getSeq());
 	cancelTimeoutAction(to_pkt.getSeq());
 }
 
@@ -687,5 +690,6 @@ void packet::printHelper(ostream &os) const {
 				dest_ip << "\"," << endl
 			<< nestingPrefix(1) << "type: " << getTypeString() << "," << endl
 			<< nestingPrefix(1) << "size: " << getSizeBytes() << endl
+			<< nestingPrefix(1) << "sequence number: " << getSeq() << endl
 			<< nestingPrefix(0) << "}";
 }
