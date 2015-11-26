@@ -445,7 +445,9 @@ void netflow::receivedFlowPacket(packet &pkt, double arrival_time) {
 	// Make and queue (locally and on the simulation event queue) an immediate
 	// duplicate_ack_event. When that event is run it will queue another,
 	// future duplicate_ack_event in case the next FLOW packet never arrives.
-	registerSendDuplicateAckAction(ackpack.getSeq(), arrival_time);
+	if (amt_sent_mb < size_mb) {
+		registerSendDuplicateAckAction(ackpack.getSeq(), arrival_time);
+	}
 
 	// Remove the previous packet's corresponding duplicate ACK
 	// send_packet_event from the local map and global events queue
