@@ -49,6 +49,12 @@ char *process_console_args(int argc, char **argv);
 bool debug = false;
 
 /**
+ * If true even more debugging output is shown and the output pauses between
+ * events for analysis.
+ */
+bool detail = false;
+
+/**
  * Output stream to which to write debugging statements. Might be customized
  * to be a file output stream, stderr, or something else.
  */
@@ -83,8 +89,10 @@ int main (int argc, char **argv) {
 // ---------------------------- Functions  ------------------------------------
 
 void print_usage_statement (char *progname) {
-	cerr << "Usage: " << progname << " <JSON input file> [-d]" << endl;
+	cerr << "Usage: " << progname << " <JSON input file> [-d|-dd]" << endl;
 	cerr << "  -d to print debugging statements to stdout." << endl;
+	cerr << "  -dd to print detailed, pausing debugging statements to stdout."
+			<< endl;
 
 	// TODO update when we decide where to send output.
 }
@@ -98,7 +106,7 @@ char *process_console_args(int argc, char **argv) {
 	}
 
 	if (argc == 2) {
-		if (strcmp(argv[1], "-d") != 0)
+		if (strcmp(argv[1], "-d") != 0 && strcmp(argv[1], "-dd") != 0)
 			return argv[1];
 		else {
 			print_usage_statement(argv[0]);
@@ -111,9 +119,18 @@ char *process_console_args(int argc, char **argv) {
 			debug = true;
 			return argv[2];
 		}
+		else if (strcmp(argv[1], "-dd") == 0) {
+			debug = true;
+			detail = true;
+			return argv[2];
+		}
 		else {
 			if (strcmp(argv[2], "-d") == 0)
 				debug = true;
+			if (strcmp(argv[2], "-dd") == 0) {
+				debug = true;
+				detail = true;
+			}
 			return argv[1];
 		}
 	}

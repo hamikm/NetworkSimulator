@@ -38,6 +38,7 @@ class eventTimeSorter;
 using namespace std;
 
 extern bool debug;
+extern bool detail;
 extern ostream &debug_os;
 
 // ------------------------------ netelement class ----------------------------
@@ -315,6 +316,10 @@ private:
 	/** Pointer to simulation so timeout_events can be made in this class. */
 	simulation *sim;
 
+	void updateTimeouts(double end_time_ms, int flow_seqnum);
+
+	void cancelAllTimeouts();
+
 	void constructorHelper (double start_time, double size_mb,
 			nethost &source, nethost &destination, int num_total_packets,
 			double window_size, double timeout_length_ms, simulation &sim);
@@ -344,10 +349,10 @@ public:
 	static const double B_TIMEOUT_CALC = 0.1;
 
 	/**
-	 * Interval between execution times of consecutive packets' timeouts (if
-	 * the packets are sent at the same time.
+	 * A small fraction of a millisecond used to order timeout events and
+	 * regular send packet events.
 	 */
-	static const double TIMEOUT_DELTA = 0.0000000001;
+	static const double TIME_EPSILON = 0.0000000001;
 
 	/**
 	 * Initializes the flow's basic attributes as well as attributes required
@@ -480,13 +485,13 @@ public:
 	 * number. It also stores the starting time for each packet so RTTs
 	 * can be computed later. It stores corresponding timeout events locally
 	 * and puts them on the simulation's event queue too.
-	 * @param start_time_ms time in millisaeconds at which the packets are put
-	 * on the initial link buffer
+	 * @param start_time time at which packets will enter link buffer
+	 * @param linkFreeAt time in milliseconds at packets will get on the link
 	 * @return all the outstanding FLOW packets in the window
 	 * @post timeout events have been added locally and pushed onto simulation
 	 * event queue
 	 */
-	vector<packet> popOutstandingPackets(double start_time_ms);
+	vector<packet> popOutstandingPackets(double start_time, double linkFreeAt);
 
 	// TODO handle out-of-order ACKs (e.g. ACK 3 might get routed a slow way),
 	// ACK 4 might get routed a fast way.
@@ -500,10 +505,11 @@ public:
 	 * @param pkt the received ACK packet.
 	 * @param end_time_ms time in milliseconds at which this ACK was received;
 	 * used to calculate RTTs.
+	 * @param linkFreeAtTime absolute time at which the link will be free
 	 * @warning DOESN'T SEND PACKETS, use @c popOutstandingPackets to get the
 	 * packets to send after this function is called.
 	 */
-	void receivedAck(packet &pkt, double end_time_ms);
+	void receivedAck(packet &pkt, double end_time_ms, double linkFreeAtTime);
 
 	/**
 	 * When a FLOW packet is received (it's assumed that the packet is
@@ -553,20 +559,14 @@ private:
 	netnode *endpoint2;
 
 	/**
-	 * The sum of the end-to-end transmission times of all the packets in
-	 * link buffer.
-	 */
-	double wait_time;
-
-	/** The sum of the packet sizes in this buffer. */
-	int buffer_occupancy;
-
-	/**
 	 * This link's FIFO buffer. Note that packets don't have real payloads
 	 * so the size of this buffer in memory is small even though packets are
-	 * stored by value.
+	 * stored by value. The keys are arrival times and the values are the
+	 * actual packets in the link buffer; to get arrival time for a new
+	 * packet about to be placed on the buffer add transmission (and possibly
+	 * delay) time to the arrival time of the last element in the buffer.
 	 */
-	queue<packet> buffer;
+	map<double, packet> buffer;
 
 	/**
 	 * Helper for the constructors. Converts the buffer length from kilobytes
@@ -622,21 +622,35 @@ public:
 
 	/**
 	 * @return end-to-end time in milliseconds for the given packet on this
-	 * link.
+	 * link NOT INCLUDING DELAY.
 	 */
 	double getTransmissionTimeMs(const packet &pkt) const;
 
 	/**
-	 * @return time INTERVAL in milliseconds until this link will be available
-	 * for the next packet.
-	 * @warning does not return an absolute time
+	 * @return time absolute time in milliseconds when this link will be
+	 * available for the next packet.
+	 * @warning if zero need to substitute current time in for free at time!
+	 * the link doesn't know the current time, so it can't tell you when
+	 * the link is free if there's nothing in the buffer.
 	 */
-	double getWaitTimeIntervalMs() const;
+	double getLinkFreeAtTime() const;
 
 	/**
 	 * @return the buffer occupancy
 	 */
-	int getBufferOccupancy() const;
+	long getBufferOccupancy() const;
+
+	/**
+	 * Gets the arrival time of a packet on the other end of the link.
+	 * @param pkt
+	 * @param useDelay
+	 * @param time of the triggered event
+	 * @return arrival time
+	 */
+	double getArrivalTime(const packet &pkt, bool useDelay, double time);
+
+	/** Prints the contents and size of the buffer to the given stream. */
+	void printBuffer(ostream &os);
 
 	/**
 	 * Print helper function which partially overrides the one in @c netdevice.
@@ -654,12 +668,15 @@ public:
 	 * If the link buffer has space the given packet is added to the buffer
 	 * and the rolling wait time and buffer occupancy are increased.
 	 * @param pkt the packet to add to the buffer
+	 * @param useDelay true if link delay should be used to sum into the
+	 * buffer's wait time. Should be used ONCE per window
+	 * @param time at which we're trying to send this packet
 	 * @return true if added to buffer successfully, false if dropped
 	 */
-	bool sendPacket(const packet &pkt);
+	bool sendPacket(const packet &pkt, bool useDelay, double time);
 
 	/**
-	 * Called when a packet is received to free the link for subsequent
+	 * Called when a lone packet is received to free the link for subsequent
 	 * packets; just dequeues the packet from the buffer.
 	 * @param pkt_id the given packet ID number must match the ID of the
 	 * packet about to be dequeued.
@@ -667,6 +684,21 @@ public:
 	 * and the buffer wasn't empty)
 	 */
 	bool receivedPacket(long pkt_id);
+
+	/**
+	 * Call this instead of @c receivedLonePacket when an arriving packet
+	 * is a part of a window so that the link buffer's wait time is adjusted
+	 * correctly. For the first packet in a windowload the buffer's wait time
+	 * is decreasing by the link delay + one transmission time, but for
+	 * subsequent packets the buffer wait time is decreased by only one
+	 * transmission time.
+	 * @param pkt_id the given packet ID number must match the ID of the
+	 * packet about to be dequeued.
+	 * @first_packet true if first packet in the window
+	 * @return true if the packet was dequeued (i.e. the given id matched
+	 * and the buffer wasn't empty)
+	 */
+	bool receivedPacketInWindow(long pkt_id, bool first_packet);
 };
 
 // -------------------------------- packet class ------------------------------

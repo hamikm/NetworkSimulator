@@ -168,7 +168,7 @@ TEST_F(flowTest, receiveAckWindowResizingAndShiftingTest) {
 	ASSERT_FLOAT_EQ((1000 + rtt_pkt) + (rtt_pkt + 4 * rtt_pkt),
 			tevents[2]->getTime());
 	ASSERT_FLOAT_EQ((1000 + rtt_pkt) +
-			(rtt_pkt + 4 * rtt_pkt) + netflow::TIMEOUT_DELTA,
+			(rtt_pkt + 4 * rtt_pkt) + netflow::TIME_EPSILON,
 			tevents[3]->getTime());
 	ASSERT_EQ(3, flow.getHighestSentSeqnum()); // highest sent num changed
 
