@@ -256,12 +256,16 @@ void simulation::runSimulation() {
 		multimap<double, event *>::iterator it = events.begin();
 		event *curr_event = (*it).second;
 		events.erase(it);
+		curr_event->runEvent();
 
 		if (debug) {
 			debug_os << endl;
+			if (detail) {
+				string dummy;
+				cerr << "Waiting... enter to continue." << endl;
+				cin.ignore();
+			}
 		}
-
-		curr_event->runEvent();
 	}
 }
 

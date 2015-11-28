@@ -286,7 +286,8 @@ vector<packet> netflow::peekOutstandingPackets() {
 	return outstanding_pkts;
 }
 
-vector<packet> netflow::popOutstandingPackets(double start_time_ms) {
+vector<packet> netflow::popOutstandingPackets(double start_time,
+		double linkFreeAt) {
 
 	// If we're done sending this flow's data then return nothing.
 	if (amt_sent_mb >= size_mb) {
@@ -303,12 +304,12 @@ vector<packet> netflow::popOutstandingPackets(double start_time_ms) {
 	while(it != outstanding_pkts.end()) {
 
 		// Store start time.
-		rtts[it->getSeq()] = -start_time_ms;
+		rtts[it->getSeq()] = -start_time;
 
 		// Make a timeout_event for this packet, store it in local map and
 		// push it onto the simulation's event queue.
 		registerTimeoutAction(it->getSeq(),
-				start_time_ms + timeout_length_ms + TIMEOUT_DELTA * i++);
+				linkFreeAt + timeout_length_ms + TIME_EPSILON * i++);
 		it++;
 	}
 
@@ -319,7 +320,38 @@ vector<packet> netflow::popOutstandingPackets(double start_time_ms) {
 	return outstanding_pkts;
 }
 
-void netflow::receivedAck(packet &pkt, double end_time_ms) {
+void netflow::updateTimeouts(double end_time_ms, int flow_seqnum) {
+
+	// Make sure we have a departure time for this ACK's corresponding FLOW
+	// packet.
+	assert (rtts.find(flow_seqnum) != rtts.end());
+
+	// Make sure the departure time was stored as a negative number.
+	assert (rtts[flow_seqnum] < 0);
+
+	// If we do then get the round-trip time for this packet then delete
+	// its entry from the RTT table.
+	double rtt = rtts[flow_seqnum] + end_time_ms;
+	rtts.erase(flow_seqnum);
+
+	// If it's the first ACK we don't have an average or deviation for the
+	// round-trip times, so initialize them to the first RTT
+	if (avg_RTT < 0 && std_RTT < 0) {
+		avg_RTT = rtt;
+		std_RTT = rtt;
+	}
+	else { // If we do have initial avg and std values, then adjust them
+		avg_RTT = (1 - B_TIMEOUT_CALC) * avg_RTT + B_TIMEOUT_CALC * rtt;
+		std_RTT = (1 - B_TIMEOUT_CALC) * std_RTT +
+				B_TIMEOUT_CALC * abs(rtt - avg_RTT);
+	}
+
+	// Now update the timeout length
+	timeout_length_ms = avg_RTT + 4 * std_RTT;
+}
+
+void netflow::receivedAck(packet &pkt, double end_time_ms,
+		double linkFreeAtTime) {
 
 	assert(pkt.getType() == ACK);
 	assert(pkt.getSeq() >= highest_received_ack_seqnum);
@@ -355,7 +387,7 @@ void netflow::receivedAck(packet &pkt, double end_time_ms) {
 		else {
 			cancelTimeoutAction(pkt.getSeq() + 1);
 			registerTimeoutAction(pkt.getSeq() + 1,
-					end_time_ms + timeout_length_ms);
+					linkFreeAtTime + timeout_length_ms);
 		}
 	}
 
@@ -370,34 +402,9 @@ void netflow::receivedAck(packet &pkt, double end_time_ms) {
 		// The corresponding FLOW packet had sequence number one less
 		int flow_seqnum = pkt.getSeq() - 1;
 
-		// Make sure we have a departure time for this ACK's corresponding FLOW
-		// packet.
-		assert (rtts.find(flow_seqnum) != rtts.end());
+		updateTimeouts(end_time_ms, flow_seqnum);
 
-		// Make sure the departure time was stored as a negative number.
-		assert (rtts[flow_seqnum] < 0);
-
-		// If we do then get the round-trip time for this packet then delete
-		// its entry from the RTT table.
-		double rtt = rtts[flow_seqnum] + end_time_ms;
-		rtts.erase(flow_seqnum);
-
-		// If it's the first ACK we don't have an average or deviation for the
-		// round-trip times, so initialize them to the first RTT
-		if (avg_RTT < 0 && std_RTT < 0) {
-			avg_RTT = rtt;
-			std_RTT = rtt;
-		}
-		else { // If we do have initial avg and std values, then adjust them
-			avg_RTT = (1 - B_TIMEOUT_CALC) * avg_RTT + B_TIMEOUT_CALC * rtt;
-			std_RTT = (1 - B_TIMEOUT_CALC) * std_RTT +
-					B_TIMEOUT_CALC * abs(rtt - avg_RTT);
-		}
-
-		// Now update the timeout length
-		timeout_length_ms = avg_RTT + 4 * std_RTT;
-
-		// Now adjust the window start and size. Since we got just received
+		// Now adjust the window start and size. Since we just received
 		// an ACK for a successfully received packet we can slide the window
 		// start by one to the right, and we can adjust the window size
 		// by whether we're in exponential or linear growth mode.
@@ -418,11 +425,21 @@ void netflow::receivedAck(packet &pkt, double end_time_ms) {
 		cancelTimeoutAction(pkt.getSeq() - 1);
 	}
 
-	// If the ACK number is more than 1 more than the highest ACK number seen
-	// or is less than the highest ACK number seen then we're getting
-	// out-of-order ACKs. For now we won't handle this case.
+	// If the ACK number is anything else then we're getting out-of-order ACKs,
+	// possibly because of dropped packets, possibly because of a timeout.
 	else {
-		assert(false);
+
+		// The corresponding FLOW packet had sequence number one less
+		int flow_seqnum = pkt.getSeq() - 1;
+
+		cancelAllTimeouts();
+
+		updateTimeouts(end_time_ms, flow_seqnum);
+
+		// Assume there was a dropped packet.
+		window_size = (window_size / 2) > 1 ? (window_size / 2)  : 1;
+		highest_sent_flow_seqnum = highest_received_ack_seqnum - 1;
+		window_start = highest_sent_flow_seqnum + 1;
 	}
 }
 
@@ -430,12 +447,7 @@ void netflow::receivedFlowPacket(packet &pkt, double arrival_time) {
 
 	assert(pkt.getType() == FLOW);
 
-	// Check that the received FLOW packet is in order. If not then DROP IT,
-	// since there's a pending duplicate_ack_event for the last in-order FLOW
-	// packet.
-	if (highest_received_flow_seqnum + 1 != pkt.getSeq()) {
-		return;
-	}
+	// TODO what to do if we receive FLOW packets out of order?
 
 	// Make the corresponding ACK packet and set the highest received flow
 	// sequence number.
@@ -458,10 +470,24 @@ void netflow::receivedFlowPacket(packet &pkt, double arrival_time) {
 
 double netflow::getTimeoutLengthMs() const { return timeout_length_ms; }
 
+void netflow::cancelAllTimeouts() {
+	map<int, timeout_event *>::iterator it;
+	for (it = future_timeouts_events.begin();
+			it != future_timeouts_events.end(); it++) {
+		sim->removeEvent(it->second);
+	}
+	future_timeouts_events.clear();
+}
+
 void netflow::timeoutOccurred(const packet &to_pkt) {
 	lin_growth_winsize_threshold = window_size / 2;
 	window_size = 1;
-	cancelTimeoutAction(to_pkt.getSeq());
+	window_start = to_pkt.getSeq();
+	num_duplicate_acks = 0;
+	rtts.clear();
+	highest_sent_flow_seqnum = to_pkt.getSeq() - 1;
+	highest_received_ack_seqnum = to_pkt.getSeq();
+	cancelAllTimeouts();
 }
 
 void netflow::printHelper(ostream &os) const {
@@ -488,6 +514,8 @@ void netflow::printHelper(ostream &os) const {
 				window_size << " packets," << endl
 			<< nestingPrefix(1) << "last seqnum sent: " <<
 				highest_sent_flow_seqnum << "-th packet," << endl
+			<< nestingPrefix(1) << "last ACK seen: " <<
+				highest_received_ack_seqnum << "-th ACK," << endl
 			<< nestingPrefix(0) << "}";
 }
 
@@ -500,8 +528,6 @@ void netlink::constructor_helper(double rate_mbps, int delay_ms, int buflen_kb,
 	this->buffer_capacity = buflen_kb * BYTES_PER_KB;
 	this->endpoint1 = endpoint1 == NULL ? NULL : endpoint1;
 	this->endpoint2 = endpoint2 == NULL ? NULL : endpoint2;
-	this->wait_time = 0;
-	this->buffer_occupancy = 0;
 }
 
 netlink::netlink(string name, double rate_mbps, int delay_ms, int buflen_kb,
@@ -542,34 +568,57 @@ double netlink::getRateMbps() const {
 }
 
 double netlink::getTransmissionTimeMs(const packet &pkt) const {
-	return pkt.getSizeBytes() / rate_bpms + delay_ms;
+	return pkt.getSizeBytes() / rate_bpms;
 }
 
-double netlink::getWaitTimeIntervalMs() const {
-	return wait_time;
+double netlink::getLinkFreeAtTime() const {
+	if (buffer.size() == 0) {
+		return 0;
+	}
+	return buffer.rbegin()->first;
 }
 
-int netlink::getBufferOccupancy() const { return buffer_occupancy; }
+void netlink::printBuffer(ostream &os) {
+	os << nestingPrefix(0) << "Link buffer: " << endl;
+	map<double, packet>::iterator it;
+	for(it = buffer.begin(); it != buffer.end(); it++) {
+		os << nestingPrefix(1) << "(arrival time: " << it->first
+				<< ", " << it->second.getTypeString() << " packet #: "
+				<< it->second.getSeq() << ")" << endl;
+	}
+	os << nestingPrefix(0) << "buffer size: " << getBufferOccupancy() << endl;
+	os << nestingPrefix(0) << "free at: " << getLinkFreeAtTime() << endl;
+}
 
-bool netlink::sendPacket(const packet &pkt) {
+long netlink::getBufferOccupancy() const {
+	long buffer_occupancy = 0;
+	map<double, packet>::const_iterator it;
+	for(it = buffer.begin(); it != buffer.end(); it++) {
+		buffer_occupancy += it->second.getSizeBytes();
+	}
+	return buffer_occupancy;
+}
+
+double netlink::getArrivalTime(const packet &pkt, bool useDelay, double time) {
+	return (useDelay ? getDelay() : 0) + getTransmissionTimeMs(pkt) +
+			(buffer.size() > 0 ? buffer.rbegin()->first : time);
+}
+
+bool netlink::sendPacket(const packet &pkt, bool useDelay, double time) {
 
 	// Check if the buffer has space. If it doesn't then return false.
 	if (getBufferOccupancy() + pkt.getSizeBytes() > buffer_capacity) {
 		return false;
 	}
-
-	buffer.push(pkt);
-	wait_time += getTransmissionTimeMs(pkt);
-	buffer_occupancy += pkt.getSizeBytes();
+	buffer[getArrivalTime(pkt, useDelay, time)] = pkt;
 	return true;
 }
 
 bool netlink::receivedPacket(long pkt_id) {
-	if(buffer.size() == 0 || buffer.front().getId() != pkt_id)
+	if(buffer.size() == 0 || buffer.begin()->second.getId() != pkt_id) {
 		return false;
-	wait_time -= getTransmissionTimeMs(buffer.front());
-	buffer_occupancy -= buffer.front().getSizeBytes();
-	buffer.pop();
+	}
+	buffer.erase(buffer.begin());
 	return true;
 }
 
@@ -590,8 +639,10 @@ void netlink::printHelper(ostream &os) const {
 				"\"," << endl
 			<< nestingPrefix(1) << "number of packets in buffer: " <<
 				buffer.size() << " packets," << endl
-			<< nestingPrefix(1) << "buffer occupancy: " <<
-				buffer_occupancy << " bytes" << endl
+			<< nestingPrefix(1) << "occupancy: " <<
+				getBufferOccupancy() << " bytes" << endl
+			<< nestingPrefix(1) << "free at: " <<
+				getLinkFreeAtTime() << " ms" << endl
 			<< nestingPrefix(0) << "}";
 }
 

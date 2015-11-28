@@ -33,6 +33,7 @@ class eventTimeSorter;
 using namespace std;
 
 extern bool debug;
+extern bool detail;
 extern ostream &debug_os;
 
 // -------------------------------- event class -------------------------------
@@ -127,15 +128,40 @@ private:
 	/** Link on which this packet arrived. */
 	netlink *link;
 
+	/** Size of the window to which this packet belongs, 1 for lone packets. */
+	int window_size;
+
+	/**
+	 * Sequence number of the first packet in this windowload. Assuming the
+	 * sequence numbers of the packets are contiguous (i.e., no selective
+	 * ACK scheme) then we can stack the transmissions of the packets in
+	 * the window (ordered by their sequence numbers) using the relative
+	 * distance from the first sequence number of the windowload to find
+	 * the arrival time of each packet.
+	 */
+	int window_start;
+
+	void constructorHelper(netflow *flow, packet &pkt,
+			netnode *step_destination, netlink *link,
+			int window_size, int window_start);
 public:
 
 	/**
-	 * Initializes this event's time to the given one, sets the event ID,
-	 * sets the flow from which this packet originates, and sets the packet.
+	 * Constructor for receive packet events for lone packets; the window size
+	 * and start are set to 1 and this packet's sequence number, respectively.
 	 */
 	receive_packet_event(double time, simulation &sim,
 			netflow &flow, packet &pkt, netnode &step_destination,
 			netlink &link);
+
+	/**
+	 * Constructor for receive packets events for packets that belong to
+	 * window loads; the window size and window start values are set to the
+	 * given ones.
+	 */
+	receive_packet_event(double time, simulation &sim,
+			netflow &flow, packet &pkt, netnode &step_destination,
+			netlink &link, int window_size, int window_start);
 
 	~receive_packet_event();
 
@@ -218,19 +244,43 @@ private:
 	/** Node from which the packet is going to leave. */
 	netnode *departure_node;
 
+	/** Size of the window to which this packet belongs, 1 for lone packets. */
+	int window_size;
+
+	/**
+	 * Sequence number of the first packet in this windowload. Assuming the
+	 * sequence numbers of the packets are contiguous (i.e., no selective
+	 * ACK scheme) then we can stack the transmissions of the packets in
+	 * the window (ordered by their sequence numbers) using the relative
+	 * distance from the first sequence number of the windowload to find
+	 * the arrival time of each packet.
+	 */
+	int window_start;
+
 	/** @return node at which this packet arrives. */
 	netnode *getDestinationNode() const;
 
+	void constructorHelper(netflow *flow, packet &pkt,
+			netlink *link, netnode *departure_node,
+			int window_size, int window_start);
 public:
 
 	send_packet_event();
 
 	/**
-	 * Initializes this event's time to the given one, sets the event ID,
-	 * sets the flow from which this packet originates, and sets the packet.
+	 * Constuctor for lone packets--window size is set to 1 and window_start
+	 * is set to this packet's sequence number.
 	 */
 	send_packet_event(double time, simulation &sim, netflow &flow,
 			packet &pkt, netlink &link, netnode &departure_node);
+
+	/**
+	 * Constructor for windowloads of packets--window_size is set to the given
+	 * value and window_start is set to the given value.
+	 */
+	send_packet_event(double time, simulation &sim, netflow &flow,
+			packet &pkt, netlink &link, netnode &departure_node,
+			int window_size, int window_start);
 
 	~send_packet_event();
 

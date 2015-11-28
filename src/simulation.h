@@ -37,6 +37,7 @@ using namespace std;
 using namespace rapidjson;
 
 extern bool debug;
+extern bool detail;
 extern ostream &debug_os;
 
 /**
