@@ -290,3 +290,141 @@ void simulation::removeEvent(event *e) {
 		it++;
 	}
 }
+
+/********** SIMULATION LOGGER RELATED FUNCTIONS **********/
+
+int simulation::getEvtCount() const {
+	return eventCount;
+}
+
+string simulation::getLogName() const {
+	return logName;
+}
+
+int simulation::initializeLog(filename) {
+	ofstream logger;
+
+	// store name of logger file
+	logName = filename;
+	// opening file with intent of appending to EOF
+    logger.open(logName, ios::out |ios::app);
+    // write in first line
+    string firstLine = "{ \"Simulation Event Metrics\" : [\n";
+    logger << firstLine ;
+    
+    logger.close();
+
+    return 0;
+}
+
+int simulation::closeLog() {
+	ofstream logger;
+	
+	// opening file with intent of appending to EOF
+    logger.open(logName, ios::out |ios::app);
+
+    // add last line and close json file
+    string lastLine = "] }";
+    logger << lastLine;
+
+    logger.close();
+
+    return 0;
+}
+
+int simulation::logEvent(double currTime) {
+	// initialize json holders
+    json allLinks;
+    json allFlows;
+    json currEvent;
+
+    // initalize iterators
+    map<string, netlink *>::const_iterator litr;
+    map<string, netflow *>::const_iterator fitr;
+
+    // get and format link data
+    for (litr = links.begin(); litr != links.end(); litr++) {
+        // get and format metrics
+        json linkMetric = logLinkMetric(*(litr->second), currTime);
+
+        // append to link metric array
+        allLinks.push_back(linkMetric);
+    }
+
+    // get and format flow data
+    for (fitr = flows.begin(); fitr != flows.end(); fitr++) {
+        // get and format metrics
+        json flowMetric = logFlowMetric(*(fitr->second), currTime);
+        
+        // append to flow metric array
+        allFlows.push_back(flowMetric);
+    }
+
+    // format event metric as json
+    json event = 
+    {
+        {"Time" , currTime},
+        {"LinkData" , allLinks},
+        {"FlowData" , allFlows}
+    };
+
+    // write to file
+    ofstream logger;
+    logger.open(logName, ios::out |ios::app);
+
+    appendEventMetric(event, logger, eventCount);
+
+    // update eventCount
+    eventCount++;
+
+    return 0;
+}
+
+void simulation::appendEventMetric(json event, ofstream& logger, int eventNum) {
+	if (eventNum != 0) {
+        logger << ',' <<'\n';
+    }
+
+    // 4 space indentation
+    logger << std::setw(4) << event << '\n';
+}
+
+json simulation::logLinkMetric(netlink link, double currTime) {
+
+	// retreive link metrics
+    string name = link.getName();
+    double rate = link.getRateMbps();
+    long occ = link.getBufferOccupancy(currTime);
+    int loss = link.getPktLoss();
+
+    // format into json
+    json linkMetric =
+    {
+        {"LinkID" , name},
+        {"LinkRate" , rate},
+        {"BuffOcc" , occ},
+        {"PktLoss" , loss},
+    };
+
+    return linkMetric;
+}
+
+json simulation::logFlowMetric(netflow flow, double currTime) {
+
+	// retrieve flow metrics
+    string name = flow.getName();
+    double rate = flow.getRateMbps();
+    int window = flow.getWindowSize();
+    double delay = flow.getPktDelay(currTime);
+
+    // format into json
+    json flowMetric =
+    {
+        {"FlowID" , name},
+        {"FlowRate" , rate},
+        {"WinSize" , window},
+        {"PktDelay" , delay},
+    };
+
+    return flowMetric;
+}

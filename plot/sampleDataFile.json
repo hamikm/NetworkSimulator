@@ -1,78 +1,77 @@
+{ "Simulation Event Metrics" : [
 {
-	"Simulation Event Metrics" : [
+	"Time" : 0,
+	"LinkData" : [
 		{
-			"Time" : 0,
-			"LinkData" : [
-				{
-					"LinkID" : "L1",
-					"LinkRate" : null,
-					"BuffOcc" : 1,
-					"PktLoss" : 1
-				},
-				{
-					"LinkID" : "L2",
-					"LinkRate" : null,
-					"BuffOcc" : 2,
-					"PktLoss" : 2
-				},
-				{
-					"LinkID" : "L3",
-					"LinkRate" : 3,
-					"BuffOcc" : 3,
-					"PktLoss" : 3
-				}
-			],
-			"FlowData" : [
-				{
-					"FlowID" : "F1",
-					"FlowRate" : 0,
-					"WinSize" : 0,
-					"PktDelay" : 0
-				},
-				{
-					"FlowID" : "F2",
-					"FlowRate" : 1,
-					"WinSize" : 2,
-					"PktDelay" : 3
-				}
-			]
+			"LinkID" : "L1",
+			"LinkRate" : null,
+			"BuffOcc" : 1,
+			"PktLoss" : 1
 		},
 		{
-			"Time" : 0,
-			"LinkData" : [
-				{
-					"LinkID" : "L1",
-					"LinkRate" : null,
-					"BuffOcc" : 1,
-					"PktLoss" : 1
-				},
-				{
-					"LinkID" : "L2",
-					"LinkRate" : null,
-					"BuffOcc" : 2,
-					"PktLoss" : 2
-				},
-				{
-					"LinkID" : "L3",
-					"LinkRate" : 3,
-					"BuffOcc" : 3,
-					"PktLoss" : 3
-				}
-			],
-			"FlowData" : [
-				{
-					"FlowID" : "F1",
-					"FlowRate" : 0,
-					"WinSize" : 0,
-					"PktDelay" : 0
-				},
-				{
-					"FlowID" : "F2",
-					"FlowRate" : 1,
-					"WinSize" : 2,
-					"PktDelay" : 3
-				}
-			]
+			"LinkID" : "L2",
+			"LinkRate" : null,
+			"BuffOcc" : 2,
+			"PktLoss" : 2
+		},
+		{
+			"LinkID" : "L3",
+			"LinkRate" : 3,
+			"BuffOcc" : 3,
+			"PktLoss" : 3
+		}
+	],
+	"FlowData" : [
+		{
+			"FlowID" : "F1",
+			"FlowRate" : 0,
+			"WinSize" : 0,
+			"PktDelay" : 0
+		},
+		{
+			"FlowID" : "F2",
+			"FlowRate" : 1,
+			"WinSize" : 2,
+			"PktDelay" : 3
 		}
 	]
 }
+,
+{
+	"Time" : 0,
+	"LinkData" : [
+		{
+			"LinkID" : "L1",
+			"LinkRate" : null,
+			"BuffOcc" : 1,
+			"PktLoss" : 1
+		},
+		{
+			"LinkID" : "L2",
+			"LinkRate" : null,
+			"BuffOcc" : 2,
+			"PktLoss" : 2
+		},
+		{
+			"LinkID" : "L3",
+			"LinkRate" : 3,
+			"BuffOcc" : 3,
+			"PktLoss" : 3
+		}
+	],
+	"FlowData" : [
+		{
+			"FlowID" : "F1",
+			"FlowRate" : 0,
+			"WinSize" : 0,
+			"PktDelay" : 0
+		},
+		{
+			"FlowID" : "F2",
+			"FlowRate" : 1,
+			"WinSize" : 2,
+			"PktDelay" : 3
+		}
+	]
+}
+] }

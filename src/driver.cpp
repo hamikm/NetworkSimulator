@@ -5,9 +5,6 @@
  * This file reads a network description from a JSON file then starts a
  * simulation of the network. It logs data as the simulation progresses then
  * dumps it to to disk so scripts can generate graphs.
- *
- * TODO decide how the data is dumped... to stdout so it can be redirected to
- * a single file? To multiple files in the 'data_dump' directory?
  */
 
 // ---------------------------- Includes --------------------------------------
@@ -65,23 +62,25 @@ ostream &debug_os = cout;
 /**
  * Reads a JSON file from disk, populates in-memory collections of hosts,
  * routers, links, and flows, starts a simulation, then logs data.
- *
- * TODO describe how we log data to disk. Multiple files? To cout intending
- * that it will get redirected to a single file?
  */
 int main (int argc, char **argv) {
 
 	char *infile = process_console_args(argc, argv);
 
-	// TODO make data logger object here (not in its own thread...) and pass it
-	// into the simulation constructor.
-
 	// Load hosts, routers, links, and flows from the JSON input file.
 	simulation sim(infile);
 
+	// Create a file in which to log data
+	logName = infile + "_metrics_log" + ".json";
+	sim.initializeLogger(logName);
+
 	// Invoke the simulation loop, which should terminate when all events
 	// have been processed.
+	// Every time an event is executed, network sim metrics are logged.
 	sim.runSimulation();
+
+	// Close .json format log file 
+	sim.closeLogger();
 
 	return 0;
 }

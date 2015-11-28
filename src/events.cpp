@@ -165,6 +165,10 @@ void receive_packet_event::runEvent() {
 		debug_os << "ERROR: packet at front of buffer wasn't the same as the"
 				" one received." << endl;
 	}
+
+	// log data
+	currTime = getTime();
+	sim->logEvent(currTime);
 }
 
 void receive_packet_event::printHelper(ostream &os) {
@@ -311,6 +315,9 @@ void send_packet_event::runEvent() {
 		// do nothing, don't make or queue a receive_packet_event
 	}
 
+	// log data
+	currTime = getTime();
+	sim->logEvent(currTime);
 }
 
 void send_packet_event::printHelper(ostream &os) {
@@ -369,6 +376,10 @@ void start_flow_event::runEvent() {
 		sim->addEvent(e);
 		pkt_it++;
 	}
+
+	// log data
+	currTime = getTime();
+	sim->logEvent(currTime);
 }
 
 void start_flow_event::printHelper(ostream &os) {
@@ -425,6 +436,10 @@ void timeout_event::runEvent() {
 		sim->addEvent(e);
 		pkt_it++;
 	}
+
+	// log data
+	currTime = getTime();
+	sim->logEvent(currTime);
 }
 
 /**
@@ -475,6 +490,10 @@ void ack_event::runEvent() {
 	// computations as the source.
 	flow->registerSendDuplicateAckAction(dup_pkt.getSeq(),
 			getTime() + flow->getTimeoutLengthMs());
+
+	// log data
+	currTime = getTime();
+	sim->logEvent(currTime);
 }
 
 void ack_event::printHelper(ostream &os) {

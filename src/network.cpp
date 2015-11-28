@@ -231,6 +231,21 @@ const map<int, ack_event *>& netflow::getFutureSendAckEvents() const {
 	return future_send_ack_events;
 }
 
+double netflow::getRateBytesPerSec() const {
+	return window_size * FLOW_PACKET_SIZE / avg_RTT;
+}
+
+double netflow::getRateMbps() const {
+	// time trace instanenous flow rate
+	return window_size * FLOW_PACKET_SIZE / avg_RTT;
+}
+
+double netflow::getPktDelay(double currTime) const {
+	// get host
+	double getOnLinkTime = source->getLink()->getLinkFreeAtTime();
+	return currTime - getOnLinkTime;
+}
+
 timeout_event *netflow::cancelTimeoutAction(int seq) {
 	if (future_timeouts_events.find(seq) == future_timeouts_events.end()) {
 		return NULL;
@@ -608,9 +623,11 @@ bool netlink::sendPacket(const packet &pkt, bool useDelay, double time) {
 
 	// Check if the buffer has space. If it doesn't then return false.
 	if (getBufferOccupancy() + pkt.getSizeBytes() > buffer_capacity) {
+		packets_dropped++;
 		return false;
 	}
 	buffer[getArrivalTime(pkt, useDelay, time)] = pkt;
+	packets_dropped = 0;
 	return true;
 }
 

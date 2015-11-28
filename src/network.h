@@ -229,10 +229,10 @@ private:
 	/** Number of megabits sent. */
 	double amt_sent_mb;
 
-	/** Pointer to one end of this link. */
+	/** Pointer to one end of this flow. */
 	nethost *source;
 
-	/** Pointer to the other end of this link. */
+	/** Pointer to the other end of this flow. */
 	nethost *destination;
 
 	/** Highest received ACK sequence number (at source). */
@@ -415,7 +415,19 @@ public:
 	 * Print helper function which partially overrides the one in @c netdevice.
 	 * @param os The output stream to which to write.
 	 */
-	virtual void printHelper(ostream &os) const;
+	virtual void printHelper(ostream &os) const;/** @return flow rate in bytes per second. */
+	
+	/** returns flow rate in bytes per sec */
+	double netflow::getRateBytesPerSec() const;
+
+	/** @return flow rate in megabits per second. */
+	double netflow::getRateMbps() const;
+
+	/** @returns packet delay 
+	 * which we are currently defining as queueing time of the link directly
+	 * connected to the host, until further notice
+	 */
+	double netflow::getPktDelay(double currTime) const;
 
 	// --------------------------- Mutators -----------------------------------
 
@@ -567,6 +579,13 @@ private:
 	 * delay) time to the arrival time of the last element in the buffer.
 	 */
 	map<double, packet> buffer;
+
+	/**
+	 * Represents packet loss. Since assuming nothing happens to the packet
+	 * whle the packet is 'in transit'. This value keeps track of the number
+	 * of packets dropped in one go due to a full link buffer.
+	 */
+	int packets_dropped = 0;
 
 	/**
 	 * Helper for the constructors. Converts the buffer length from kilobytes

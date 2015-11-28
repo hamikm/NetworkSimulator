@@ -19,8 +19,13 @@
 #include <queue>
 
 // Libraries.
+ /* NOTE: rapidjson is used for parsing input while
+ *       "JSON for Modern C++" (found here: https://github.com/nlohmann/json)
+ *       is used to parse and format .json logger file.
+ */
 #include "rapidjson/document.h"
 #include "rapidjson/prettywriter.h"
+#include "json.hpp"
 
 // Forward declarations.
 class event;
@@ -35,6 +40,7 @@ class netflow;
 
 using namespace std;
 using namespace rapidjson;
+using namespace nlohmann;     // necessary to use "json.h"
 
 extern bool debug;
 extern bool detail;
@@ -58,7 +64,11 @@ public:
 };
 
 /**
- * Represents the simulation. TODO add details.
+ * Represents the simulation.
+ * Sets up network based on .json input file and runs network simulation. TCP protocol
+ * to use indicated as flow parameter in .json input file.
+ * Each simulation object has an associated logger file to which simulation metrics
+ * are written.
  */
 class simulation {
 
@@ -81,6 +91,12 @@ private:
 	 * Keys represent time in milliseconds.
 	 */
 	multimap<double, event *> events;
+
+	/** Name of file to which simulation metrics are logged */
+	string logName;
+
+	/** Keeps track of how many events have been executed; Used in logging */
+	int eventCount = 0;
 
 	/** Helper for the destructor. */
 	void free_network_devices ();
@@ -128,8 +144,9 @@ public:
 	 * empties. Note that each event can (1) modify the host, flow, router,
 	 * or link data structures in this simulation object, (2) add new events
 	 * to this simulation object's event queue, or (3) log data into this
-	 * simulation object's data logger object. This function is not responsible
-	 * for writing the data logger's data to disk--the caller is.
+	 * simulation object's related log file. This function is not responsible
+	 * for writing the data logger's data to disk--the caller (individual event)
+	 * is.
 	 */
 	void runSimulation();
 
@@ -146,6 +163,53 @@ public:
 	 * @param e event to remove
 	 */
 	void removeEvent(event *e);
+
+	/********** SIMULATION LOGGER RELATED FUNCTIONS **********/
+	
+	/** @return eventCount */
+	int getEvtCount() const;
+
+	/** @return logName */
+	string getLogName() const;
+
+	/**
+	 * Initializes a data log for the simulation object by creating
+	 * new file called "filename.json" and adds the first line.
+	 */
+	int initializeLog(filename);
+
+	/**
+	 * After simulation has finished i.e. all events have logged data
+	 * adds the last line to make the .json logger file valid.
+	 */
+	int closeLog();
+	
+	/**
+	 * Called everytime an event is run/"popped".
+	 * Sweeps for all relevant metrics of time currTime stored in event object
+	 * and then writes to file.
+	 */
+	int logEvent(double currTime);
+
+	/**
+	 * Helper function to logEvent.
+	 * Appends a .json formatted event metric to a logger file
+	 */
+	void appendEventMetric(json event, ofstream& logger, int eventNum);
+
+	/**
+	 * Helper function to logEvent.
+	 * Retrieves link ID, link rate, link buffer occupancy, and packet loss of a
+	 * single link and formats metrics into json.
+	 */
+	json logLinkMetric(double currTime);
+
+	/**
+	 * Helper function to logEvent.
+	 * Retrieves flow ID, flow rate, window size, and packet delay of a single
+	 * flow, and formats metrics into json.
+	 */
+	json logFlowMetric(double currTime);
 };
 
 #endif // SIMULATION_H
