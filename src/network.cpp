@@ -137,6 +137,7 @@ void netflow::constructorHelper (double start_time, double size_mb,
 	this->source = &source;
 	this->destination = &destination;
 
+	this->num_total_packets =num_total_packets;
 	this->amt_sent_mb = 0;
 	this->highest_received_ack_seqnum = 1;
 	this->highest_sent_flow_seqnum = 0;
@@ -150,13 +151,19 @@ void netflow::constructorHelper (double start_time, double size_mb,
 	this->std_RTT = -1;
 
 	this->sim = &sim;
+
+	// Initialize vector of received packets.
+	this->received_flow_packets.push_back(true);	// For easy indexing.
+	for (int i = 1; i <= num_total_packets; i++)
+		this->received_flow_packets.push_back(false);
+
 }
 
 netflow::netflow (string name, double start_time, double size_mb,
 			nethost &source, nethost &destination, simulation &sim) :
 				netelement(name) {
 	constructorHelper(start_time, size_mb, source, destination,
-			size_mb / packet::FLOW_PACKET_SIZE + 1, 1,
+			1e6 * size_mb / packet::FLOW_PACKET_SIZE + 1, 1,
 			DEFAULT_INITIAL_TIMEOUT, sim);
 }
 
@@ -283,6 +290,13 @@ vector<packet> netflow::peekOutstandingPackets() {
 		outstanding_pkts.push_back(packet(FLOW, *this, i));
 	}
 
+	
+	cerr << "highest sent flow seqnum: " << highest_sent_flow_seqnum << endl;
+	cerr << "window start: " << window_start << endl;
+	cerr << "window end: " << window_start + window_size << endl;
+	cerr << "num outstanding packets: " << outstanding_pkts.size() << endl;
+	
+
 	return outstanding_pkts;
 }
 
@@ -354,7 +368,14 @@ void netflow::receivedAck(packet &pkt, double end_time_ms,
 		double linkFreeAtTime) {
 
 	assert(pkt.getType() == ACK);
-	assert(pkt.getSeq() >= highest_received_ack_seqnum);
+	//assert(pkt.getSeq() >= highest_received_ack_seqnum);
+	if (pkt.getSeq() < highest_received_ack_seqnum) {
+		
+		cerr << "Ack seq smaller than highest received seq " << endl;
+		cerr << "Received ack: " << pkt.getSeq() << endl;
+		cerr << "Highest: " << highest_received_ack_seqnum << endl;
+		//exit(0);
+	}
 
 	/*
 	 * Check if sequence number is the same as the last one (i.e., duplicate
@@ -364,19 +385,30 @@ void netflow::receivedAck(packet &pkt, double end_time_ms,
 	 * just cancel the pending timeout, since popOutstandingPackets will
 	 * create one later.
 	 */
+
 	if (pkt.getSeq() == highest_received_ack_seqnum) {
 
 		// Increment number of duplicate acks and check if more than
 		// allowed number. If so, do fast retransmit by changing last
 		// seen packet to current sequence number and halving window size
+
 		if (++num_duplicate_acks >=
 				FAST_RETRANSMIT_DUPLICATE_ACK_THRESHOLD) {
-			highest_sent_flow_seqnum = pkt.getSeq();
+			int old_highest_sent = highest_sent_flow_seqnum;
+			highest_sent_flow_seqnum = pkt.getSeq()-1;
+			window_start = pkt.getSeq();
+
+			cerr << "Window size (before): " << window_size << endl;
 			window_size = window_size / 2 > 1 ? window_size / 2 : 1;
+			cerr << "Window size (after): " << window_size << endl;
+
 			lin_growth_winsize_threshold = window_size;
 			num_duplicate_acks = 0;
 
 			cancelTimeoutAction(pkt.getSeq() + 1);
+
+			// TODO: revise timeout handling.
+			
 			// new timeout_event will be created when popOutstandingPackets
 			// is called.
 		}
@@ -384,6 +416,8 @@ void netflow::receivedAck(packet &pkt, double end_time_ms,
 		// Got a duplicate ACK but don't have enough of them to do a fast
 		// retransmit. Push back the timeout event by canceling the old one
 		// and registering a new one.
+		// TODO: revise timeout handling
+
 		else {
 			cancelTimeoutAction(pkt.getSeq() + 1);
 			registerTimeoutAction(pkt.getSeq() + 1,
@@ -391,44 +425,45 @@ void netflow::receivedAck(packet &pkt, double end_time_ms,
 		}
 	}
 
-	// Otherwise if the ACK number is one more than highest ACK we've seen we
+	// Otherwise if the ACK number is greater than the highest ACK we've seen we
 	// had a successful transmission, so slide and grow the window, adjust the
 	// average and std of RTTs so the timeout length can be set, and remove
-	// the corresponding timeout event from the flow.
-	else if (pkt.getSeq() == highest_received_ack_seqnum + 1) {
+	// the corresponding timeout events from the flow.
+	else if (pkt.getSeq() > highest_received_ack_seqnum) {
+		// Remove the timeout events for all packets between the last 
+		// highest_received_ack_seqnum and the ack just received.	
+		int prev_highest = highest_received_ack_seqnum;	
+
+		for (int ack_seqnum = highest_received_ack_seqnum;
+			 ack_seqnum < pkt.getSeq(); ack_seqnum++) {
+
+			// Adjust avg and std of RTTs
+			updateTimeouts(end_time_ms, ack_seqnum);
+
+			// Remove events from the flow's map of future timeout events
+			// and from the simulation's event queue
+			cancelTimeoutAction(ack_seqnum);
+		}
+
 		// Update the last successfully received ack
 		highest_received_ack_seqnum = pkt.getSeq();
 
-		// The corresponding FLOW packet had sequence number one less
-		int flow_seqnum = pkt.getSeq() - 1;
-
-		updateTimeouts(end_time_ms, flow_seqnum);
-
 		// Now adjust the window start and size. Since we just received
 		// an ACK for a successfully received packet we can slide the window
-		// start by one to the right, and we can adjust the window size
+		// to begin at its sequence number, and we can adjust the window size
 		// by whether we're in exponential or linear growth mode.
-		window_start++;
-		if (lin_growth_winsize_threshold < 0) { // hasn't been initialized, so
-											    // just do exponential growth
-			window_size++;
-		}
-		else if (window_size < lin_growth_winsize_threshold) { // exp. part
-			window_size++;
-		}
-		else { // linear growth part
-			window_size += 1 / window_size;
-		}
+		window_start = highest_received_ack_seqnum;
 
-		// Remove event from the flow's map of future timeout events
-		// and from the simulation's event queue
-		cancelTimeoutAction(pkt.getSeq() - 1);
+		increaseWindowSize(pkt.getSeq() - prev_highest);
+
 	}
-
-	// If the ACK number is anything else then we're getting out-of-order ACKs,
-	// possibly because of dropped packets, possibly because of a timeout.
+	
+	// If the ACK number is less than the highest received ACK, it is the
+	// result of leftover repeated-ACKs still being dequeued.
+	// Drop them for now...
 	else {
 
+		/*
 		// The corresponding FLOW packet had sequence number one less
 		int flow_seqnum = pkt.getSeq() - 1;
 
@@ -440,19 +475,37 @@ void netflow::receivedAck(packet &pkt, double end_time_ms,
 		window_size = (window_size / 2) > 1 ? (window_size / 2)  : 1;
 		highest_sent_flow_seqnum = highest_received_ack_seqnum - 1;
 		window_start = highest_sent_flow_seqnum + 1;
+		*/
+		return;
 	}
+	
 }
 
 void netflow::receivedFlowPacket(packet &pkt, double arrival_time) {
 
 	assert(pkt.getType() == FLOW);
+	cerr << "Received flow packet seq: " << pkt.getSeq() << endl;
 
-	// TODO what to do if we receive FLOW packets out of order?
+	// Set the highest_received_flow_seqnum and make/send the corresponding
+	// ACK packet. This should handle out-of-order FLOW packets.
 
-	// Make the corresponding ACK packet and set the highest received flow
-	// sequence number.
-	packet ackpack = packet(ACK, *this, pkt.getSeq() + 1);
-	highest_received_flow_seqnum++;
+	// Update the vector of received flow packets.
+	received_flow_packets[pkt.getSeq()] = true;
+	
+	// Find the latest flow packet received IN ORDER. Start iterating at
+	// the current highest received flow packet, until we reach something
+	// not received or the end of the flow.
+	int update_last_received = highest_received_flow_seqnum + 1;
+
+	while (update_last_received < num_total_packets &&
+		   received_flow_packets[update_last_received]) {
+		highest_received_flow_seqnum = update_last_received;
+		update_last_received++;
+	}
+
+	cerr << "Received highest consec. flow packet: " << highest_received_flow_seqnum << endl;
+	// Send the corresponding acknowledgement.
+	packet ackpack = packet(ACK, *this, highest_received_flow_seqnum + 1);
 
 	// Make and queue (locally and on the simulation event queue) an immediate
 	// duplicate_ack_event. When that event is run it will queue another,
@@ -488,6 +541,34 @@ void netflow::timeoutOccurred(const packet &to_pkt) {
 	highest_sent_flow_seqnum = to_pkt.getSeq() - 1;
 	highest_received_ack_seqnum = to_pkt.getSeq();
 	cancelAllTimeouts();
+}
+
+void netflow::increaseWindowSize(int num_acks_received) {
+
+	if (lin_growth_winsize_threshold < 0) { // hasn't been initialized, so
+										    // just do exponential growth
+		window_size += num_acks_received;
+	}
+	else if (window_size < lin_growth_winsize_threshold) {
+		// Increase exponentially until linear growth threshold is reached.
+		// Then increase linearly.
+		if (window_size + num_acks_received < lin_growth_winsize_threshold)
+			window_size += num_acks_received;
+		else {
+			int linear_growth = window_size + num_acks_received - 
+				lin_growth_winsize_threshold;
+			window_size = lin_growth_winsize_threshold;
+			for (int i = 0; i < linear_growth; i++) {
+				window_size += 1 / window_size;
+			}
+		}
+
+	}
+	else { // linear growth part
+		for (int i = 0; i < num_acks_received; i++) {
+			window_size += 1 / window_size;
+		}
+	}
 }
 
 void netflow::printHelper(ostream &os) const {

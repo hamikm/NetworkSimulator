@@ -128,6 +128,8 @@ void receive_packet_event::runEvent() {
 		// each. The timout_events have already been added to the flow and to
 		// the simulation's queue.
 		int window_size = pkts_to_send.size();
+		if (pkts_to_send.size() <= 0)
+			return;
 		assert(pkts_to_send.size() > 0);
 		int first_seqnum_in_window = pkts_to_send[0].getSeq(); //assume ordered
 		vector<packet>::iterator pkt_it = pkts_to_send.begin();

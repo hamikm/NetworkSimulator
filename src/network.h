@@ -241,8 +241,13 @@ private:
 	/** Highest sent FLOW packet sequence number (at source). */
 	int highest_sent_flow_seqnum;
 
-	/** Highest received FLOW sequence number (at destination). */
+	/** Highest received FLOW sequence number such that all flow packets
+	 * before it have also been received. (at destination). */
 	int highest_received_flow_seqnum;
+
+	/** Vector of received FLOW packets (at destination), indexed by
+	 * sequence number. Value is true if packet has been received. */
+	vector<bool> received_flow_packets;
 
 	/** The TCP protocol's window size. */
 	double window_size;
@@ -252,6 +257,9 @@ private:
 
 	/** Number of duplicate ACKs seen. */
 	int num_duplicate_acks;
+
+	/** Number of total packets in the flow. */
+	int num_total_packets;
 
 	/**
 	 * This is the maximum length of time in milliseconds that can pass between
@@ -532,6 +540,12 @@ public:
 	 * @param to_pkt the packet that timed out
 	 */
 	void timeoutOccurred(const packet &to_pkt);
+
+	/**
+	 * Helper function to calculate new window size based on number of new
+	 * acknowledgements received.
+	 */
+	 void increaseWindowSize(int num_acks_received);
 };
 
 // ------------------------------- netlink class ------------------------------
