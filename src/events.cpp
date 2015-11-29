@@ -129,11 +129,12 @@ void receive_packet_event::runEvent() {
 		// the simulation's queue.
 		int window_size = pkts_to_send.size();
 
-		cout << "Num packets to send: " <<  pkts_to_send.size() << endl;
-		if(pkts_to_send.size() > 0)
-			return;
+		if (debug) {
+			cout << "Num packets to send: " <<  pkts_to_send.size() << endl;
+		}
 
-		int first_seqnum_in_window = pkts_to_send[0].getSeq(); //assume ordered
+		int first_seqnum_in_window = pkts_to_send.size() == 0 ? -1 :
+				pkts_to_send[0].getSeq();
 		vector<packet>::iterator pkt_it = pkts_to_send.begin();
 		int i = 0;
 		while(pkt_it != pkts_to_send.end()) {
@@ -445,8 +446,8 @@ void timeout_event::runEvent() {
 	}
 
 	// Queue up a new timeout event
-	timeout_event *new_te = new timeout_event(getTime() + flow->getTimeoutLengthMs(), 
-		 						*sim, *flow);
+	timeout_event *new_te = new timeout_event(getTime() +
+			flow->getTimeoutLengthMs(), *sim, *flow);
 	flow->setFlowTimeout(new_te);
 	sim->addEvent(new_te);
 

@@ -226,8 +226,8 @@ private:
 	/** Transmission size in megabits. */
 	double size_mb;
 
-	/** Number of megabits sent. */
-	double amt_sent_mb;
+	/** Number of megabits received. */
+	double amt_received_mb;
 
 	/** Pointer to one end of this flow. */
 	nethost *source;
@@ -291,17 +291,6 @@ private:
 	timeout_event *flow_timeout;
 
 	/**
-	 * Every time an ACK send_packet_event is pushed onto the global events
-	 * queue we also push a duplicate_ack_event onto the events
-	 * queue. When the duplicate_ack_event runs it chains (queues) another
-	 * duplicate_ack_event onto this map and onto the gloval events queue.
-	 * If the correct FLOW packet is received in the future then pending
-	 * duplicate_ack_events are deleted from this map and from the global
-	 * events queue.
-	 */
-	map<int, ack_event *> future_send_ack_events;
-
-	/**
 	 * Map from sequence numbers to round-trip times of those packets. If a
 	 * value is negative then it's the FLOW packet departure time; the
 	 * corresponding ACK hasn't arrived yet. When it does its arrival
@@ -315,8 +304,8 @@ private:
 	void updateTimeoutLength(double end_time_ms, int flow_seqnum);
 
 	void constructorHelper (double start_time, double size_mb,
-			nethost &source, nethost &destination, int num_total_packets,
-			double window_size, double timeout_length_ms, simulation &sim);
+			nethost &source, nethost &destination, double window_size,
+			double timeout_length_ms, simulation &sim);
 
 public:
 
