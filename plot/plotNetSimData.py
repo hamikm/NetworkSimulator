@@ -86,18 +86,21 @@ def plotLinkData(time, linksData):
 		pktloss.plot(time, linksData[link]["Packet Loss (pkts)"], 'o',
 				 label=str(link), markersize=1)
 	
-	# add titles and labels and legend to plots
+	# add titles, labels and legend; set lower bound of y axis
 	lrates.set_xlabel('Time (ms)')
 	lrates.set_ylabel('Link Rate (Mbps)')
 	lrates.legend()
+	lrates.set_ylim(ymin=0)
 	
 	buffocc.set_xlabel('Time (ms)')
 	buffocc.set_ylabel('Buffer Occupancy (pkts)')
 	buffocc.legend()
+	buffocc.set_ylim(ymin=0)
 	
 	pktloss.set_xlabel('Time (ms)')
 	pktloss.set_ylabel('Packet Loss (pkts)')
 	pktloss.legend()
+	pktloss.set_ylim(ymin=0)
 
 	# set window title
 	f.canvas.set_window_title("Link Metrics Graph")
@@ -120,21 +123,23 @@ def plotFlowData(time, flowsData):
 		pktdelay.plot(time, flowsData[flow]["Packet Delay (ms)"], 'o',
 				label=str(flow), markersize=1)
 	
-	# add titles and labels to plots
+	# add titles, labels, and legends to plots; set lower bound of y axis
 	frates.set_xlabel('Time (ms)')
 	frates.set_ylabel('Flow Rate (Mbps)')
 	frates.legend()
+	frates.set_ylim(ymin=0)
 	
 	winsize.set_xlabel('Time (ms)')
 	winsize.set_ylabel('Window Size (pkts)')
 	winsize.legend()
+	winsize.set_ylim(ymin=0)
 	
 	pktdelay.set_xlabel('Time (ms)')
 	pktdelay.set_ylabel('Packet Delay (ms)')
 	pktdelay.legend()
+	pktdelay.set_ylim(ymin=0)
 
 	# set window title
-	# don't really understand why this isn't working
 	f.canvas.set_window_title("Flow Metrics Graph")
 
 def plotAll(time, linksData, flowsData):

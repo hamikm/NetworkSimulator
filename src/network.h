@@ -281,6 +281,13 @@ private:
 	 * should be initialized to first RTT.
 	 */
 	double std_RTT;
+	
+	/** 
+	 * Time elapsed since packet was send and corresponding acknowledgment
+	 * was received by the source. Updated every receive_packet_event.
+	 * Exists for purpose of plotting metric packet delay.
+	 */ 
+	double pkt_RRT;
 
 	/**
 	 * This is a map from sequence numbers of packets to their future,
@@ -412,10 +419,10 @@ public:
 	const map<int, ack_event*>& getFutureSendAckEvents() const;
 
 	/**
-	 * Print helper function which partially overrides the one in @c netdevice.
+	 * Print helper function which partially overrides the one in netdevice.
 	 * @param os The output stream to which to write.
 	 */
-	virtual void printHelper(ostream &os) const;/** @return flow rate in bytes per second. */
+	virtual void printHelper(ostream &os) const;
 	
 	/** returns flow rate in bytes per sec */
 	double getRateBytesPerSec() const;
@@ -424,8 +431,8 @@ public:
 	double getRateMbps() const;
 
 	/** @returns packet delay 
-	 * which we are currently defining as queueing time of the link directly
-	 * connected to the host, until further notice
+	 * Defined as time elapsed since packet is send and acknowledgement is
+	 * received.
 	 */
 	double getPktDelay(double currTime) const;
 

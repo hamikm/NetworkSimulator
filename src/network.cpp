@@ -148,6 +148,7 @@ void netflow::constructorHelper (double start_time, double size_mb,
 	this->lin_growth_winsize_threshold = -1;
 	this->avg_RTT = -1;
 	this->std_RTT = -1;
+	this->pkt_RRT = -1;
 
 	this->sim = &sim;
 }
@@ -241,9 +242,7 @@ double netflow::getRateMbps() const {
 }
 
 double netflow::getPktDelay(double currTime) const {
-	// get host
-	double getOnLinkTime = source->getLink()->getLinkFreeAtTime();
-	return currTime - getOnLinkTime;
+	return pkt_RRT;
 }
 
 timeout_event *netflow::cancelTimeoutAction(int seq) {
@@ -348,7 +347,10 @@ void netflow::updateTimeouts(double end_time_ms, int flow_seqnum) {
 	// its entry from the RTT table.
 	double rtt = rtts[flow_seqnum] + end_time_ms;
 	rtts.erase(flow_seqnum);
-
+	
+	// update state variable
+	pkt_RRT = rtt;
+	
 	// If it's the first ACK we don't have an average or deviation for the
 	// round-trip times, so initialize them to the first RTT
 	if (avg_RTT < 0 && std_RTT < 0) {
