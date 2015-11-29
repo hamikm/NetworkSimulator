@@ -33,18 +33,18 @@ def loadAllData(filename):
 	linksData = {}
 	flowsData = {}
 
-	if events[0]["Time"] == 0:
-		# initialize data storage arrays
-		times.append(0)
-		# initialize data storage arrays for links
-		for link in events[0]["LinkData"]:
-			linksData[link["LinkID"]] = {"Link Rate (Mbps)" : [link["LinkRate"]],
-			                              "Buffer Occupancy (pkts)" : [link["BuffOcc"]],
-			                              "Packet Loss (pkts)" : [link["PktLoss"]]}
-		for flow in events[0]["FlowData"]:
-			flowsData[flow["FlowID"]] = {"Flow Rate (Mbps)" : [flow["FlowRate"]],
-				                       "Window Size (pkts)" : [flow["WinSize"]],
-				                       "Packet Delay (ms)" : [flow["PktDelay"]]}
+	# use events[0] to declare and initialize arrays
+	# initialize data storage arrays
+	times.append(events[0]["Time"])
+	# initialize data storage arrays for links
+	for link in events[0]["LinkData"]:
+		linksData[link["LinkID"]] = {"Link Rate (Mbps)" : [link["LinkRate"]],
+		                              "Buffer Occupancy (pkts)" : [link["BuffOcc"]],
+		                              "Packet Loss (pkts)" : [link["PktLoss"]]}
+	for flow in events[0]["FlowData"]:
+		flowsData[flow["FlowID"]] = {"Flow Rate (Mbps)" : [flow["FlowRate"]],
+			                       "Window Size (pkts)" : [flow["WinSize"]],
+			                       "Packet Delay (ms)" : [flow["PktDelay"]]}
 
 	# continue sorting data from every event
 	for event in events[1:]:
