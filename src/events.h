@@ -351,9 +351,6 @@ private:
 	/** Flow to which to register a timeout. */
 	netflow *flow;
 
-	/** The packet that timed out. */
-	packet timedout_pkt;
-
 public:
 
 	timeout_event();
@@ -362,7 +359,7 @@ public:
 	 * Initializes this event's time to the given one, sets the event ID,
 	 * and sets the flow to which this timeout_event belongs.
 	 */
-	timeout_event(double time, simulation &sim, netflow &flow, packet &to_pkt);
+	timeout_event(double time, simulation &sim, netflow &flow);
 
 	~timeout_event();
 

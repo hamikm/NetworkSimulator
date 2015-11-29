@@ -283,16 +283,12 @@ private:
 	double std_RTT;
 
 	/**
-	 * This is a map from sequence numbers of packets to their future,
-	 * corresponding timeout events. Each time a send_packet_event is pushed
-	 * onto the global events queue a corresponding future timeoutout_event is
-	 * also pushed. If an ACK for the packet sent through the send_packet_event
-	 * is received before that packet's timeout_event has been processed
-	 * then it's the receive_ack_event's job to remove the corresponding
-	 * timeout_event from the global events queue by looking up the
-	 * timeout_event in this map then deleting by event id number and time.
+	 * Pointer to the timer associated with the flow. Each time an ack is received,
+	 * the timer is pushed back by removing this timeout event from the events
+	 * queue and replacing it with a new timeout event. The new event's timer
+	 * extends the previous event's timer by timeout_length_ms.
 	 */
-	map<int, timeout_event *> future_timeouts_events;
+	timeout_event *flow_timeout;
 
 	/**
 	 * Every time an ACK send_packet_event is pushed onto the global events
@@ -316,9 +312,7 @@ private:
 	/** Pointer to simulation so timeout_events can be made in this class. */
 	simulation *sim;
 
-	void updateTimeouts(double end_time_ms, int flow_seqnum);
-
-	void cancelAllTimeouts();
+	void updateTimeoutLength(double end_time_ms, int flow_seqnum);
 
 	void constructorHelper (double start_time, double size_mb,
 			nethost &source, nethost &destination, int num_total_packets,
@@ -398,6 +392,8 @@ public:
 
 	int getNumDuplicateAcks() const;
 
+	timeout_event* getFlowTimeout() const;
+
 	const map<int, double>& getRoundTripTimes() const;
 
 	double getWindowSize() const;
@@ -437,29 +433,20 @@ public:
 
 	void setLastACKNum(int new_seqnum);
 
-	/**
-	 * Cancels the timeout action corresponding the given sequence number
-	 * by removing it from the local map and from the simulation's evnet
-	 * queue. Invoke after an ACK is received or after another timeout is
-	 * processed and a new one generated.
-	 * @param seq sequence number corresponding to the packet that would have
-	 * been retransmitted after a timeout
-	 * @return the timeout event that was cancelled
-	 * @post timeout_event erased from local map and from the global events
-	 * queue.
+	/** 
+	 * Creates the first timeout event associated with a flow. This is called
+	 * in the start_flow_event. 
 	 */
-	timeout_event *cancelTimeoutAction(int seq);
+	timeout_event *initFlowTimeout();
 
 	/**
-	 * Makes a timeout_event and puts it in the local map and on the
-	 * simulation's event queue.
-	 * @param seq the timeout_event will contain a FLOW packet with this
-	 * sequence number
-	 * @time time at which the timeout event should run
-	 * @post timeout_event added to the local map and to the global events
-	 * queue
+	 * Postpones runnng the timeout_event by removing it from the event queue
+	 * and replacing it with a new timeout_event with new_time passed in as the
+	 * scheduled execution time.
 	 */
-	void registerTimeoutAction(int seq, double time);
+	timeout_event *delayFlowTimeout(double new_time);
+
+	timeout_event *setFlowTimeout(timeout_event *e);
 
 	/**
 	 * Cancels a future duplicate_ack_event. Invoke after an in-order FLOW
@@ -470,6 +457,7 @@ public:
 	 * @post duplicate_ack_event erased from the local map and from the global
 	 * events queue.
 	 */
+
 	ack_event *cancelSendDuplicateAckAction(int seq);
 
 	/**
@@ -543,7 +531,7 @@ public:
 	 * and a new timeout_event.
 	 * @param to_pkt the packet that timed out
 	 */
-	void timeoutOccurred(const packet &to_pkt);
+	void timeoutOccurred();
 };
 
 // ------------------------------- netlink class ------------------------------
