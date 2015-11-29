@@ -137,6 +137,10 @@ void netflow::constructorHelper (double start_time, double size_mb,
 	this->source = &source;
 	this->destination = &destination;
 
+	this->pktTally = 0;
+	this->leftTime = start_time;
+	this->rightTime = start_time + RATE_INTERVAL;
+
 	this->amt_sent_mb = 0;
 	this->highest_received_ack_seqnum = 1;
 	this->highest_sent_flow_seqnum = 0;
@@ -161,15 +165,10 @@ netflow::netflow (string name, double start_time, double size_mb,
 			DEFAULT_INITIAL_TIMEOUT, sim);
 }
 
-nethost *netflow::getSource() const {
-	return source;
-}
 
 double netflow::getStartTimeSec() const { return start_time_sec; }
 
 double netflow::getStartTimeMs() const { return start_time_sec * MS_PER_SEC; }
-
-nethost *netflow::getDestination() const { return destination; }
 
 double netflow::getSizeMb() const { return size_mb; }
 
@@ -180,12 +179,40 @@ int netflow::getNumTotalPackets() const {
 	return size_in_bytes / FLOW_PACKET_SIZE + 1;
 }
 
+nethost *netflow::getDestination() const { return destination; }
+
 void netflow::setDestination(nethost &destination) {
 	this->destination = &destination;
 }
 
+nethost *netflow::getSource() const {
+	return source;
+}
+
 void netflow::setSource(nethost &source) {
 	this->source = &source;
+}
+
+int netflow::getPktTally() const { return pktTally; }
+
+void netflow::incPktTally() {
+	pktTally++;
+}
+
+void netflow::resetPktTally() {
+	pktTally = 0;
+}
+	
+double netflow::getLeftTime() const { return leftTime; }
+
+void netflow::setLeftTime(double newTime) {
+	leftTime = newTime;
+}
+	
+double netflow::getRightTime() const { return rightTime; }
+
+void netflow::setRightTime(double newTime) {
+	rightTime = newTime;
 }
 
 int netflow::getLastAck() const {

@@ -234,6 +234,15 @@ private:
 
 	/** Pointer to the other end of this flow. */
 	nethost *destination;
+	
+	/** For plotting, number of flow packets received by source */
+	int pktTally;
+	
+	/** For plotting, start time of the packet count interval */
+	double leftTime;
+	
+	/** For plotting, end time of the packet count interval */
+	double rightTime;
 
 	/** Highest received ACK sequence number (at source). */
 	int highest_received_ack_seqnum;
@@ -254,7 +263,7 @@ private:
 	int num_duplicate_acks;
 
 	/**
-	 * This is the maximum length of time in milliseconds that can pass between
+	 * This is the maximum length of time in milliseconds that can pass b/t
 	 * a send_packet_event and its corresponding receive_ack_event before
 	 * a timeout_event will run. This timeout length is dynamically
 	 * readjusted with the (recursively determined) average RTT and
@@ -384,6 +393,15 @@ public:
 
 	nethost *getSource() const;
 
+	/** @returns number of flow packets received by source w/in interval */
+	int getPktTally() const;
+	
+	/** @returns start time of the packet count interval */
+	double getLeftTime() const;
+	
+	/** @returns end time of the packet count interval */
+	double getRightTime() const;
+
 	/**  @return last ACK's sequence number. */
 	int getLastAck() const;
 
@@ -443,6 +461,18 @@ public:
 	void setDestination(nethost &destination);
 
 	void setLastACKNum(int new_seqnum);
+	
+	/** increments packet tally */
+	void incPktTally();
+	
+	/** resets packet tally */
+	void resetPktTally();
+	
+	/** sets left time */
+	void setLeftTime(double newTime);
+	
+	/** sets right time */
+	void setRightTime(double newTime);
 
 	/**
 	 * Cancels the timeout action corresponding the given sequence number
