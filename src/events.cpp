@@ -296,8 +296,9 @@ void send_packet_event::runEvent() {
 	// Find (absolute) arrival time to the next node from the given departure
 	// node down the given link, taking into account that packets in window-
 	// loads incur the link delay penalty once per WINDOW, not once per packet.
+	bool use_delay = !link->isSameDirectionAsLastPacket(getDestinationNode());
 	double arrival_time =
-			link->getArrivalTime(pkt, window_start == pkt.getSeq(), getTime());
+			link->getArrivalTime(pkt, use_delay, getTime());
 	if (debug) {
 		debug_os << "transmission time: " << link->getTransmissionTimeMs(pkt)
 				<< ", event time: " << getTime() << ", relative pos: "
@@ -307,7 +308,7 @@ void send_packet_event::runEvent() {
 
 	// Use the arrival time to queue a receive_packet_event (does nothing if
 	// the link buffer has no room, thereby dropping the packet).
-	if (link->sendPacket(pkt, window_start == pkt.getSeq(), getTime())) {
+	if (link->sendPacket(pkt, getDestinationNode(), use_delay, getTime())) {
 		receive_packet_event *e = new receive_packet_event(arrival_time, *sim,
 				*flow, pkt, *getDestinationNode(), *link);
 		sim->addEvent(e);
@@ -358,7 +359,7 @@ void start_flow_event::runEvent() {
 
 	// Queue the timeout event for the flow, which runs if no acknowledgements
 	// are received before the listed time is reached.
-	flow->initFlowTimeout();
+	//flow->initFlowTimeout();
 
 	// Get the current (i.e. the first) window's packet(s) to send.
 	double linkFreeAt = flow->getSource()->getLink()->getLinkFreeAtTime();

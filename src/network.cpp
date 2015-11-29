@@ -150,7 +150,6 @@ void netflow::constructorHelper (double start_time, double size_mb,
 	this->std_RTT = -1;
 
 	this->sim = &sim;
-
 }
 
 netflow::netflow (string name, double start_time, double size_mb,
@@ -240,6 +239,7 @@ double netflow::getPktDelay(double currTime) const {
 
 
 timeout_event *netflow::delayFlowTimeout(double new_time) {
+
 	// Find and remove the current timeout_event in the global event queue.
 	this->sim->removeEvent(this->flow_timeout);
 
@@ -282,7 +282,8 @@ vector<packet> netflow::popOutstandingPackets(double start_time,
 		double linkFreeAt) {
 
 	// If we're done sending this flow's data then return nothing.
-	if (amt_received_mb >= size_mb) {
+	if (highest_sent_flow_seqnum * packet::FLOW_PACKET_SIZE / BYTES_PER_MEGABIT
+			>= getSizeMb()) {
 		return vector<packet>();
 	}
 
@@ -366,7 +367,7 @@ void netflow::receivedAck(packet &pkt, double end_time_ms,
 			lin_growth_winsize_threshold = window_size;
 			num_duplicate_acks = 0;
 
-			delayFlowTimeout(end_time_ms + timeout_length_ms);
+			//delayFlowTimeout(end_time_ms + timeout_length_ms);
 		}
 
 		// Got a duplicate ACK but don't have enough of them to do a fast
@@ -416,7 +417,7 @@ void netflow::receivedAck(packet &pkt, double end_time_ms,
 		}
 
 		// Successfully received an ACK, so we push back the timeout.
-		delayFlowTimeout(end_time_ms + timeout_length_ms);
+		//delayFlowTimeout(end_time_ms + timeout_length_ms);
 	}
 
 	cerr << " --------------- " << endl;
@@ -435,16 +436,17 @@ void netflow::receivedFlowPacket(packet &pkt, double arrival_time) {
 
 	// Make the corresponding ACK packet and set the highest received flow
 	// sequence number.
+
 	if (pkt.getSeq() ==  highest_received_flow_seqnum + 1) {
 		highest_received_flow_seqnum++;
-		amt_received_mb += pkt.getSizeMb();
+
+
 		// TODO: without following timeouts are triggered too early?
-		//delayFlowTimeout(arrival_time + timeout_length_ms);
+		// delayFlowTimeout(arrival_time + timeout_length_ms);
 	}
 
 	// Make and queue (locally and on the simulation event queue) an immediate
-	// duplicate_ack_event. When that event is run it will queue another,
-	// future duplicate_ack_event in case the next FLOW packet never arrives.
+	// duplicate_ack_event.
 	registerSendDuplicateAckAction(highest_received_flow_seqnum + 1,
 			arrival_time);
 }
@@ -512,6 +514,7 @@ void netlink::constructor_helper(double rate_mbps, int delay_ms, int buflen_kb,
 	this->buffer_capacity = buflen_kb * BYTES_PER_KB;
 	this->endpoint1 = endpoint1 == NULL ? NULL : endpoint1;
 	this->endpoint2 = endpoint2 == NULL ? NULL : endpoint2;
+	destination_last_packet = NULL;
 }
 
 netlink::netlink(string name, double rate_mbps, int delay_ms, int buflen_kb,
@@ -587,12 +590,28 @@ int netlink::getPktLoss() const {
 	return packets_dropped;
 }
 
+bool netlink::isSameDirectionAsLastPacket(netnode *destination) {
+	if(destination_last_packet == NULL) { // need to use link delay for first
+		return false;
+	}
+
+	// If names of destinations are the same, then same direction
+	if(strcmp(destination->getName().c_str(),
+			destination_last_packet->getName().c_str()) == 0) {
+		return true;
+	}
+	return false;
+}
+
 double netlink::getArrivalTime(const packet &pkt, bool useDelay, double time) {
 	return (useDelay ? getDelay() : 0) + getTransmissionTimeMs(pkt) +
 			(buffer.size() > 0 ? buffer.rbegin()->first : time);
 }
 
-bool netlink::sendPacket(const packet &pkt, bool useDelay, double time) {
+bool netlink::sendPacket(const packet &pkt, netnode *destination,
+		bool useDelay, double time) {
+
+	destination_last_packet = destination;
 
 	// Check if the buffer has space. If it doesn't then return false.
 	if (getBufferOccupancy() + pkt.getSizeBytes() > buffer_capacity) {

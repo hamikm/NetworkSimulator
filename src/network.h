@@ -14,6 +14,7 @@
 #include <map>
 #include <queue>
 #include <cmath>
+#include <set>
 
 // Custom headers
 #include "util.h"
@@ -298,6 +299,9 @@ private:
 	 */
 	map<int, double> rtts;
 
+	set<int> receivedPackets;
+	multiset<int> receivedAcks;
+
 	/** Pointer to simulation so timeout_events can be made in this class. */
 	simulation *sim;
 
@@ -564,6 +568,9 @@ private:
 	 */
 	int packets_dropped = 0;
 
+	/** Destination of last packet added to the buffer. */
+	netnode *destination_last_packet;
+
 	/**
 	 * Helper for the constructors. Converts the buffer length from kilobytes
 	 * to bytes and the rate from megabits per second to bytes per second.
@@ -643,6 +650,17 @@ public:
 	int getPktLoss() const;
 
 	/**
+	 * Returns true if the direction of the last packet in the buffer is the
+	 * same as the direction of the packet about to be added; if the
+	 * direction is the same then the link delay should not be used, since it
+	 * was already used once for the first packet in this run of same-direction
+	 * packets.
+	 * @return true if the destination is the same as the destination of the
+	 * last packet in the buffer
+	 */
+	bool isSameDirectionAsLastPacket(netnode *destination);
+
+	/**
 	 * Gets the arrival time of a packet on the other end of the link.
 	 * @param pkt
 	 * @param useDelay
@@ -670,12 +688,14 @@ public:
 	 * If the link buffer has space the given packet is added to the buffer
 	 * and the rolling wait time and buffer occupancy are increased.
 	 * @param pkt the packet to add to the buffer
+	 * @param destination of the packet
 	 * @param useDelay true if link delay should be used to sum into the
 	 * buffer's wait time. Should be used ONCE per window
 	 * @param time at which we're trying to send this packet
 	 * @return true if added to buffer successfully, false if dropped
 	 */
-	bool sendPacket(const packet &pkt, bool useDelay, double time);
+	bool sendPacket(const packet &pkt, netnode *destination,
+			bool useDelay, double time);
 
 	/**
 	 * Called when a lone packet is received to free the link for subsequent
