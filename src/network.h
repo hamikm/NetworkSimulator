@@ -343,16 +343,16 @@ public:
 	 * timeout value is later seeded with the first packet's RTT and then
 	 * changed with recursive average and deviation algorithms.
 	 */
-	static const double DEFAULT_INITIAL_TIMEOUT = 1000.0;
+	static constexpr double DEFAULT_INITIAL_TIMEOUT = 1000.0;
 
 	/** The constant 'b' from the recursive average and std formulas. */
-	static const double B_TIMEOUT_CALC = 0.1;
+	static constexpr double B_TIMEOUT_CALC = 0.1;
 
 	/**
 	 * A small fraction of a millisecond used to order timeout events and
 	 * regular send packet events.
 	 */
-	static const double TIME_EPSILON = 0.0000000001;
+	static constexpr double TIME_EPSILON = 0.0000000001;
 
 	/**
 	 * Initializes the flow's basic attributes as well as attributes required
@@ -418,16 +418,16 @@ public:
 	virtual void printHelper(ostream &os) const;/** @return flow rate in bytes per second. */
 	
 	/** returns flow rate in bytes per sec */
-	double netflow::getRateBytesPerSec() const;
+	double getRateBytesPerSec() const;
 
 	/** @return flow rate in megabits per second. */
-	double netflow::getRateMbps() const;
+	double getRateMbps() const;
 
 	/** @returns packet delay 
 	 * which we are currently defining as queueing time of the link directly
 	 * connected to the host, until further notice
 	 */
-	double netflow::getPktDelay(double currTime) const;
+	double getPktDelay(double currTime) const;
 
 	// --------------------------- Mutators -----------------------------------
 
@@ -658,6 +658,12 @@ public:
 	 * @return the buffer occupancy
 	 */
 	long getBufferOccupancy() const;
+
+	/**
+	 * @return packet loss, whic is number of packets dropped since
+	 * assuming nothing happens to a backet while in transit
+	 */
+	int getPktLoss() const;
 
 	/**
 	 * Gets the arrival time of a packet on the other end of the link.

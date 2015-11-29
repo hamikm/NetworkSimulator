@@ -176,7 +176,7 @@ public:
 	 * Initializes a data log for the simulation object by creating
 	 * new file called "filename.json" and adds the first line.
 	 */
-	int initializeLog(filename);
+	int initializeLog(string filename);
 
 	/**
 	 * After simulation has finished i.e. all events have logged data
@@ -202,14 +202,14 @@ public:
 	 * Retrieves link ID, link rate, link buffer occupancy, and packet loss of a
 	 * single link and formats metrics into json.
 	 */
-	json logLinkMetric(double currTime);
+	json logLinkMetric(netlink link, double currTime);
 
 	/**
 	 * Helper function to logEvent.
 	 * Retrieves flow ID, flow rate, window size, and packet delay of a single
 	 * flow, and formats metrics into json.
 	 */
-	json logFlowMetric(double currTime);
+	json logFlowMetric(netflow flow, double currTime);
 };
 
 #endif // SIMULATION_H

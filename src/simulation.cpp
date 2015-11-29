@@ -301,9 +301,9 @@ string simulation::getLogName() const {
 	return logName;
 }
 
-int simulation::initializeLog(filename) {
+int simulation::initializeLog(string filename) {
 	ofstream logger;
-
+	
 	// store name of logger file
 	logName = filename;
 	// opening file with intent of appending to EOF
@@ -394,7 +394,7 @@ json simulation::logLinkMetric(netlink link, double currTime) {
 	// retreive link metrics
     string name = link.getName();
     double rate = link.getRateMbps();
-    long occ = link.getBufferOccupancy(currTime);
+    long occ = link.getBufferOccupancy();
     int loss = link.getPktLoss();
 
     // format into json

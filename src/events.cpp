@@ -167,7 +167,7 @@ void receive_packet_event::runEvent() {
 	}
 
 	// log data
-	currTime = getTime();
+	double currTime = getTime();
 	sim->logEvent(currTime);
 }
 
@@ -316,7 +316,7 @@ void send_packet_event::runEvent() {
 	}
 
 	// log data
-	currTime = getTime();
+	double currTime = getTime();
 	sim->logEvent(currTime);
 }
 
@@ -378,7 +378,7 @@ void start_flow_event::runEvent() {
 	}
 
 	// log data
-	currTime = getTime();
+	double currTime = getTime();
 	sim->logEvent(currTime);
 }
 
@@ -438,7 +438,7 @@ void timeout_event::runEvent() {
 	}
 
 	// log data
-	currTime = getTime();
+	double currTime = getTime();
 	sim->logEvent(currTime);
 }
 
@@ -492,7 +492,7 @@ void ack_event::runEvent() {
 			getTime() + flow->getTimeoutLengthMs());
 
 	// log data
-	currTime = getTime();
+	double currTime = getTime();
 	sim->logEvent(currTime);
 }
 

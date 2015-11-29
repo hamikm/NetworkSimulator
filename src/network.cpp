@@ -614,6 +614,10 @@ long netlink::getBufferOccupancy() const {
 	return buffer_occupancy;
 }
 
+int netlink::getPktLoss() const {
+	return packets_dropped;
+}
+
 double netlink::getArrivalTime(const packet &pkt, bool useDelay, double time) {
 	return (useDelay ? getDelay() : 0) + getTransmissionTimeMs(pkt) +
 			(buffer.size() > 0 ? buffer.rbegin()->first : time);

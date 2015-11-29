@@ -71,8 +71,12 @@ int main (int argc, char **argv) {
 	simulation sim(infile);
 
 	// Create a file in which to log data
-	logName = infile + "_metrics_log" + ".json";
-	sim.initializeLogger(logName);
+	string logName = infile;
+	
+	// .json output file should end up on plot/ directory
+	logName = logName.substr(11, 20);	
+	logName = "plot" + logName + "_log" + ".json";
+	sim.initializeLog(logName);
 
 	// Invoke the simulation loop, which should terminate when all events
 	// have been processed.
@@ -80,7 +84,7 @@ int main (int argc, char **argv) {
 	sim.runSimulation();
 
 	// Close .json format log file 
-	sim.closeLogger();
+	sim.closeLog();
 
 	return 0;
 }

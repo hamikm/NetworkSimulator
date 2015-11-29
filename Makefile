@@ -2,7 +2,7 @@
 # For: CS143 project, Caltech, FA 2015
 
 # For warnings, gdb, and valgrind, respectively.
-CXX_FLAGS = -Wall -g -O0
+CXX_FLAGS = -Wall -g -O0 -std=c++1y
 
 # JSON input files for simulation.
 INPUT_DIR = input_files
@@ -77,7 +77,9 @@ $(GT_DIR)/make/$(GT_OBJ):
 
 clean:
 	rm -rf *~ *.o $(NETSIM) $(TESTS) $(DOCS) $(TST_DIR)/*.o Makefile.bak \
-	$(TST_DIR)/*~ $(SRC_DIR)/*~ $(SRC_DIR)/*.o $(INPUT_DIR)/*~
+	$(TST_DIR)/*~ $(SRC_DIR)/*~ $(SRC_DIR)/*.o $(INPUT_DIR)/*~ \
+	plot/test_case_*.json \
+	plot/*~
 	make clean -C $(GT_DIR)/make
 
 # Auto-generates HTML documentation into the docs directory using doxygen.
