@@ -79,9 +79,12 @@ def plotLinkData(time, linksData):
 	# plot link rates, buff occup, packet loss for all links
 	# note: 'o' is to ensure scatterplot
 	for link in linksData.keys():
-		lrates.plot(time, linksData[link]["Link Rate (Mbps)"], 'o', label=str(link))
-		buffocc.plot(time, linksData[link]["Buffer Occupancy (pkts)"], 'o', label=str(link))
-		pktloss.plot(time, linksData[link]["Packet Loss (pkts)"], 'o', label=str(link))
+		lrates.plot(time, linksData[link]["Link Rate (Mbps)"], 'o',
+				 label=str(link), markersize=1)
+		buffocc.plot(time, linksData[link]["Buffer Occupancy (pkts)"], 'o',
+				 label=str(link), markersize=1)
+		pktloss.plot(time, linksData[link]["Packet Loss (pkts)"], 'o',
+				 label=str(link), markersize=1)
 	
 	# add titles and labels and legend to plots
 	lrates.set_xlabel('Time (ms)')
@@ -110,9 +113,12 @@ def plotFlowData(time, flowsData):
 	# plot flow rates, buff occup, packet loss for all links
 	# note: 'o' is to ensure scatterplot
 	for flow in flowsData.keys():
-		frates.plot(time, flowsData[flow]["Flow Rate (Mbps)"], 'o',label=str(flow))
-		winsize.plot(time, flowsData[flow]["Window Size (pkts)"], 'o', label=str(flow))
-		pktdelay.plot(time, flowsData[flow]["Packet Delay (ms)"], 'o', label=str(flow))
+		frates.plot(time, flowsData[flow]["Flow Rate (Mbps)"], 'o',
+				label=str(flow), markersize=1)
+		winsize.plot(time, flowsData[flow]["Window Size (pkts)"], 'o',
+				label=str(flow), markersize=1)
+		pktdelay.plot(time, flowsData[flow]["Packet Delay (ms)"], 'o',
+				label=str(flow), markersize=1)
 	
 	# add titles and labels to plots
 	frates.set_xlabel('Time (ms)')
