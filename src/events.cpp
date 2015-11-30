@@ -107,8 +107,6 @@ void receive_packet_event::runEvent() {
 		// update flow packet tally used to calculate flow rate
 		double time = getTime();
 		flow->updatePktTally(time);
-
-		cout << "packet arrived at host" << endl;
 	}
 	
 	/*

@@ -333,7 +333,7 @@ int simulation::closeLog() {
 }
 
 int simulation::logEvent(double currTime) {
-    cout << "Logging event";
+   
     // initialize json holders
     json allLinks;
     json allFlows;
@@ -391,7 +391,7 @@ void simulation::appendEventMetric(json event, ofstream& logger, int eventNum) {
 }
 
 json simulation::logLinkMetric(netlink link, double currTime) {
-    cout << " link metric";
+
     // retreive link metrics
     string name = link.getName();
     double rate = link.getRateMbps();
@@ -411,7 +411,7 @@ json simulation::logLinkMetric(netlink link, double currTime) {
 }
 
 json simulation::logFlowMetric(netflow flow, double currTime) {
-    cout << " flow metric" << endl;
+  
 	// retrieve flow metrics
     string name = flow.getName();
     //double rate = flow.getPktTally() * 1024 / RATE_INTERVAL / BYTES_PER_MEGABIT;

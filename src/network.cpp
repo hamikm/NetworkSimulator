@@ -195,7 +195,6 @@ void netflow::setSource(nethost &source) {
 
 int netflow::getPktTally() const {
 	return pktTally;
-	cout << "tally: " << pktTally << endl;
 }
 
 // update flow packet tally used to calculate flow rate
@@ -203,13 +202,11 @@ void netflow::updatePktTally(double time) {
 
 	if ((time <= rightTime) && (time > leftTime)) {
 		pktTally++;
-		cout << "within left right" << endl;	
 	}
 	else if (time > rightTime) {
 		pktTally = 0;		
 		leftTime = rightTime;
 		rightTime = rightTime + RATE_INTERVAL;
-		cout << "not within left right" << endl;
 		updatePktTally(time);
 	}
 	else { cout << "Should never hit this case" << endl; }
@@ -273,7 +270,6 @@ const map<int, ack_event *>& netflow::getFutureSendAckEvents() const {
 
 double netflow::getFlowRateBytesPerSec() const {
 	return getPktTally() * 1024 / RATE_INTERVAL;
-	// is flow packet size stored somewhere as a constant?
 	//return window_size * FLOW_PACKET_SIZE / avg_RTT;
 }
 
