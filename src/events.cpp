@@ -140,7 +140,11 @@ void receive_packet_event::runEvent() {
 		// each. The timout_events have already been added to the flow and to
 		// the simulation's queue.
 		int window_size = pkts_to_send.size();
-		assert(pkts_to_send.size() > 0);
+
+		cout << "Num packets to send: " <<  pkts_to_send.size() << endl;
+		if(pkts_to_send.size() > 0)
+			return;
+
 		int first_seqnum_in_window = pkts_to_send[0].getSeq(); //assume ordered
 		vector<packet>::iterator pkt_it = pkts_to_send.begin();
 		int i = 0;
@@ -363,6 +367,10 @@ void start_flow_event::runEvent() {
 		debug_os << getTime() << "\tSTARTING FLOW: " << *this << endl;
 	}
 
+	// Queue the timeout event for the flow, which runs if no acknowledgements
+	// are received before the listed time is reached.
+	flow->initFlowTimeout();
+
 	// Get the current (i.e. the first) window's packet(s) to send.
 	double linkFreeAt = flow->getSource()->getLink()->getLinkFreeAtTime();
 	vector<packet> pkts_to_send =
@@ -408,11 +416,11 @@ void start_flow_event::printHelper(ostream &os) {
 // ----------------------------- timeout_event class --------------------------
 
 timeout_event::timeout_event() :
-		event(), flow(NULL), timedout_pkt(packet()) { }
+		event(), flow(NULL) { }
 
 timeout_event::timeout_event(
-		double time, simulation &sim, netflow &flow, packet &to_pkt) :
-				event(time, sim), flow(&flow), timedout_pkt(to_pkt) { }
+		double time, simulation &sim, netflow &flow) :
+				event(time, sim), flow(&flow) { }
 
 timeout_event::~timeout_event() { }
 
@@ -420,14 +428,13 @@ void timeout_event::runEvent() {
 
 	if(debug) {
 		debug_os << getTime() << "\tTIMEOUT TRIGGERED: "
-				<< timedout_pkt.getSeq() << endl
 				<< *this << endl;
 	}
 
 	// Resize the window, set the linear growth threshold, cancel the
 	// corresponding timeout locally (this event running means it was
 	// dequeued in the events queue).
-	flow->timeoutOccurred(timedout_pkt);
+	flow->timeoutOccurred();
 
 	// Now send the timed out packet again.
 	double linkFreeAt = flow->getSource()->getLink()->getLinkFreeAtTime();
@@ -449,6 +456,12 @@ void timeout_event::runEvent() {
 		pkt_it++;
 	}
 
+	// Queue up a new timeout event
+	timeout_event *new_te = new timeout_event(getTime() + flow->getTimeoutLengthMs(), 
+		 						*sim, *flow);
+	flow->setFlowTimeout(new_te);
+	sim->addEvent(new_te);
+
 	// log data
 	double currTime = getTime();
 	sim->logEvent(currTime);
@@ -462,14 +475,11 @@ void timeout_event::printHelper(ostream &os) {
 	event::printHelper(os);
 
 	flow->setNestingDepth(1);
-	timedout_pkt.setNestingDepth(1);
 
 	os << "<-- timeout_event. {" << endl <<
-			"  timedout_pkt: " << timedout_pkt << endl <<
 			"  flow: " << *flow << endl << "}";
 
 	flow->setNestingDepth(0);
-	timedout_pkt.setNestingDepth(0);
 }
 
 // ------------------------------- ack_event class ----------------------------
@@ -496,12 +506,6 @@ void ack_event::runEvent() {
 			dup_pkt, *(flow->getDestination()->getLink()),
 			*(flow->getDestination()));
 	sim->addEvent(e);
-
-	// N.B. we wait the same amount of time to send a duplicate ACK as we do
-	// a timeout_event, since the destination can just perform the same
-	// computations as the source.
-	flow->registerSendDuplicateAckAction(dup_pkt.getSeq(),
-			getTime() + flow->getTimeoutLengthMs());
 
 	// log data
 	double currTime = getTime();
