@@ -14,6 +14,7 @@
 #include <map>
 #include <queue>
 #include <cmath>
+#include <climits>
 
 // Custom headers
 #include "util.h"
@@ -176,8 +177,14 @@ class netrouter : public netnode {
 
 private:
 
-	/** Routing table implemented as map from destination names to links. */
+	/** Routing table implemented as map from destination names to a 
+	 * pair containing distance next-hop link. */
 	map<string, netlink *> rtable;
+
+	/** Table of distances from this router to each node in the network.
+	 * Distance to self and adjacent HOSTS are initialized to 0. Distance
+	 * to other routers are initialized to max double (defined in <climits>) */
+	map<string, double> rdistances;
 
 public:
 
@@ -202,6 +209,15 @@ public:
 	 */
 	map<netlink *, packet> receivePacket(double time, simulation &sim,
 			netflow &flow, packet &pkt);
+
+	/**
+	 * If this is a ROUTING packet, this function will update the router's
+	 * routing table and distances table if necessary. If an update is made,
+	 * it will also trigger send_packet_events to deliver additional routing
+	 * packets to its neighbors.
+	 */
+	void receiveRoutingPacket(double time, simulation &sim, netflow &flow, 
+			packet &pkt, netlink &link);
 
 	/**
 	 * Print helper function which partially overrides the one in @c netdevice.
@@ -801,6 +817,9 @@ private:
 	/** Sequence number of packet */
 	int seqnum;
 
+	/** Distance vector for use in routing messages. **/
+	map<string, double> distance_vec;
+
 	/**
 	 * Constructor helper. Does naive assignments; logic should be in the
 	 * calling constructors.
@@ -870,6 +889,10 @@ public:
 	int getSeq() const;
 
 	long getId() const;
+
+	map<string, double> getDistances() const;
+
+	void setDistances(map<string, double> distances);
 
 	netflow *getParentFlow() const;
 

@@ -95,19 +95,63 @@ bool netrouter::isRoutingNode() const { return true; }
 
 map<netlink *, packet> netrouter::receivePacket(double time, simulation &sim,
 		netflow &flow, packet &pkt) {
-
-	map<netlink *, packet> link_pkt_map;
-
-	if (pkt.getType() == ROUTING) {
-		// TODO handle routing packets later. See the else below or
-		// netflow::popOutstandingPackets for an example.
-	}
-	else {
-		netlink *link_to_use = rtable.at(pkt.getDestination());
-		link_pkt_map[link_to_use] = pkt;
-	}
+ 
+	map<netlink *, packet> link_pkt_map;	
+	netlink *link_to_use = rtable.at(pkt.getDestination());
+	link_pkt_map[link_to_use] = pkt;
 
 	return link_pkt_map;
+}
+
+void netrouter::receiveRoutingPacket(double time, simulation &sim, netflow &flow, 
+			packet &pkt, netlink &link) {
+	// Update routing table as follows: For each destination,
+	// if distance reported by the packet is less than the distance
+	// stored in the router's rdistances map, update with the new 
+	// distance and set the link_ptr in rtable to the link on
+	// which the packet arrived.
+
+	map<string, double> received_dist = pkt.getDistances();
+	map<string, double>::iterator it = received_dist.begin();
+	bool updated = false;
+	double travel_time = 0; 			// TODO routing: set the distance (time in link)
+										// reported by the packet.
+
+	while (it != received_dist.end()) {
+		string key = it->first;
+
+		if (it->second + travel_time < rdistances[key]) {
+			updated = true;
+			
+			// TODO: add in the distance (time in link) reported by the packet
+			rdistances[key] = it->second + travel_time;
+
+			// Set link_ptr in routing table to link this packet came from.
+			rtable[key] = link;
+
+		}
+		it++;
+	}
+
+	if (updated) {
+		// Send routing packets to adjacent routers.
+		// TODO routing: determine what to do for flow - can't dereference a null pointer
+		packet rpack = packet(ROUTING, NULL, -1);
+		rpack.setDistances(rdistances);
+
+		vector<netlink *> adj_links = getlinks();
+		for (int i = 0; i < adj_links.size(); i++) {
+			netnode *other_node = ((adj_links[i]->endpoint1 == this) ? 
+									adj_links[i]->endpoint2 : adj_links[i]->endpoint1);
+
+			// Check if other_node points to host
+			if (other_node->isRoutingNode()) {
+				// TODO routing : Check when link is free and queue up a routing packet 
+			}
+
+		}
+	}
+
 }
 
 void netrouter::printHelper(ostream &os) const {
@@ -756,6 +800,8 @@ string packet::getSource() const { return source_ip; }
 string packet::getDestination() const { return dest_ip; }
 
 int packet::getSeq() const { return seqnum; }
+
+map<string, double> packet::getDistances() const { return distance_vec; }
 
 netflow *packet::getParentFlow() const { return parent_flow; }
 
