@@ -443,10 +443,10 @@ public:
 	virtual void printHelper(ostream &os) const;
 	
 	/** returns flow rate in bytes per sec */
-	double getRateBytesPerSec() const;
+	double getFlowRateBytesPerSec() const;
 
 	/** @return flow rate in megabits per second. */
-	double getRateMbps() const;
+	double getFlowRateMbps() const;
 
 	/** @returns packet delay 
 	 * Defined as time elapsed since packet is send and acknowledgement is
@@ -462,11 +462,10 @@ public:
 
 	void setLastACKNum(int new_seqnum);
 	
-	/** increments packet tally */
-	void incPktTally();
-	
-	/** resets packet tally */
-	void resetPktTally();
+	/** Updates packet tally depending on whether receive_packet_event
+	 * occurr during rate_interval
+	 */
+	void updatePktTally(double time);
 	
 	/** sets left time */
 	void setLeftTime(double newTime);

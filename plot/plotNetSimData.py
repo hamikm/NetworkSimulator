@@ -81,7 +81,7 @@ def plotLinkData(time, linksData):
 	for link in linksData.keys():
 		lrates.plot(time, linksData[link]["Link Rate (Mbps)"], 'o',
 				 label=str(link), markersize=1)
-		buffocc.plot(time, linksData[link]["Buffer Occupancy (pkts)"], 'o',
+		buffocc.plot(time, linksData[link]["Buffer Occupancy (bytes)"], 'o',
 				 label=str(link), markersize=1)
 		pktloss.plot(time, linksData[link]["Packet Loss (pkts)"], 'o',
 				 label=str(link), markersize=1)

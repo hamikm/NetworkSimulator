@@ -193,14 +193,26 @@ void netflow::setSource(nethost &source) {
 	this->source = &source;
 }
 
-int netflow::getPktTally() const { return pktTally; }
-
-void netflow::incPktTally() {
-	pktTally++;
+int netflow::getPktTally() const {
+	return pktTally;
+	cout << "tally: " << pktTally << endl;
 }
 
-void netflow::resetPktTally() {
-	pktTally = 0;
+// update flow packet tally used to calculate flow rate
+void netflow::updatePktTally(double time) {
+
+	if ((time <= rightTime) && (time > leftTime)) {
+		pktTally++;
+		cout << "within left right" << endl;	
+	}
+	else if (time > rightTime) {
+		pktTally = 0;		
+		leftTime = rightTime;
+		rightTime = rightTime + RATE_INTERVAL;
+		cout << "not within left right" << endl;
+		updatePktTally(time);
+	}
+	else { cout << "Should never hit this case" << endl; }
 }
 	
 double netflow::getLeftTime() const { return leftTime; }
@@ -259,13 +271,15 @@ const map<int, ack_event *>& netflow::getFutureSendAckEvents() const {
 	return future_send_ack_events;
 }
 
-double netflow::getRateBytesPerSec() const {
-	return window_size * FLOW_PACKET_SIZE / avg_RTT;
+double netflow::getFlowRateBytesPerSec() const {
+	return getPktTally() * 1024 / RATE_INTERVAL;
+	// is flow packet size stored somewhere as a constant?
+	//return window_size * FLOW_PACKET_SIZE / avg_RTT;
 }
 
-double netflow::getRateMbps() const {
-	// time trace instanenous flow rate
-	return window_size * FLOW_PACKET_SIZE / avg_RTT;
+double netflow::getFlowRateMbps() const {
+	return getPktTally() * 1024 / RATE_INTERVAL * BYTES_PER_MEGABIT;
+	
 }
 
 double netflow::getPktDelay(double currTime) const {

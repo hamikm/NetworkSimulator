@@ -77,12 +77,12 @@ int main (int argc, char **argv) {
 	logName = logName.substr(11, 20);	
 	logName = "plot" + logName + "_log" + ".json";
 	sim.initializeLog(logName);
-
+	cout << "log initialized" << endl;
 	// Invoke the simulation loop, which should terminate when all events
 	// have been processed.
 	// Every time an event is executed, network sim metrics are logged.
 	sim.runSimulation();
-
+	cout << "simulation ended" << endl;
 	// Close .json format log file 
 	sim.closeLog();
 

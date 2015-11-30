@@ -103,7 +103,14 @@ void receive_packet_event::runEvent() {
 	 */
 	else if (pkt.getType() == FLOW) {
 		flow->receivedFlowPacket(pkt, getTime());
+
+		// update flow packet tally used to calculate flow rate
+		double time = getTime();
+		flow->updatePktTally(time);
+
+		cout << "packet arrived at host" << endl;
 	}
+	
 	/*
 	 * If we're an ACK packet arriving at a source then we need to trigger the
 	 * ACK-handling behavior in the flow class and send a new window-load
