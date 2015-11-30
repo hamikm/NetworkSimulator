@@ -95,19 +95,75 @@ bool netrouter::isRoutingNode() const { return true; }
 
 map<netlink *, packet> netrouter::receivePacket(double time, simulation &sim,
 		netflow &flow, packet &pkt) {
-
-	map<netlink *, packet> link_pkt_map;
-
-	if (pkt.getType() == ROUTING) {
-		// TODO handle routing packets later. See the else below or
-		// netflow::popOutstandingPackets for an example.
-	}
-	else {
-		netlink *link_to_use = rtable.at(pkt.getDestination());
-		link_pkt_map[link_to_use] = pkt;
-	}
+ 
+	map<netlink *, packet> link_pkt_map;	
+	netlink *link_to_use = rtable.at(pkt.getDestination());
+	link_pkt_map[link_to_use] = pkt;
 
 	return link_pkt_map;
+}
+
+void netrouter::receiveRoutingPacket(double time, simulation &sim, netflow &flow, 
+			packet &pkt, netlink &link) {
+
+	// Update routing table as follows: For each destination,
+	// if distance reported by the packet is less than the distance
+	// stored in the router's rdistances map, update with the new 
+	// distance and set the link_ptr in rtable to the link on
+	// which the packet arrived.
+
+	map<string, double> received_dist = pkt.getDistances();
+	map<string, double>::iterator it = received_dist.begin();
+	bool updated = false;
+	double travel_time = time - pkt.getTransmitTimestamp(); 			
+
+	while (it != received_dist.end()) {
+		string key = it->first;
+
+		if (it->second + travel_time < rdistances[key]) {
+			updated = true;
+		
+			rdistances[key] = it->second + travel_time;
+
+			// Set link_ptr in routing table to link this packet came from.
+			rtable[key] = &link;
+
+		}
+		it++;
+	}
+
+	if (updated) {
+		// Send routing packets to adjacent routers.
+
+		vector<netlink *> adj_links = getLinks();
+		for (unsigned i = 0; i < adj_links.size(); i++) {
+
+			netnode *other_node;
+			if (adj_links[i]->getEndpoint1()->getName().c_str() == 
+									 this->getName().c_str()) {
+				other_node = adj_links[i]->getEndpoint2();
+			}
+			else {
+				other_node = adj_links[i]->getEndpoint1();
+			}
+
+			// Check if other_node points to router
+			if (other_node->isRoutingNode()) {
+
+				packet rpack = packet(ROUTING, this->getName(), other_node->getName());
+				rpack.setDistances(rdistances); 
+				rpack.setTransmitTimestamp(time); 			// Time that packet is sent
+
+				// Check when link is free and queue up new packet
+				send_packet_event *e = new send_packet_event(time, sim, flow,
+					rpack, *adj_links[i], *this);
+				sim.addEvent(e);
+
+			}
+
+		}
+	}
+
 }
 
 void netrouter::printHelper(ostream &os) const {
@@ -148,6 +204,7 @@ void netflow::constructorHelper (double start_time, double size_mb,
 	this->lin_growth_winsize_threshold = -1;
 	this->avg_RTT = -1;
 	this->std_RTT = -1;
+	this->pkt_RRT = -1;
 
 	this->sim = &sim;
 }
@@ -159,15 +216,10 @@ netflow::netflow (string name, double start_time, double size_mb,
 			DEFAULT_INITIAL_TIMEOUT, sim);
 }
 
-nethost *netflow::getSource() const {
-	return source;
-}
 
 double netflow::getStartTimeSec() const { return start_time_sec; }
 
 double netflow::getStartTimeMs() const { return start_time_sec * MS_PER_SEC; }
-
-nethost *netflow::getDestination() const { return destination; }
 
 double netflow::getSizeMb() const { return size_mb; }
 
@@ -178,12 +230,40 @@ int netflow::getNumTotalPackets() const {
 	return size_in_bytes / FLOW_PACKET_SIZE + 1;
 }
 
+nethost *netflow::getDestination() const { return destination; }
+
 void netflow::setDestination(nethost &destination) {
 	this->destination = &destination;
 }
 
+nethost *netflow::getSource() const {
+	return source;
+}
+
 void netflow::setSource(nethost &source) {
 	this->source = &source;
+}
+
+int netflow::getPktTally() const { return pktTally; }
+
+void netflow::incPktTally() {
+	pktTally++;
+}
+
+void netflow::resetPktTally() {
+	pktTally = 0;
+}
+	
+double netflow::getLeftTime() const { return leftTime; }
+
+void netflow::setLeftTime(double newTime) {
+	leftTime = newTime;
+}
+	
+double netflow::getRightTime() const { return rightTime; }
+
+void netflow::setRightTime(double newTime) {
+	rightTime = newTime;
 }
 
 int netflow::getLastAck() const {
@@ -232,9 +312,7 @@ double netflow::getRateMbps() const {
 }
 
 double netflow::getPktDelay(double currTime) const {
-	// get host
-	double getOnLinkTime = source->getLink()->getLinkFreeAtTime();
-	return currTime - getOnLinkTime;
+	return pkt_RRT;
 }
 
 
@@ -319,7 +397,10 @@ void netflow::updateTimeoutLength(double end_time_ms, int flow_seqnum) {
 	// its entry from the RTT table.
 	double rtt = rtts[flow_seqnum] + end_time_ms;
 	rtts.erase(flow_seqnum);
-
+	
+	// update state variable
+	pkt_RRT = rtt;
+	
 	// If it's the first ACK we don't have an average or deviation for the
 	// round-trip times, so initialize them to the first RTT
 	if (avg_RTT < 0 && std_RTT < 0) {
@@ -716,6 +797,12 @@ string packet::getDestination() const { return dest_ip; }
 
 int packet::getSeq() const { return seqnum; }
 
+map<string, double> packet::getDistances() const { return distance_vec; }
+
+void packet::setDistances(map<string, double> distances) {
+	this->distance_vec = distances;
+}
+
 netflow *packet::getParentFlow() const { return parent_flow; }
 
 long packet::getId() const { return pkt_id; }
@@ -742,6 +829,10 @@ string packet::getTypeString() const {
 		break;
 	}
 }
+
+double packet::getTransmitTimestamp() const { return transmit_timestamp; }
+
+void packet::setTransmitTimestamp(double time) { transmit_timestamp = time; }
 
 void packet::printHelper(ostream &os) const {
 	netelement::printHelper(os);

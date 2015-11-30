@@ -33,4 +33,7 @@ enum packet_type {
 /** A sentinel used for the sequence numbers of routing packets. */
 const int SEQNUM_FOR_NONFLOWS = -1;
 
+/** Time interval in ms over which to compute flow rate */
+const int RATE_INTERVAL = 50;
+
 #endif // UTIL_H

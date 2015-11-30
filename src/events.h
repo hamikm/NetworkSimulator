@@ -209,7 +209,7 @@ public:
 	~router_discovery_event();
 
 	/**
-	 * Runs the Bellman-Ford algorithm from this router.
+	 * Runs the distributed Bellman-Ford algorithm from this router.
 	 */
 	void runEvent();
 
