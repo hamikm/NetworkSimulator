@@ -808,6 +808,9 @@ private:
 	/** Distance vector for use in routing messages. **/
 	map<string, double> distance_vec;
 
+	/** Transmit time (stored as double), for calculating link costs. */
+	double transmit_timestamp;
+
 	/**
 	 * Constructor helper. Does naive assignments; logic should be in the
 	 * calling constructors.
@@ -894,6 +897,10 @@ public:
 
 	/** @return type as a string */
 	string getTypeString() const;
+
+	double getTransmitTimestamp() const;
+
+	void setTransmitTimestamp(double time);
 
 	/**
 	 * Print helper function which partially overrides the one in @c netdevice.
