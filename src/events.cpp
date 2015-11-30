@@ -141,11 +141,12 @@ void receive_packet_event::runEvent() {
 		// the simulation's queue.
 		int window_size = pkts_to_send.size();
 
-		cout << "Num packets to send: " <<  pkts_to_send.size() << endl;
-		if(pkts_to_send.size() > 0)
-			return;
+		if (debug) {
+			cout << "Num packets to send: " <<  pkts_to_send.size() << endl;
+		}
 
-		int first_seqnum_in_window = pkts_to_send[0].getSeq(); //assume ordered
+		int first_seqnum_in_window = pkts_to_send.size() == 0 ? -1 :
+				pkts_to_send[0].getSeq();
 		vector<packet>::iterator pkt_it = pkts_to_send.begin();
 		int i = 0;
 		while(pkt_it != pkts_to_send.end()) {
@@ -307,8 +308,9 @@ void send_packet_event::runEvent() {
 	// Find (absolute) arrival time to the next node from the given departure
 	// node down the given link, taking into account that packets in window-
 	// loads incur the link delay penalty once per WINDOW, not once per packet.
+	bool use_delay = !link->isSameDirectionAsLastPacket(getDestinationNode());
 	double arrival_time =
-			link->getArrivalTime(pkt, window_start == pkt.getSeq(), getTime());
+			link->getArrivalTime(pkt, use_delay, getTime());
 	if (debug) {
 		debug_os << "transmission time: " << link->getTransmissionTimeMs(pkt)
 				<< ", event time: " << getTime() << ", relative pos: "
@@ -318,7 +320,7 @@ void send_packet_event::runEvent() {
 
 	// Use the arrival time to queue a receive_packet_event (does nothing if
 	// the link buffer has no room, thereby dropping the packet).
-	if (link->sendPacket(pkt, window_start == pkt.getSeq(), getTime())) {
+	if (link->sendPacket(pkt, getDestinationNode(), use_delay, getTime())) {
 		receive_packet_event *e = new receive_packet_event(arrival_time, *sim,
 				*flow, pkt, *getDestinationNode(), *link);
 		sim->addEvent(e);
@@ -369,7 +371,7 @@ void start_flow_event::runEvent() {
 
 	// Queue the timeout event for the flow, which runs if no acknowledgements
 	// are received before the listed time is reached.
-	flow->initFlowTimeout();
+	//flow->initFlowTimeout();
 
 	// Get the current (i.e. the first) window's packet(s) to send.
 	double linkFreeAt = flow->getSource()->getLink()->getLinkFreeAtTime();
@@ -457,8 +459,8 @@ void timeout_event::runEvent() {
 	}
 
 	// Queue up a new timeout event
-	timeout_event *new_te = new timeout_event(getTime() + flow->getTimeoutLengthMs(), 
-		 						*sim, *flow);
+	timeout_event *new_te = new timeout_event(getTime() +
+			flow->getTimeoutLengthMs(), *sim, *flow);
 	flow->setFlowTimeout(new_te);
 	sim->addEvent(new_te);
 
