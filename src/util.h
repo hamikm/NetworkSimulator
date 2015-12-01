@@ -17,10 +17,10 @@ static const long ACK_PACKET_SIZE = 64;
 /** Size of a routing packet in bytes. */
 static const long ROUTING_PACKET_SIZE = 64;
 
-const int BYTES_PER_KB = 1000;
+const int BYTES_PER_KB = 1 << 10;
 
 /**  Conversion factor between kilobytes and megabytes. */
-const int KB_PER_MB = 1000;
+const int KB_PER_MB = 1 << 10;
 
 /**  Conversion factor between bits and bytes. */
 const int BITS_PER_BYTE = 1 << 3;
