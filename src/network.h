@@ -253,13 +253,13 @@ private:
 	nethost *destination;
 	
 	/** For plotting, number of flow packets received by source */
-	int pktTally;
+	//int pktTally;
 	
 	/** For plotting, start time of the packet count interval */
-	double leftTime;
+	//double leftTime;
 	
 	/** For plotting, end time of the packet count interval */
-	double rightTime;
+	//double rightTime;
 
 	/** Highest received ACK sequence number (at source). */
 	int highest_received_ack_seqnum;
@@ -313,7 +313,7 @@ private:
 	 * was received by the source. Updated every receive_packet_event.
 	 * Exists for purpose of plotting metric packet delay.
 	 */ 
-	double pkt_RRT;
+	//double pkt_RRT;
 
 	/**
 	 * Pointer to the timer associated with the flow. Each time an ack is received,
@@ -397,13 +397,15 @@ public:
 	nethost *getSource() const;
 
 	/** @returns number of flow packets received by source w/in interval */
-	int getPktTally() const;
+
+	//int getPktTally() const;
 	
 	/** @returns start time of the packet count interval */
-	double getLeftTime() const;
+	//double getLeftTime() const;
 	
 	/** @returns end time of the packet count interval */
-	double getRightTime() const;
+	//double getRightTime() const;
+
 
 	/**  @return last ACK's sequence number. */
 	int getLastAck() const;
@@ -468,16 +470,16 @@ public:
 	void setLastACKNum(int new_seqnum);
 	
 	/** increments packet tally */
-	void incPktTally();
+	//void incPktTally();
 	
 	/** resets packet tally */
-	void resetPktTally();
+	//void resetPktTally();
 	
 	/** sets left time */
-	void setLeftTime(double newTime);
+	//void setLeftTime(double newTime);
 	
 	/** sets right time */
-	void setRightTime(double newTime);
+	//void setRightTime(double newTime);
 
 	/** 
 	 * Creates the first timeout event associated with a flow. This is called
