@@ -14,7 +14,6 @@
 #include <map>
 #include <queue>
 #include <cmath>
-#include <climits>
 #include <set>
 
 // Custom headers
@@ -178,14 +177,8 @@ class netrouter : public netnode {
 
 private:
 
-	/** Routing table implemented as map from destination names to a 
-	 * pair containing distance next-hop link. */
+	/** Routing table implemented as map from destination names to links. */
 	map<string, netlink *> rtable;
-
-	/** Table of distances from this router to each node in the network.
-	 * Distance to self and adjacent HOSTS are initialized to 0. Distance
-	 * to other routers are initialized to max double (defined in <climits>) */
-	map<string, double> rdistances;
 
 public:
 
@@ -210,15 +203,6 @@ public:
 	 */
 	map<netlink *, packet> receivePacket(double time, simulation &sim,
 			netflow &flow, packet &pkt);
-
-	/**
-	 * If this is a ROUTING packet, this function will update the router's
-	 * routing table and distances table if necessary. If an update is made,
-	 * it will also trigger send_packet_events to deliver additional routing
-	 * packets to its neighbors.
-	 */
-	void receiveRoutingPacket(double time, simulation &sim, netflow &flow, 
-			packet &pkt, netlink &link);
 
 	/**
 	 * Print helper function which partially overrides the one in @c netdevice.
@@ -251,15 +235,6 @@ private:
 
 	/** Pointer to the other end of this flow. */
 	nethost *destination;
-	
-	/** For plotting, number of flow packets received by source */
-	int pktTally;
-	
-	/** For plotting, start time of the packet count interval */
-	double leftTime;
-	
-	/** For plotting, end time of the packet count interval */
-	double rightTime;
 
 	/** Highest received ACK sequence number (at source). */
 	int highest_received_ack_seqnum;
@@ -280,7 +255,7 @@ private:
 	int num_duplicate_acks;
 
 	/**
-	 * This is the maximum length of time in milliseconds that can pass b/t
+	 * This is the maximum length of time in milliseconds that can pass between
 	 * a send_packet_event and its corresponding receive_ack_event before
 	 * a timeout_event will run. This timeout length is dynamically
 	 * readjusted with the (recursively determined) average RTT and
@@ -307,13 +282,6 @@ private:
 	 * should be initialized to first RTT.
 	 */
 	double std_RTT;
-	
-	/** 
-	 * Time elapsed since packet was send and corresponding acknowledgment
-	 * was received by the source. Updated every receive_packet_event.
-	 * Exists for purpose of plotting metric packet delay.
-	 */ 
-	double pkt_RRT;
 
 	/**
 	 * Pointer to the timer associated with the flow. Each time an ack is received,
@@ -396,15 +364,6 @@ public:
 
 	nethost *getSource() const;
 
-	/** @returns number of flow packets received by source w/in interval */
-	int getPktTally() const;
-	
-	/** @returns start time of the packet count interval */
-	double getLeftTime() const;
-	
-	/** @returns end time of the packet count interval */
-	double getRightTime() const;
-
 	/**  @return last ACK's sequence number. */
 	int getLastAck() const;
 
@@ -442,10 +401,10 @@ public:
 	const map<int, ack_event*>& getFutureSendAckEvents() const;
 
 	/**
-	 * Print helper function which partially overrides the one in netdevice.
+	 * Print helper function which partially overrides the one in @c netdevice.
 	 * @param os The output stream to which to write.
 	 */
-	virtual void printHelper(ostream &os) const;
+	virtual void printHelper(ostream &os) const;/** @return flow rate in bytes per second. */
 	
 	/** returns flow rate in bytes per sec */
 	double getRateBytesPerSec() const;
@@ -454,8 +413,8 @@ public:
 	double getRateMbps() const;
 
 	/** @returns packet delay 
-	 * Defined as time elapsed since packet is send and acknowledgement is
-	 * received.
+	 * which we are currently defining as queueing time of the link directly
+	 * connected to the host, until further notice
 	 */
 	double getPktDelay(double currTime) const;
 
@@ -466,18 +425,6 @@ public:
 	void setDestination(nethost &destination);
 
 	void setLastACKNum(int new_seqnum);
-	
-	/** increments packet tally */
-	void incPktTally();
-	
-	/** resets packet tally */
-	void resetPktTally();
-	
-	/** sets left time */
-	void setLeftTime(double newTime);
-	
-	/** sets right time */
-	void setRightTime(double newTime);
 
 	/** 
 	 * Creates the first timeout event associated with a flow. This is called
@@ -814,12 +761,6 @@ private:
 	/** Sequence number of packet */
 	int seqnum;
 
-	/** Distance vector for use in routing messages. **/
-	map<string, double> distance_vec;
-
-	/** Transmit time (stored as double), for calculating link costs. */
-	double transmit_timestamp;
-
 	/**
 	 * Constructor helper. Does naive assignments; logic should be in the
 	 * calling constructors.
@@ -890,10 +831,6 @@ public:
 
 	long getId() const;
 
-	map<string, double> getDistances() const;
-
-	void setDistances(map<string, double> distances);
-
 	netflow *getParentFlow() const;
 
 	packet_type getType() const;
@@ -906,10 +843,6 @@ public:
 
 	/** @return type as a string */
 	string getTypeString() const;
-
-	double getTransmitTimestamp() const;
-
-	void setTransmitTimestamp(double time);
 
 	/**
 	 * Print helper function which partially overrides the one in @c netdevice.
