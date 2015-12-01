@@ -16,18 +16,25 @@ netelement::~netelement() { }
 
 const string &netelement::getName() const { return name; }
 
-void netelement::setNestingDepth(int depth) { this->nest_depth = depth; }
+void netelement::setNestingDepth(int depth) { 
+	if (this) {
+		this->nest_depth = depth; 
+	}
+}
 
 string netelement::nestingPrefix(int delta) const {
 	string rtn = "";
-	for (int i = 0; i < nest_depth + delta; i++) {
-		rtn += "  ";
+	if (this) {
+		for (int i = 0; i < nest_depth + delta; i++) {
+			rtn += "  ";
+		}
 	}
 	return rtn;
 }
 
 void netelement::printHelper(std::ostream &os) const {
-	os << "netelement. name: \"" << name << "\"";
+	if (this)
+		os << "netelement. name: \"" << name << "\"";
 }
 
 // ------------------------------- netnode class ------------------------------
@@ -42,6 +49,24 @@ netnode::netnode (string name, vector<netlink *> links) :
 void netnode::addLink (netlink &link) { links.push_back(&link); }
 
 bool netnode::isRoutingNode() const { return false; }
+
+netnode *netnode::getOtherNode(netlink *link) {
+	// Confirm that this node is indeed connected to input link
+	assert((strcmp(this->getName().c_str(),
+				   link->getEndpoint1()->getName().c_str()) == 0) ||
+		   (strcmp(this->getName().c_str(),
+				   link->getEndpoint2()->getName().c_str()) == 0));
+
+	netnode *other_node;
+	if (strcmp(link->getEndpoint1()->getName().c_str(),
+						       this->getName().c_str()) == 0) {
+		other_node = link->getEndpoint2();
+	}
+	else {
+		other_node = link->getEndpoint1();
+	}
+	return other_node;
+}
 
 const vector<netlink *> &netnode::getLinks() const { return links; }
 
@@ -95,24 +120,140 @@ bool netrouter::isRoutingNode() const { return true; }
 
 map<netlink *, packet> netrouter::receivePacket(double time, simulation &sim,
 		netflow &flow, packet &pkt) {
-
-	map<netlink *, packet> link_pkt_map;
-
-	if (pkt.getType() == ROUTING) {
-		// TODO handle routing packets later. See the else below or
-		// netflow::popOutstandingPackets for an example.
-	}
-	else {
-		netlink *link_to_use = rtable.at(pkt.getDestination());
-		link_pkt_map[link_to_use] = pkt;
-	}
+ 
+	map<netlink *, packet> link_pkt_map;	
+	netlink *link_to_use = rtable.at(pkt.getDestination());
+	link_pkt_map[link_to_use] = pkt;
 
 	return link_pkt_map;
 }
 
+void netrouter::receiveRoutingPacket(double time, simulation &sim, 
+			packet &pkt, netlink &link) {
+
+	// Update routing table as follows: For each destination,
+	// if distance reported by the packet is less than the distance
+	// stored in the router's rdistances map, update with the new 
+	// distance and set the link_ptr in rtable to the link on
+	// which the packet arrived.
+
+	map<string, double> received_dist = pkt.getDistances();
+	map<string, double>::iterator it = received_dist.begin();
+	bool updated = false;
+	double travel_time = time - pkt.getTransmitTimestamp(); 			
+
+	while (it != received_dist.end()) {
+		string key = it->first;
+
+		if (it->second + travel_time < rdistances[key]) {
+			updated = true;
+		
+			rdistances[key] = it->second + travel_time;
+
+			// Set link_ptr in routing table to link this packet came from.
+			rtable[key] = &link;
+
+		}
+		it++;
+	}
+
+	if (updated) {
+		// Send routing packets to adjacent routers.
+
+		// TODO: put the following block in a sendRoutingMessage function so
+		// it's not repeated unnecessarily here and in router_discovery_event
+		vector<netlink *> adj_links = getLinks();
+		for (unsigned i = 0; i < adj_links.size(); i++) {
+
+			netnode *other_node = this->getOtherNode(adj_links[i]);
+
+			// Check if other_node points to router
+			if (other_node->isRoutingNode()) {
+
+				packet rpack = packet(ROUTING, this->getName(), other_node->getName());
+				rpack.setDistances(rdistances); 
+				rpack.setTransmitTimestamp(time); 			// Time that packet is sent
+
+				// Queue up new packet. Send_packet_event will check when the
+				// link is free.
+				send_packet_event *e = new send_packet_event(time, sim,
+					rpack, *adj_links[i], *this);
+				sim.addEvent(e);
+
+			}
+
+		}
+	}
+
+}
+
+map<string, double> netrouter::getRDistances() const { return rdistances; }
+
+void netrouter::resetDistances(map<string, nethost*> host_list, 
+							   map<string, netrouter*> router_list) {
+	// Reset distances to routers
+	for (map<string, netrouter*>::iterator it_r = router_list.begin();
+		 it_r != router_list.end(); it_r++) {
+
+		// Set distance to others = infinity
+		if (strcmp(it_r->first.c_str(), getName().c_str()) != 0) {
+			rdistances[it_r->first] = numeric_limits<double>::max();
+		}
+	}
+	// Reset distances to hosts
+	for (map<string, nethost*>::iterator it_h = host_list.begin();
+		it_h != host_list.end(); it_h++) {
+		// Check if connected to this router
+		nethost *host = it_h->second;
+
+		// TODO router: add a helper function for safe node comparison with strcmp
+		if (strcmp(host->getOtherNode(host->getLink())->getName().c_str(),
+					getName().c_str()) != 0) {
+			rdistances[it_h->first] = numeric_limits<double>::max();
+		}
+	}
+}
+
+void netrouter::initializeTables(map<string, nethost*> host_list, 
+								 map<string, netrouter*> router_list) {
+	// Add routers
+	for (map<string, netrouter*>::iterator it_r = router_list.begin();
+		 it_r != router_list.end(); it_r++) {
+
+		// TODO router: Initialize to a default link instead of NULL?
+		rtable[it_r->first] = NULL;
+
+		// Set distance to self = 0
+		if (strcmp(it_r->first.c_str(), getName().c_str()) == 0) {
+			rdistances[it_r->first] = 0;
+		}
+		// Set distance to others = infinity
+		else {
+			rdistances[it_r->first] = numeric_limits<double>::max();
+		}
+	}
+	// Add hosts
+	for (map<string, nethost*>::iterator it_h = host_list.begin();
+		it_h != host_list.end(); it_h++) {
+		// Check if connected to this router
+		nethost *host = it_h->second;
+
+		// TODO router: add a helper function for safe node comparison with strcmp
+		if (strcmp(host->getOtherNode(host->getLink())->getName().c_str(),
+					getName().c_str()) == 0) {
+			rtable[it_h->first] = host->getLink();
+			rdistances[it_h->first] = 0;
+		}
+		else {
+			rtable[it_h->first] = NULL;
+			rdistances[it_h->first] = numeric_limits<double>::max();
+		}
+	}
+}
+
 void netrouter::printHelper(ostream &os) const {
 	netnode::printHelper(os);
-	os << " <-- router. routing table: ";
+	os << " <-- router. routing table: " << endl;
 	if (rtable.size() == 0) {
 		os << "{ }";
 		return;
@@ -120,8 +261,19 @@ void netrouter::printHelper(ostream &os) const {
 	os << "{ " << endl;
 	map<string, netlink *>::const_iterator itr;
 	for (itr = rtable.begin(); itr != rtable.end(); itr++) {
+		string link_name = (itr->second == NULL) ? 
+							"Out-link not set" : itr->second->getName();
 		os << nestingPrefix(1) << "(" <<
-				itr->first << "<--" << itr->second << ")";
+				itr->first << "<--" << link_name << ")" << endl;
+	}
+	os << nestingPrefix(0) << "}";
+
+	os << "{ " << endl;
+	os << " <-- router. routing distances: " << endl;
+	map<string, double>::const_iterator itr_d;
+	for(itr_d = rdistances.begin(); itr_d != rdistances.end(); itr_d++) {
+		os << nestingPrefix(1) << "(" <<
+				itr_d->first << "<--" << itr_d->second << ")" << endl;
 	}
 	os << nestingPrefix(0) << "}";
 }
@@ -129,19 +281,19 @@ void netrouter::printHelper(ostream &os) const {
 // ------------------------------- netflow class ------------------------------
 
 void netflow::constructorHelper (double start_time, double size_mb,
-		nethost &source, nethost &destination, int num_total_packets,
-		double window_size, double timeout_length_ms, simulation &sim) {
+		nethost &source, nethost &destination, double window_size,
+		double timeout_length_ms, simulation &sim) {
 
 	this->start_time_sec = start_time;
 	this->size_mb = size_mb;
 	this->source = &source;
 	this->destination = &destination;
 
+	this->amt_received_mb = 0;
 	this->pktTally = 0;
 	this->leftTime = start_time;
 	this->rightTime = start_time + RATE_INTERVAL;
 
-	this->amt_sent_mb = 0;
 	this->highest_received_ack_seqnum = 1;
 	this->highest_sent_flow_seqnum = 0;
 	this->highest_received_flow_seqnum = 0;
@@ -160,8 +312,7 @@ void netflow::constructorHelper (double start_time, double size_mb,
 netflow::netflow (string name, double start_time, double size_mb,
 			nethost &source, nethost &destination, simulation &sim) :
 				netelement(name) {
-	constructorHelper(start_time, size_mb, source, destination,
-			size_mb / FLOW_PACKET_SIZE + 1, 1,
+	constructorHelper(start_time, size_mb, source, destination, 1,
 			DEFAULT_INITIAL_TIMEOUT, sim);
 }
 
@@ -192,6 +343,7 @@ nethost *netflow::getSource() const {
 void netflow::setSource(nethost &source) {
 	this->source = &source;
 }
+
 
 int netflow::getPktTally() const {
 	return pktTally;
@@ -262,14 +414,6 @@ double netflow::getLinGrowthWinsizeThreshold() const {
 	return lin_growth_winsize_threshold;
 }
 
-const map<int, timeout_event *>& netflow::getFutureTimeoutsEvents() const {
-	return future_timeouts_events;
-}
-
-const map<int, ack_event *>& netflow::getFutureSendAckEvents() const {
-	return future_send_ack_events;
-}
-
 double netflow::getFlowRateBytesPerSec() const {
 	return getPktTally() * FLOW_PACKET_SIZE / RATE_INTERVAL;
 	//return window_size * FLOW_PACKET_SIZE / avg_RTT;
@@ -285,46 +429,31 @@ double netflow::getPktDelay(double currTime) const {
 	return pkt_RRT;
 }
 
-timeout_event *netflow::cancelTimeoutAction(int seq) {
-	if (future_timeouts_events.find(seq) == future_timeouts_events.end()) {
-		return NULL;
-	}
+timeout_event *netflow::delayFlowTimeout(double new_time) {
 
-	timeout_event *t = future_timeouts_events[seq];
-	future_timeouts_events.erase(seq);
-	sim->removeEvent(t); // this frees the memory
-	return t;
-}
+	// Find and remove the current timeout_event in the global event queue.
+	this->sim->removeEvent(this->flow_timeout);
 
-void netflow::registerTimeoutAction(int seq, double time) {
-	packet p = packet(FLOW, *this, seq);
-	timeout_event *e = new timeout_event(time, *sim, *this, p);
-	sim->addEvent(e);
-	future_timeouts_events[seq] = e;
-}
+	// Queue up new event scheduled for input time
+	timeout_event *e = new timeout_event(new_time, *sim, *this);
+	this->sim->addEvent(e);
 
-ack_event *netflow::cancelSendDuplicateAckAction(int seq) {
-
-	if(future_send_ack_events.find(seq) == future_send_ack_events.end())
-		return NULL;
-
-	ack_event *e = future_send_ack_events.at(seq);
-	future_send_ack_events.erase(seq);
-	sim->removeEvent(e); // this frees the memory
+	// Make sure the flow has a pointer to this event for future updates.
+	this->flow_timeout = e;
 	return e;
 }
 
 void netflow::registerSendDuplicateAckAction(int seq, double time) {
+	// Update and queue up new ack_event
 	packet p = packet(ACK, *this, seq);
 	ack_event *e = new ack_event(time, *sim, *this, p);
-	future_send_ack_events[seq] = e;
 	sim->addEvent(e);
 }
 
 vector<packet> netflow::peekOutstandingPackets() {
 
 	// If we're done sending this flow's data then return nothing.
-	if (amt_sent_mb >= size_mb) {
+	if (amt_received_mb >= size_mb) {
 		return vector<packet>();
 	}
 
@@ -344,7 +473,8 @@ vector<packet> netflow::popOutstandingPackets(double start_time,
 		double linkFreeAt) {
 
 	// If we're done sending this flow's data then return nothing.
-	if (amt_sent_mb >= size_mb) {
+	if (highest_sent_flow_seqnum * FLOW_PACKET_SIZE / BYTES_PER_MEGABIT
+			>= getSizeMb()) {
 		return vector<packet>();
 	}
 
@@ -354,27 +484,20 @@ vector<packet> netflow::popOutstandingPackets(double start_time,
 	// so round_trip_times can be computed later. Also making a timeout_event
 	// for each one, putting them on the out parameter and into the local map.
 	vector<packet>::iterator it = outstanding_pkts.begin();
-	int i = 0;
 	while(it != outstanding_pkts.end()) {
 
 		// Store start time.
 		rtts[it->getSeq()] = -start_time;
 
-		// Make a timeout_event for this packet, store it in local map and
-		// push it onto the simulation's event queue.
-		registerTimeoutAction(it->getSeq(),
-				linkFreeAt + timeout_length_ms + TIME_EPSILON * i++);
 		it++;
 	}
 
 	highest_sent_flow_seqnum += outstanding_pkts.size();
-	amt_sent_mb += ((double) FLOW_PACKET_SIZE) / BYTES_PER_MEGABIT *
-			outstanding_pkts.size();
 
 	return outstanding_pkts;
 }
 
-void netflow::updateTimeouts(double end_time_ms, int flow_seqnum) {
+void netflow::updateTimeoutLength(double end_time_ms, int flow_seqnum) {
 
 	// Make sure we have a departure time for this ACK's corresponding FLOW
 	// packet.
@@ -411,15 +534,11 @@ void netflow::receivedAck(packet &pkt, double end_time_ms,
 		double linkFreeAtTime) {
 
 	assert(pkt.getType() == ACK);
-	assert(pkt.getSeq() >= highest_received_ack_seqnum);
 
 	/*
 	 * Check if sequence number is the same as the last one (i.e., duplicate
 	 * ACK); if so then update duplicate ACKs field and potentially get ready
-	 * to fast retransmit. Also push back the local and global timeout event
-	 * for this packet if we're not doing fast retransmit; if we are then
-	 * just cancel the pending timeout, since popOutstandingPackets will
-	 * create one later.
+	 * to fast retransmit.
 	 */
 	if (pkt.getSeq() == highest_received_ack_seqnum) {
 
@@ -428,23 +547,37 @@ void netflow::receivedAck(packet &pkt, double end_time_ms,
 		// seen packet to current sequence number and halving window size
 		if (++num_duplicate_acks >=
 				FAST_RETRANSMIT_DUPLICATE_ACK_THRESHOLD) {
-			highest_sent_flow_seqnum = pkt.getSeq();
+
+			if(debug && this) {
+				cout << "Saw " << FAST_RETRANSMIT_DUPLICATE_ACK_THRESHOLD
+						<< "-th duplicate ACK, so fast retransmitting."
+						<< endl;
+			}
+
+			highest_sent_flow_seqnum = pkt.getSeq()-1;
+			window_start = pkt.getSeq();
+
 			window_size = window_size / 2 > 1 ? window_size / 2 : 1;
 			lin_growth_winsize_threshold = window_size;
 			num_duplicate_acks = 0;
 
-			cancelTimeoutAction(pkt.getSeq() + 1);
-			// new timeout_event will be created when popOutstandingPackets
-			// is called.
+			//delayFlowTimeout(end_time_ms + timeout_length_ms);
 		}
 
 		// Got a duplicate ACK but don't have enough of them to do a fast
 		// retransmit. Push back the timeout event by canceling the old one
 		// and registering a new one.
 		else {
-			cancelTimeoutAction(pkt.getSeq() + 1);
-			registerTimeoutAction(pkt.getSeq() + 1,
-					linkFreeAtTime + timeout_length_ms);
+
+			if(debug && this) {
+				cout << "Saw pre-threshold duplicate ACK!!!" <<
+						"Num duplicates: " << num_duplicate_acks << endl;
+			}
+
+			// Don't push back the timeout (for now)
+
+			// TODO: make sure interval between duplicate ACK retransmit
+			// is less than timeout length.
 		}
 	}
 
@@ -454,12 +587,12 @@ void netflow::receivedAck(packet &pkt, double end_time_ms,
 	// the corresponding timeout event from the flow.
 	else if (pkt.getSeq() == highest_received_ack_seqnum + 1) {
 		// Update the last successfully received ack
-		highest_received_ack_seqnum = pkt.getSeq();
+		highest_received_ack_seqnum++;
 
 		// The corresponding FLOW packet had sequence number one less
 		int flow_seqnum = pkt.getSeq() - 1;
 
-		updateTimeouts(end_time_ms, flow_seqnum);
+		updateTimeoutLength(end_time_ms, flow_seqnum);
 
 		// Now adjust the window start and size. Since we just received
 		// an ACK for a successfully received packet we can slide the window
@@ -477,74 +610,66 @@ void netflow::receivedAck(packet &pkt, double end_time_ms,
 			window_size += 1 / window_size;
 		}
 
-		// Remove event from the flow's map of future timeout events
-		// and from the simulation's event queue
-		cancelTimeoutAction(pkt.getSeq() - 1);
+		// Successfully received an ACK, so we push back the timeout.
+		//delayFlowTimeout(end_time_ms + timeout_length_ms);
 	}
 
-	// If the ACK number is anything else then we're getting out-of-order ACKs,
-	// possibly because of dropped packets, possibly because of a timeout.
-	else {
+	/*
+	cerr << " --------------- " << endl;
+	cerr << "highest_received_ack_seqnum" << highest_received_ack_seqnum
+			<< endl;
+	cerr << "highest_sent_flow_seqnum" << highest_sent_flow_seqnum << endl;
+	cerr << "window start" << window_start << endl;
+	cerr << "window size" << window_size << endl;
+	cerr << " --------------- " << endl;
+	*/
 
-		// The corresponding FLOW packet had sequence number one less
-		int flow_seqnum = pkt.getSeq() - 1;
-
-		cancelAllTimeouts();
-
-		updateTimeouts(end_time_ms, flow_seqnum);
-
-		// Assume there was a dropped packet.
-		window_size = (window_size / 2) > 1 ? (window_size / 2)  : 1;
-		highest_sent_flow_seqnum = highest_received_ack_seqnum - 1;
-		window_start = highest_sent_flow_seqnum + 1;
-	}
 }
 
 void netflow::receivedFlowPacket(packet &pkt, double arrival_time) {
 
 	assert(pkt.getType() == FLOW);
 
-	// TODO what to do if we receive FLOW packets out of order?
-
 	// Make the corresponding ACK packet and set the highest received flow
 	// sequence number.
-	packet ackpack = packet(ACK, *this, pkt.getSeq() + 1);
-	highest_received_flow_seqnum++;
+
+	if (pkt.getSeq() ==  highest_received_flow_seqnum + 1) {
+		highest_received_flow_seqnum++;
+
+
+		// TODO: without following timeouts are triggered too early?
+		// delayFlowTimeout(arrival_time + timeout_length_ms);
+	}
 
 	// Make and queue (locally and on the simulation event queue) an immediate
-	// duplicate_ack_event. When that event is run it will queue another,
-	// future duplicate_ack_event in case the next FLOW packet never arrives.
-	if (amt_sent_mb < size_mb) {
-		registerSendDuplicateAckAction(ackpack.getSeq(), arrival_time);
-	}
-
-	// Remove the previous packet's corresponding duplicate ACK
-	// send_packet_event from the local map and global events queue
-	if (cancelSendDuplicateAckAction(ackpack.getSeq() - 1) == NULL && debug) {
-		debug_os << "No pending duplicate_ack_event to delete." << endl;
-	}
+	// duplicate_ack_event.
+	registerSendDuplicateAckAction(highest_received_flow_seqnum + 1,
+			arrival_time);
 }
 
 double netflow::getTimeoutLengthMs() const { return timeout_length_ms; }
 
-void netflow::cancelAllTimeouts() {
-	map<int, timeout_event *>::iterator it;
-	for (it = future_timeouts_events.begin();
-			it != future_timeouts_events.end(); it++) {
-		sim->removeEvent(it->second);
-	}
-	future_timeouts_events.clear();
+timeout_event* netflow::setFlowTimeout(timeout_event *e) {
+	this->flow_timeout = e;
+	return this->flow_timeout;
 }
 
-void netflow::timeoutOccurred(const packet &to_pkt) {
+timeout_event* netflow::initFlowTimeout() {
+
+	timeout_event *e = new timeout_event(getStartTimeMs() + timeout_length_ms,
+	 									 *sim, *this);
+	this->flow_timeout = e;
+	this->sim->addEvent(e);
+	return e;
+}
+
+void netflow::timeoutOccurred() {
 	lin_growth_winsize_threshold = window_size / 2;
 	window_size = 1;
-	window_start = to_pkt.getSeq();
+	window_start = highest_received_ack_seqnum;
 	num_duplicate_acks = 0;
 	rtts.clear();
-	highest_sent_flow_seqnum = to_pkt.getSeq() - 1;
-	highest_received_ack_seqnum = to_pkt.getSeq();
-	cancelAllTimeouts();
+	highest_sent_flow_seqnum = window_start - 1;
 }
 
 void netflow::printHelper(ostream &os) const {
@@ -560,7 +685,7 @@ void netflow::printHelper(ostream &os) const {
 				(destination == NULL ? "NULL" : destination->getName()) <<
 				"\"," << endl
 			<< nestingPrefix(1) << "data sent: " <<
-				amt_sent_mb << " megabits," << endl
+				amt_received_mb << " megabits," << endl
 			<< nestingPrefix(1) << "linear growth threshold: " <<
 				lin_growth_winsize_threshold << " packets," << endl
 			<< nestingPrefix(1) << "timeout length: " <<
@@ -585,6 +710,7 @@ void netlink::constructor_helper(double rate_mbps, int delay_ms, int buflen_kb,
 	this->buffer_capacity = buflen_kb * BYTES_PER_KB;
 	this->endpoint1 = endpoint1 == NULL ? NULL : endpoint1;
 	this->endpoint2 = endpoint2 == NULL ? NULL : endpoint2;
+	destination_last_packet = NULL;
 }
 
 netlink::netlink(string name, double rate_mbps, int delay_ms, int buflen_kb,
@@ -671,12 +797,28 @@ map<string, int> netlink::getLinkTraffic() const {
 	return linkTraffic;
 }
 
+bool netlink::isSameDirectionAsLastPacket(netnode *destination) {
+	if(destination_last_packet == NULL) { // need to use link delay for first
+		return false;
+	}
+
+	// If names of destinations are the same, then same direction
+	if(strcmp(destination->getName().c_str(),
+			destination_last_packet->getName().c_str()) == 0) {
+		return true;
+	}
+	return false;
+}
+
 double netlink::getArrivalTime(const packet &pkt, bool useDelay, double time) {
 	return (useDelay ? getDelay() : 0) + getTransmissionTimeMs(pkt) +
 			(buffer.size() > 0 ? buffer.rbegin()->first : time);
 }
 
-bool netlink::sendPacket(const packet &pkt, bool useDelay, double time) {
+bool netlink::sendPacket(const packet &pkt, netnode *destination,
+		bool useDelay, double time) {
+
+	destination_last_packet = destination;
 
 	// Check if the buffer has space. If it doesn't then return false.
 	if (getBufferOccupancy() + pkt.getSizeBytes() > buffer_capacity) {
@@ -811,6 +953,12 @@ string packet::getDestination() const { return dest_ip; }
 
 int packet::getSeq() const { return seqnum; }
 
+map<string, double> packet::getDistances() const { return distance_vec; }
+
+void packet::setDistances(map<string, double> distances) {
+	this->distance_vec = distances;
+}
+
 netflow *packet::getParentFlow() const { return parent_flow; }
 
 long packet::getId() const { return pkt_id; }
@@ -837,6 +985,10 @@ string packet::getTypeString() const {
 		break;
 	}
 }
+
+double packet::getTransmitTimestamp() const { return transmit_timestamp; }
+
+void packet::setTransmitTimestamp(double time) { transmit_timestamp = time; }
 
 void packet::printHelper(ostream &os) const {
 	netelement::printHelper(os);

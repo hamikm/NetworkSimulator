@@ -116,7 +116,8 @@ class receive_packet_event : public event {
 
 private:
 
-	/**  Flow to which the received packet belongs. */
+	/**  Flow to which the received packet belongs. Is NULL for routing
+	 * packets. */
 	netflow *flow;
 
 	/** Packet received by the flow. */
@@ -153,6 +154,13 @@ public:
 	receive_packet_event(double time, simulation &sim,
 			netflow &flow, packet &pkt, netnode &step_destination,
 			netlink &link);
+
+	/**
+	 * Constructor for receive packet events for packets that do not belong
+	 * to a flow (i.e., routing packets).
+	 */
+	receive_packet_event(double time, simulation &sim, packet &pkt, 
+			netnode &step_destination, netlink &link);
 
 	/**
 	 * Constructor for receive packets events for packets that belong to
@@ -201,15 +209,14 @@ private:
 public:
 
 	/**
-	 * Initializes this event's time to the given one, sets the event ID,
-	 * and sets the router from which this router discovery event should run.
+	 * Initializes this event's time to the given one and sets the event ID,
 	 */
-	router_discovery_event(double time, simulation &sim, netrouter &router);
+	router_discovery_event(double time, simulation &sim);
 
 	~router_discovery_event();
 
 	/**
-	 * Runs the Bellman-Ford algorithm from this router.
+	 * Runs the distributed Bellman-Ford algorithm from this router.
 	 */
 	void runEvent();
 
@@ -273,6 +280,13 @@ public:
 	 */
 	send_packet_event(double time, simulation &sim, netflow &flow,
 			packet &pkt, netlink &link, netnode &departure_node);
+
+	/**
+	 * Constructor for packets that do not belong to a flow (i.e., routing 
+	 * packets).
+	 */
+	send_packet_event(double time, simulation &sim, packet &pkt, 
+			netlink &link, netnode &departure_node);
 
 	/**
 	 * Constructor for windowloads of packets--window_size is set to the given
@@ -351,9 +365,6 @@ private:
 	/** Flow to which to register a timeout. */
 	netflow *flow;
 
-	/** The packet that timed out. */
-	packet timedout_pkt;
-
 public:
 
 	timeout_event();
@@ -362,7 +373,7 @@ public:
 	 * Initializes this event's time to the given one, sets the event ID,
 	 * and sets the flow to which this timeout_event belongs.
 	 */
-	timeout_event(double time, simulation &sim, netflow &flow, packet &to_pkt);
+	timeout_event(double time, simulation &sim, netflow &flow);
 
 	~timeout_event();
 

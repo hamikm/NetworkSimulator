@@ -14,6 +14,8 @@
 #include <map>
 #include <queue>
 #include <cmath>
+#include <limits>
+#include <set>
 
 // Custom headers
 #include "util.h"
@@ -93,7 +95,9 @@ public:
  * @return The same output stream for operator chaining.
  */
 inline ostream & operator<<(ostream &os, const netelement &device) {
-	device.printHelper(os);
+	if(&device) {
+		device.printHelper(os);
+	}
 	return os;
 }
 
@@ -116,6 +120,10 @@ public:
 	netnode (string name);
 
 	netnode (string name, vector<netlink *> links);
+
+	/** Returns the node connected to the input link that is not *this 
+	 *  node. */
+	netnode *getOtherNode(netlink *link);
 
 	virtual void addLink (netlink &link);
 
@@ -176,8 +184,14 @@ class netrouter : public netnode {
 
 private:
 
-	/** Routing table implemented as map from destination names to links. */
+	/** Routing table implemented as map from destination names to a 
+	 * pair containing distance next-hop link. */
 	map<string, netlink *> rtable;
+
+	/** Table of distances from this router to each node in the network.
+	 * Distance to self and adjacent HOSTS are initialized to 0. Distance
+	 * to other routers are initialized to max double (defined in <climits>) */
+	map<string, double> rdistances;
 
 public:
 
@@ -204,6 +218,33 @@ public:
 			netflow &flow, packet &pkt);
 
 	/**
+	 * If this is a ROUTING packet, this function will update the router's
+	 * routing table and distances table if necessary. If an update is made,
+	 * it will also trigger send_packet_events to deliver additional routing
+	 * packets to its neighbors.
+	 */
+	void receiveRoutingPacket(double time, simulation &sim, 
+			packet &pkt, netlink &link);
+
+	map<string, double> getRDistances() const;
+
+	/**
+	 * Called once at the beginning of the simulation, after parsing in an
+	 * input file. Sets distance to self and adjacent hosts to 0. 
+	 * Sets the correct link to adjacent hosts since each host
+	 * has only one outgoing link. Sets other links to NULL.
+	 */
+	void initializeTables(map<string, nethost*> host_list, 
+						  map<string, netrouter*> router_list);
+
+	/**
+	 * Called from each router_discovery_event before recalculating distances.
+	 * Sets distances to all other routers and nonadjacent hosts to infinity.
+	 */
+	void resetDistances(map<string, nethost*> host_list, 
+						map<string, netrouter*> router_list);
+
+	/**
 	 * Print helper function which partially overrides the one in @c netdevice.
 	 * @param os The output stream to which to write.
 	 */
@@ -226,8 +267,8 @@ private:
 	/** Transmission size in megabits. */
 	double size_mb;
 
-	/** Number of megabits sent. */
-	double amt_sent_mb;
+	/** Number of megabits received. */
+	double amt_received_mb;
 
 	/** Pointer to one end of this flow. */
 	nethost *source;
@@ -299,27 +340,12 @@ private:
 	double pkt_RRT;
 
 	/**
-	 * This is a map from sequence numbers of packets to their future,
-	 * corresponding timeout events. Each time a send_packet_event is pushed
-	 * onto the global events queue a corresponding future timeoutout_event is
-	 * also pushed. If an ACK for the packet sent through the send_packet_event
-	 * is received before that packet's timeout_event has been processed
-	 * then it's the receive_ack_event's job to remove the corresponding
-	 * timeout_event from the global events queue by looking up the
-	 * timeout_event in this map then deleting by event id number and time.
+	 * Pointer to the timer associated with the flow. Each time an ack is received,
+	 * the timer is pushed back by removing this timeout event from the events
+	 * queue and replacing it with a new timeout event. The new event's timer
+	 * extends the previous event's timer by timeout_length_ms.
 	 */
-	map<int, timeout_event *> future_timeouts_events;
-
-	/**
-	 * Every time an ACK send_packet_event is pushed onto the global events
-	 * queue we also push a duplicate_ack_event onto the events
-	 * queue. When the duplicate_ack_event runs it chains (queues) another
-	 * duplicate_ack_event onto this map and onto the gloval events queue.
-	 * If the correct FLOW packet is received in the future then pending
-	 * duplicate_ack_events are deleted from this map and from the global
-	 * events queue.
-	 */
-	map<int, ack_event *> future_send_ack_events;
+	timeout_event *flow_timeout;
 
 	/**
 	 * Map from sequence numbers to round-trip times of those packets. If a
@@ -329,16 +355,17 @@ private:
 	 */
 	map<int, double> rtts;
 
+	set<int> receivedPackets;
+	multiset<int> receivedAcks;
+
 	/** Pointer to simulation so timeout_events can be made in this class. */
 	simulation *sim;
 
-	void updateTimeouts(double end_time_ms, int flow_seqnum);
-
-	void cancelAllTimeouts();
+	void updateTimeoutLength(double end_time_ms, int flow_seqnum);
 
 	void constructorHelper (double start_time, double size_mb,
-			nethost &source, nethost &destination, int num_total_packets,
-			double window_size, double timeout_length_ms, simulation &sim);
+			nethost &source, nethost &destination, double window_size,
+			double timeout_length_ms, simulation &sim);
 
 public:
 
@@ -385,6 +412,7 @@ public:
 	nethost *getSource() const;
 
 	/** @returns number of flow packets received by source w/in interval */
+
 	int getPktTally() const;
 	
 	/** @returns start time of the packet count interval */
@@ -392,6 +420,7 @@ public:
 	
 	/** @returns end time of the packet count interval */
 	double getRightTime() const;
+
 
 	/**  @return last ACK's sequence number. */
 	int getLastAck() const;
@@ -413,6 +442,8 @@ public:
 	int getHighestSentSeqnum() const;
 
 	int getNumDuplicateAcks() const;
+
+	timeout_event* getFlowTimeout() const;
 
 	const map<int, double>& getRoundTripTimes() const;
 
@@ -464,29 +495,20 @@ public:
 	/** sets right time */
 	void setRightTime(double newTime);
 
-	/**
-	 * Cancels the timeout action corresponding the given sequence number
-	 * by removing it from the local map and from the simulation's evnet
-	 * queue. Invoke after an ACK is received or after another timeout is
-	 * processed and a new one generated.
-	 * @param seq sequence number corresponding to the packet that would have
-	 * been retransmitted after a timeout
-	 * @return the timeout event that was cancelled
-	 * @post timeout_event erased from local map and from the global events
-	 * queue.
+	/** 
+	 * Creates the first timeout event associated with a flow. This is called
+	 * in the start_flow_event. 
 	 */
-	timeout_event *cancelTimeoutAction(int seq);
+	timeout_event *initFlowTimeout();
 
 	/**
-	 * Makes a timeout_event and puts it in the local map and on the
-	 * simulation's event queue.
-	 * @param seq the timeout_event will contain a FLOW packet with this
-	 * sequence number
-	 * @time time at which the timeout event should run
-	 * @post timeout_event added to the local map and to the global events
-	 * queue
+	 * Postpones runnng the timeout_event by removing it from the event queue
+	 * and replacing it with a new timeout_event with new_time passed in as the
+	 * scheduled execution time.
 	 */
-	void registerTimeoutAction(int seq, double time);
+	timeout_event *delayFlowTimeout(double new_time);
+
+	timeout_event *setFlowTimeout(timeout_event *e);
 
 	/**
 	 * Cancels a future duplicate_ack_event. Invoke after an in-order FLOW
@@ -497,6 +519,7 @@ public:
 	 * @post duplicate_ack_event erased from the local map and from the global
 	 * events queue.
 	 */
+
 	ack_event *cancelSendDuplicateAckAction(int seq);
 
 	/**
@@ -570,7 +593,7 @@ public:
 	 * and a new timeout_event.
 	 * @param to_pkt the packet that timed out
 	 */
-	void timeoutOccurred(const packet &to_pkt);
+	void timeoutOccurred();
 };
 
 // ------------------------------- netlink class ------------------------------
@@ -626,6 +649,9 @@ private:
 	
 	/** For plotting, end time of the packet count interval */
 	double rightTime;
+
+	/** Destination of last packet added to the buffer. */
+	netnode *destination_last_packet;
 
 	/**
 	 * Helper for the constructors. Converts the buffer length from kilobytes
@@ -714,6 +740,17 @@ public:
 	map<string, int> getLinkTraffic() const;
 
 	/**
+	 * Returns true if the direction of the last packet in the buffer is the
+	 * same as the direction of the packet about to be added; if the
+	 * direction is the same then the link delay should not be used, since it
+	 * was already used once for the first packet in this run of same-direction
+	 * packets.
+	 * @return true if the destination is the same as the destination of the
+	 * last packet in the buffer
+	 */
+	bool isSameDirectionAsLastPacket(netnode *destination);
+
+	/**
 	 * Gets the arrival time of a packet on the other end of the link.
 	 * @param pkt
 	 * @param useDelay
@@ -741,12 +778,14 @@ public:
 	 * If the link buffer has space the given packet is added to the buffer
 	 * and the rolling wait time and buffer occupancy are increased.
 	 * @param pkt the packet to add to the buffer
+	 * @param destination of the packet
 	 * @param useDelay true if link delay should be used to sum into the
 	 * buffer's wait time. Should be used ONCE per window
 	 * @param time at which we're trying to send this packet
 	 * @return true if added to buffer successfully, false if dropped
 	 */
-	bool sendPacket(const packet &pkt, bool useDelay, double time);
+	bool sendPacket(const packet &pkt, netnode *destination,
+			bool useDelay, double time);
 
 	/**
 	 * Called when a lone packet is received to free the link for subsequent
@@ -822,6 +861,12 @@ private:
 	/** Sequence number of packet */
 	int seqnum;
 
+	/** Distance vector for use in routing messages. **/
+	map<string, double> distance_vec;
+
+	/** Transmit time (stored as double), for calculating link costs. */
+	double transmit_timestamp;
+
 	/**
 	 * Constructor helper. Does naive assignments; logic should be in the
 	 * calling constructors.
@@ -883,6 +928,10 @@ public:
 
 	long getId() const;
 
+	map<string, double> getDistances() const;
+
+	void setDistances(map<string, double> distances);
+
 	netflow *getParentFlow() const;
 
 	packet_type getType() const;
@@ -895,6 +944,10 @@ public:
 
 	/** @return type as a string */
 	string getTypeString() const;
+
+	double getTransmitTimestamp() const;
+
+	void setTransmitTimestamp(double time);
 
 	/**
 	 * Print helper function which partially overrides the one in @c netdevice.
