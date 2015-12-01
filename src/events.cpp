@@ -78,32 +78,20 @@ void receive_packet_event::runEvent() {
 	 */
 	if (step_destination->isRoutingNode()) {
 		netrouter *router = dynamic_cast<netrouter *>(step_destination);
+		map<netlink *, packet> link_pkt_map =
+				router->receivePacket(getTime(), *sim, *flow, pkt);
 
-		if (pkt.getType() == ROUTING) {
-			// Handle routing packets differently here
-			// New send_packet_event(s) will only be triggered within the 
-			// router's receiveRoutingPacket method if there are any updates
-			// made to the router table/distances.
+		// TODO routing packets aren't treated like window-loads, right?
 
-			router->receiveRoutingPacket(getTime(), *sim, *flow, pkt, *link);
-
-		}
-
-		else {
-			// FLOW and ACK packets are handled the same way here:
-			map<netlink *, packet> link_pkt_map =
-					router->receivePacket(getTime(), *sim, *flow, pkt);
-
-			// Iterate over all the packets that must be sent, making a
-			// send packet event for each.
-			map<netlink *, packet>::iterator it = link_pkt_map.begin();
-			while (it != link_pkt_map.end()) {
-				send_packet_event *e = new send_packet_event(
-						getTime(), *sim, *flow, pkt, *(it->first),
-						*step_destination);
-				sim->addEvent(e);
-				it++;
-			}
+		// Iterate over all the packets that must be sent, making a
+		// send packet event for each.
+		map<netlink *, packet>::iterator it = link_pkt_map.begin();
+		while (it != link_pkt_map.end()) {
+			send_packet_event *e = new send_packet_event(
+					getTime(), *sim, *flow, pkt, *(it->first),
+					*step_destination);
+			sim->addEvent(e);
+			it++;
 		}
 	}
 
