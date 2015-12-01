@@ -395,7 +395,7 @@ json simulation::logLinkMetric(netlink link, double currTime) {
     // retreive link metrics
     string name = link.getName();
     double rate = link.getRateMbps();
-    long occ = link.getBufferOccupancy();
+    long occ = link.getBufferOccupancy() / 1000; // kilobyte
     int loss = link.getPktLoss();
 
     // format into json

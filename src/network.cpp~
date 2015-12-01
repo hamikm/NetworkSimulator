@@ -277,7 +277,7 @@ double netflow::getFlowRateBytesPerSec() const {
 
 double netflow::getFlowRateMbps() const {
 	// something seems fishy about this calculatiion dim-analysis wise
-	double bytes = (double) getPktTally() * FLOW_PACKET_SIZE / RATE_INTERVAL;
+	bytes = (double) getPktTally() * FLOW_PACKET_SIZE / RATE_INTERVAL;
 	return bytes / BYTES_PER_MEGABIT;
 }
 

@@ -106,7 +106,7 @@ class netnode : public netelement {
 
 protected:
 
-	/** Pointers to all the links attached to this router. */
+	/** Pointers to all the links attached to this node. */
 	vector<netlink *> links;
 
 public:
@@ -235,7 +235,7 @@ private:
 	/** Pointer to the other end of this flow. */
 	nethost *destination;
 	
-	/** For plotting, number of flow packets received by source */
+	/** For plotting, number of flow packets received by destination */
 	int pktTally;
 	
 	/** For plotting, start time of the packet count interval */
@@ -341,15 +341,6 @@ private:
 			double window_size, double timeout_length_ms, simulation &sim);
 
 public:
-
-	/** Size of a flow packet in bytes. */
-	static const long FLOW_PACKET_SIZE = 1024;
-
-	/** Size of an ACK packet in bytes. */
-	static const long ACK_PACKET_SIZE = 64;
-
-	/** Size of a routing packet in bytes. */
-	static const long ROUTING_PACKET_SIZE = 64;
 
 	/** Number of duplicate ACKs before fast retransmit is used. */
 	static const int FAST_RETRANSMIT_DUPLICATE_ACK_THRESHOLD = 3;
@@ -622,6 +613,19 @@ private:
 	 * of packets dropped in one go due to a full link buffer.
 	 */
 	int packets_dropped = 0;
+	
+	/** For plotting link rate. 
+	 * Keeps track of how many packets of each type were passing
+	 * through link during given time interval.
+	 * Key is a string instead of packet_type for easier printing.
+	 */ 
+	map<string, int> linkTraffic = { {"ack", 0}, {"flow", 0}, {"rtr", 0} };
+
+	/** For plotting, start time of the packet count interval */
+	double leftTime;
+	
+	/** For plotting, end time of the packet count interval */
+	double rightTime;
 
 	/**
 	 * Helper for the constructors. Converts the buffer length from kilobytes
@@ -669,11 +673,14 @@ public:
 
 	netnode *getEndpoint2() const;
 
-	/** @return link rate in bytes per second. */
-	double getRateBytesPerSec() const;
+	/** @return link capacity in bytes per second. */
+	double getCapacityBytesPerSec() const;
 
-	/** @return link rate in megabits per second. */
-	double getRateMbps() const;
+	/** @return link capacity in megabits per second. */
+	double getCapacityMbps() const;
+
+	/** @return link rate in megabits per second */
+	double getRateMbps();
 
 	/**
 	 * @return end-to-end time in milliseconds for the given packet on this
@@ -696,10 +703,15 @@ public:
 	long getBufferOccupancy() const;
 
 	/**
-	 * @return packet loss, whic is number of packets dropped since
-	 * assuming nothing happens to a backet while in transit
+	 * @return packet loss, which is number of packets dropped since
+	 * we are assuming nothing happens to a backet while in transit
 	 */
 	int getPktLoss() const;
+
+	/** 
+	 * @return linkTraffic
+	 */
+	map<string, int> getLinkTraffic() const;
 
 	/**
 	 * Gets the arrival time of a packet on the other end of the link.
@@ -724,7 +736,7 @@ public:
 	void setEndpoint1(netnode &endpoint1);
 
 	void setEndpoint2(netnode &endpoint2);
-
+	
 	/**
 	 * If the link buffer has space the given packet is added to the buffer
 	 * and the rolling wait time and buffer occupancy are increased.
@@ -760,6 +772,16 @@ public:
 	 * and the buffer wasn't empty)
 	 */
 	bool receivedPacketInWindow(long pkt_id, bool first_packet);
+
+	/**
+	 * Resets all values in linkTraffic map to 0
+	 */
+	void resetLinkTraffic();	
+	
+	/**
+	 * Updates value of linkTraffic accordingly
+	 */
+	void updateLinkTraffic(int time, packet_type type);
 };
 
 // -------------------------------- packet class ------------------------------
@@ -812,15 +834,6 @@ public:
 
 	/** Unique ID number generator. Initialized in corresponding cpp file. */
 	static long id_gen;
-
-	/** Size of a flow packet in bytes. */
-	static const long FLOW_PACKET_SIZE = 1024;
-
-	/** Size of an ACK packet in bytes. */
-	static const long ACK_PACKET_SIZE = 64;
-
-	/** Size of a routing packet in bytes. */
-	static const long ROUTING_PACKET_SIZE = 64;
 
 	packet();
 

@@ -39,7 +39,7 @@ def loadAllData(filename):
 	# initialize data storage arrays for links
 	for link in events[0]["LinkData"]:
 		linksData[link["LinkID"]] = {"Link Rate (Mbps)" : [link["LinkRate"]],
-		                              "Buffer Occupancy (pkts)" : [link["BuffOcc"]],
+		                              "Buffer Occupancy (KB)" : [link["BuffOcc"]],
 		                              "Packet Loss (pkts)" : [link["PktLoss"]]}
 	for flow in events[0]["FlowData"]:
 		flowsData[flow["FlowID"]] = {"Flow Rate (Mbps)" : [flow["FlowRate"]],
@@ -53,7 +53,7 @@ def loadAllData(filename):
 		# get and store link data
 		for link in event["LinkData"]:
 			linksData[link["LinkID"]]["Link Rate (Mbps)"].append(link["LinkRate"])
-			linksData[link["LinkID"]]["Buffer Occupancy (pkts)"].append(link["BuffOcc"])
+			linksData[link["LinkID"]]["Buffer Occupancy (KB)"].append(link["BuffOcc"])
 			linksData[link["LinkID"]]["Packet Loss (pkts)"].append(link["PktLoss"])
 			
 		# get and store flow data
@@ -81,7 +81,7 @@ def plotLinkData(time, linksData):
 	for link in linksData.keys():
 		lrates.plot(time, linksData[link]["Link Rate (Mbps)"], 'o',
 				 label=str(link), markersize=1)
-		buffocc.plot(time, linksData[link]["Buffer Occupancy (bytes)"], 'o',
+		buffocc.plot(time, linksData[link]["Buffer Occupancy (KB)"], 'o',
 				 label=str(link), markersize=1)
 		pktloss.plot(time, linksData[link]["Packet Loss (pkts)"], 'o',
 				 label=str(link), markersize=1)
@@ -93,7 +93,7 @@ def plotLinkData(time, linksData):
 	lrates.set_ylim(ymin=0)
 	
 	buffocc.set_xlabel('Time (ms)')
-	buffocc.set_ylabel('Buffer Occupancy (pkts)')
+	buffocc.set_ylabel('Buffer Occupancy (KB)')
 	buffocc.legend()
 	buffocc.set_ylim(ymin=0)
 	

@@ -96,8 +96,6 @@ void print_usage_statement (char *progname) {
 	cerr << "  -d to print debugging statements to stdout." << endl;
 	cerr << "  -dd to print detailed, pausing debugging statements to stdout."
 			<< endl;
-
-	// TODO update when we decide where to send output.
 }
 
 char *process_console_args(int argc, char **argv) {

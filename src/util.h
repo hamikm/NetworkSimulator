@@ -8,10 +8,19 @@
 #ifndef UTIL_H
 #define UTIL_H
 
-const int BYTES_PER_KB = 1 << 10;
+/** Size of a flow packet in bytes. */
+static const long FLOW_PACKET_SIZE = 1024;
+
+/** Size of an ACK packet in bytes. */
+static const long ACK_PACKET_SIZE = 64;
+
+/** Size of a routing packet in bytes. */
+static const long ROUTING_PACKET_SIZE = 64;
+
+const int BYTES_PER_KB = 1000;
 
 /**  Conversion factor between kilobytes and megabytes. */
-const int KB_PER_MB = 1 << 10;
+const int KB_PER_MB = 1000;
 
 /**  Conversion factor between bits and bytes. */
 const int BITS_PER_BYTE = 1 << 3;

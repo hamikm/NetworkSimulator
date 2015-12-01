@@ -57,6 +57,7 @@ receive_packet_event::receive_packet_event(double time, simulation &sim,
 receive_packet_event::~receive_packet_event() { }
 
 void receive_packet_event::runEvent() {
+	
 
 	if(debug) {
 		debug_os << getTime() << "\tRECEIVING " << pkt.getTypeString()
@@ -65,6 +66,10 @@ void receive_packet_event::runEvent() {
 		debug_os << "Before receipt: ";
 		link->printBuffer(debug_os);
 	}
+
+	// update link traffic used to calculate link rate
+	double time = getTime();
+	link->updateLinkTraffic(time, pkt.getType());
 
 	/*
 	 * If this arrival event is at a router then forward the packet. The
@@ -105,7 +110,6 @@ void receive_packet_event::runEvent() {
 		flow->receivedFlowPacket(pkt, getTime());
 
 		// update flow packet tally used to calculate flow rate
-		double time = getTime();
 		flow->updatePktTally(time);
 	}
 	
