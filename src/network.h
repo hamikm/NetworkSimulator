@@ -228,10 +228,19 @@ public:
 
 	/**
 	 * Called once at the beginning of the simulation, after parsing in an
-	 * input file. Sets distance to self and adjacent hosts to 0.
+	 * input file. Sets distance to self and adjacent hosts to 0. 
+	 * Sets the correct link to adjacent hosts since each host
+	 * has only one outgoing link. Sets other links to NULL.
 	 */
 	void initializeTables(map<string, nethost*> host_list, 
 						  map<string, netrouter*> router_list);
+
+	/**
+	 * Called from each router_discovery_event before recalculating distances.
+	 * Sets distances to all other routers and nonadjacent hosts to infinity.
+	 */
+	void resetDistances(map<string, nethost*> host_list, 
+						map<string, netrouter*> router_list);
 
 	/**
 	 * Print helper function which partially overrides the one in @c netdevice.

@@ -229,8 +229,14 @@ void router_discovery_event::runEvent() {
 		debug_os << "ROUTING: " << *this << endl;
 	}
 
-	// Have each router send packets to its neighbors
+	// Reset each router's distance table
 	map<string, netrouter *> router_list = sim->getRouters();
+	for (map<string, netrouter *>::iterator it = router_list.begin();
+		 it != router_list.end(); it++) {
+		it->second->resetDistances(sim->getHosts(), sim->getRouters());
+	}
+
+	// Have each router send packets to its neighbors
 	for (map<string, netrouter *>::iterator it = router_list.begin();
 		 it != router_list.end(); it++) {
 

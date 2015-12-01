@@ -262,6 +262,12 @@ void simulation::runSimulation() {
 	addEvent(r_event);
 
 	/*
+	for (int update_t = 550; update_t < 20000; update_t += 1000) {
+		router_discovery_event *r_event = new 
+				router_discovery_event(update_t, *this);
+		addEvent(r_event);
+	}
+	
 	// Loop over the flows, making a start flow event for each and adding
 	// it to the events queue
 	for (map<string, netflow *>::iterator itr = flows.begin();

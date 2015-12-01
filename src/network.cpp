@@ -182,6 +182,31 @@ void netrouter::receiveRoutingPacket(double time, simulation &sim,
 
 map<string, double> netrouter::getRDistances() const { return rdistances; }
 
+void netrouter::resetDistances(map<string, nethost*> host_list, 
+							   map<string, netrouter*> router_list) {
+	// Reset distances to routers
+	for (map<string, netrouter*>::iterator it_r = router_list.begin();
+		 it_r != router_list.end(); it_r++) {
+
+		// Set distance to others = infinity
+		if (strcmp(it_r->first.c_str(), getName().c_str()) != 0) {
+			rdistances[it_r->first] = numeric_limits<double>::max();
+		}
+	}
+	// Reset distances to hosts
+	for (map<string, nethost*>::iterator it_h = host_list.begin();
+		it_h != host_list.end(); it_h++) {
+		// Check if connected to this router
+		nethost *host = it_h->second;
+
+		// TODO router: add a helper function for safe node comparison with strcmp
+		if (strcmp(host->getOtherNode(host->getLink())->getName().c_str(),
+					getName().c_str()) != 0) {
+			rdistances[it_h->first] = numeric_limits<double>::max();
+		}
+	}
+}
+
 void netrouter::initializeTables(map<string, nethost*> host_list, 
 								 map<string, netrouter*> router_list) {
 	// Add routers
