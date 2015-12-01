@@ -47,6 +47,12 @@ receive_packet_event::receive_packet_event(double time, simulation &sim,
 	constructorHelper(&flow, pkt, &step_destination, &link, 1, pkt.getSeq());
 }
 
+receive_packet_event::receive_packet_event(double time, simulation &sim, 
+			packet &pkt, netnode &step_destination, netlink &link) {
+	constructorHelper(NULL, pkt, &step_destination, &link, 1, 
+		SEQNUM_FOR_NONFLOWS);
+}
+
 receive_packet_event::receive_packet_event(double time, simulation &sim,
 		netflow &flow, packet &pkt, netnode &step_destination,
 		netlink &link, int window_size, int window_start) : event(time, sim) {
@@ -57,11 +63,12 @@ receive_packet_event::receive_packet_event(double time, simulation &sim,
 receive_packet_event::~receive_packet_event() { }
 
 void receive_packet_event::runEvent() {
-
+ 
 	if(debug) {
 		debug_os << getTime() << "\tRECEIVING " << pkt.getTypeString()
-				<< " PACKET: " << pkt.getSeq() << endl
-				<< *this << endl;
+				<< " PACKET: " << pkt.getSeq() << endl;
+				// TODO: figure out why uncommenting this causes segfault
+				//<< *this << endl;
 		debug_os << "Before receipt: ";
 		link->printBuffer(debug_os);
 	}
@@ -76,8 +83,11 @@ void receive_packet_event::runEvent() {
 	 * the receivePacket function just returns all the packets to send and
 	 * corresponding links to follow.
 	 */
+	//cout << "REACHED RECEIVED 0" << endl;
 	if (step_destination->isRoutingNode()) {
+		//cout << "REACHED RECEIVED 1" << endl;
 		netrouter *router = dynamic_cast<netrouter *>(step_destination);
+		//cout << "REACHED RECEIVED 2" << endl;
 
 		if (pkt.getType() == ROUTING) {
 			// Handle routing packets differently here
@@ -85,7 +95,7 @@ void receive_packet_event::runEvent() {
 			// router's receiveRoutingPacket method if there are any updates
 			// made to the router table/distances.
 
-			router->receiveRoutingPacket(getTime(), *sim, *flow, pkt, *link);
+			router->receiveRoutingPacket(getTime(), *sim, pkt, *link);
 
 		}
 
@@ -208,8 +218,8 @@ void receive_packet_event::printHelper(ostream &os) {
 // ------------------------- router_discovery_event class ---------------------
 
 router_discovery_event::router_discovery_event(
-		double time, simulation &sim, netrouter &router) :
-				event(time, sim), router(&router) { }
+		double time, simulation &sim) :
+				event(time, sim) { }
 
 router_discovery_event::~router_discovery_event() { }
 
@@ -218,7 +228,37 @@ void router_discovery_event::runEvent() {
 	if(debug) {
 		debug_os << "ROUTING: " << *this << endl;
 	}
-	// TODO
+
+	// Have each router send packets to its neighbors
+	map<string, netrouter *> router_list = sim->getRouters();
+	for (map<string, netrouter *>::iterator it = router_list.begin();
+		 it != router_list.end(); it++) {
+
+		netrouter *r = it->second;
+
+		vector<netlink *> adj_links = r->getLinks();
+		for (unsigned i = 0; i < adj_links.size(); i++) {
+
+			netnode *other_node = r->getOtherNode(adj_links[i]);
+
+			// Check if other_node points to router
+			if (other_node->isRoutingNode()) {
+
+				packet rpack = packet(ROUTING, r->getName(), other_node->getName());
+				rpack.setDistances(r->getRDistances()); 
+				rpack.setTransmitTimestamp(getTime());
+
+				// Queue up new packet. Send_packet_event will check when the
+				// link is free.
+				send_packet_event *e = new send_packet_event(getTime(), *sim,
+					rpack, *adj_links[i], *r);
+				sim->addEvent(e);
+
+			}
+
+		}
+	}
+
 }
 
 void router_discovery_event::printHelper(ostream &os) {
@@ -255,6 +295,13 @@ void send_packet_event::constructorHelper(netflow *flow, packet &pkt,
 send_packet_event::send_packet_event() : event() {
 	packet pkt;
 	constructorHelper(NULL, pkt, NULL, NULL, -1, -1);
+}
+
+send_packet_event::send_packet_event(double time, simulation &sim, 
+			packet &pkt, netlink &link, netnode &departure_node) : 
+					event(time, sim) {
+	constructorHelper(NULL, pkt, &link, &departure_node, 1, 
+		SEQNUM_FOR_NONFLOWS);
 }
 
 send_packet_event::send_packet_event(double time, simulation &sim,

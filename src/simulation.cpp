@@ -249,15 +249,19 @@ void simulation::runSimulation() {
 		 it_rt != routers.end(); it_rt++) {
 		it_rt->second->initializeTables(hosts, routers);
 
-
 		if (debug) {
 			it_rt->second->printHelper(cout);
 			cout << endl;
 		}
 	}
-	// Router discovery initiation events not implemented yet
-	exit(0);
 
+	// At regular time intervals, push router discovery events onto events
+	// queue. 
+	// TODO: determine proper time interval. For now just try once:
+	router_discovery_event *r_event = new router_discovery_event(0, *this);
+	addEvent(r_event);
+
+	/*
 	// Loop over the flows, making a start flow event for each and adding
 	// it to the events queue
 	for (map<string, netflow *>::iterator itr = flows.begin();
@@ -267,6 +271,7 @@ void simulation::runSimulation() {
 				start_flow_event(flow->getStartTimeMs(), *this, *flow);
 		addEvent(fevent);
 	}
+	*/
 
 	// Loop over the events in the events queue, running the one with the
 	// smallest start time.
@@ -285,6 +290,18 @@ void simulation::runSimulation() {
 			}
 		}
 	}
+
+	// Check resulting routing tables
+	if (debug) {
+		for (map<string, netrouter*>::iterator it_rt = routers.begin();
+			 it_rt != routers.end(); it_rt++) {
+
+			
+			it_rt->second->printHelper(cout);
+			cout << endl;
+		}
+	}
+
 }
 
 void simulation::addEvent(event *e) {

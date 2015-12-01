@@ -121,7 +121,7 @@ map<netlink *, packet> netrouter::receivePacket(double time, simulation &sim,
 	return link_pkt_map;
 }
 
-void netrouter::receiveRoutingPacket(double time, simulation &sim, netflow &flow, 
+void netrouter::receiveRoutingPacket(double time, simulation &sim, 
 			packet &pkt, netlink &link) {
 
 	// Update routing table as follows: For each destination,
@@ -153,6 +153,8 @@ void netrouter::receiveRoutingPacket(double time, simulation &sim, netflow &flow
 	if (updated) {
 		// Send routing packets to adjacent routers.
 
+		// TODO: put the following block in a sendRoutingMessage function so
+		// it's not repeated unnecessarily here and in router_discovery_event
 		vector<netlink *> adj_links = getLinks();
 		for (unsigned i = 0; i < adj_links.size(); i++) {
 
@@ -165,8 +167,9 @@ void netrouter::receiveRoutingPacket(double time, simulation &sim, netflow &flow
 				rpack.setDistances(rdistances); 
 				rpack.setTransmitTimestamp(time); 			// Time that packet is sent
 
-				// Check when link is free and queue up new packet
-				send_packet_event *e = new send_packet_event(time, sim, flow,
+				// Queue up new packet. Send_packet_event will check when the
+				// link is free.
+				send_packet_event *e = new send_packet_event(time, sim,
 					rpack, *adj_links[i], *this);
 				sim.addEvent(e);
 
@@ -176,6 +179,8 @@ void netrouter::receiveRoutingPacket(double time, simulation &sim, netflow &flow
 	}
 
 }
+
+map<string, double> netrouter::getRDistances() const { return rdistances; }
 
 void netrouter::initializeTables(map<string, nethost*> host_list, 
 								 map<string, netrouter*> router_list) {

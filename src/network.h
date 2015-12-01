@@ -221,8 +221,10 @@ public:
 	 * it will also trigger send_packet_events to deliver additional routing
 	 * packets to its neighbors.
 	 */
-	void receiveRoutingPacket(double time, simulation &sim, netflow &flow, 
+	void receiveRoutingPacket(double time, simulation &sim, 
 			packet &pkt, netlink &link);
+
+	map<string, double> getRDistances() const;
 
 	/**
 	 * Called once at the beginning of the simulation, after parsing in an
