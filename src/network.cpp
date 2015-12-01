@@ -16,18 +16,25 @@ netelement::~netelement() { }
 
 const string &netelement::getName() const { return name; }
 
-void netelement::setNestingDepth(int depth) { this->nest_depth = depth; }
+void netelement::setNestingDepth(int depth) { 
+	if (this) {
+		this->nest_depth = depth; 
+	}
+}
 
 string netelement::nestingPrefix(int delta) const {
 	string rtn = "";
-	for (int i = 0; i < nest_depth + delta; i++) {
-		rtn += "  ";
+	if (this) {
+		for (int i = 0; i < nest_depth + delta; i++) {
+			rtn += "  ";
+		}
 	}
 	return rtn;
 }
 
 void netelement::printHelper(std::ostream &os) const {
-	os << "netelement. name: \"" << name << "\"";
+	if (this)
+		os << "netelement. name: \"" << name << "\"";
 }
 
 // ------------------------------- netnode class ------------------------------
@@ -293,7 +300,7 @@ void netflow::constructorHelper (double start_time, double size_mb,
 	this->lin_growth_winsize_threshold = -1;
 	this->avg_RTT = -1;
 	this->std_RTT = -1;
-	//this->pkt_RRT = -1;
+	this->pkt_RRT = -1;
 
 	this->sim = &sim;
 }
@@ -333,7 +340,7 @@ void netflow::setSource(nethost &source) {
 	this->source = &source;
 }
 
-/*
+
 int netflow::getPktTally() const { return pktTally; }
 
 void netflow::incPktTally() {
@@ -355,7 +362,7 @@ double netflow::getRightTime() const { return rightTime; }
 void netflow::setRightTime(double newTime) {
 	rightTime = newTime;
 }
-*/
+
 
 int netflow::getLastAck() const {
 	return highest_received_ack_seqnum;
@@ -492,7 +499,7 @@ void netflow::updateTimeoutLength(double end_time_ms, int flow_seqnum) {
 	rtts.erase(flow_seqnum);
 	
 	// update state variable
-	//pkt_RRT = rtt;
+	pkt_RRT = rtt;
 	
 	// If it's the first ACK we don't have an average or deviation for the
 	// round-trip times, so initialize them to the first RTT
@@ -528,7 +535,7 @@ void netflow::receivedAck(packet &pkt, double end_time_ms,
 		if (++num_duplicate_acks >=
 				FAST_RETRANSMIT_DUPLICATE_ACK_THRESHOLD) {
 
-			if(debug) {
+			if(debug && this) {
 				cout << "Saw " << FAST_RETRANSMIT_DUPLICATE_ACK_THRESHOLD
 						<< "-th duplicate ACK, so fast retransmitting."
 						<< endl;
@@ -549,7 +556,7 @@ void netflow::receivedAck(packet &pkt, double end_time_ms,
 		// and registering a new one.
 		else {
 
-			if(debug) {
+			if(debug && this) {
 				cout << "Saw pre-threshold duplicate ACK!!!" <<
 						"Num duplicates: " << num_duplicate_acks << endl;
 			}
@@ -594,6 +601,7 @@ void netflow::receivedAck(packet &pkt, double end_time_ms,
 		//delayFlowTimeout(end_time_ms + timeout_length_ms);
 	}
 
+	/*
 	cerr << " --------------- " << endl;
 	cerr << "highest_received_ack_seqnum" << highest_received_ack_seqnum
 			<< endl;
@@ -601,6 +609,7 @@ void netflow::receivedAck(packet &pkt, double end_time_ms,
 	cerr << "window start" << window_start << endl;
 	cerr << "window size" << window_size << endl;
 	cerr << " --------------- " << endl;
+	*/
 
 }
 

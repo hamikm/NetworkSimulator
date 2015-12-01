@@ -261,7 +261,7 @@ void simulation::runSimulation() {
 	router_discovery_event *r_event = new router_discovery_event(0, *this);
 	addEvent(r_event);
 
-	/*
+	
 	for (int update_t = 550; update_t < 20000; update_t += 1000) {
 		router_discovery_event *r_event = new 
 				router_discovery_event(update_t, *this);
@@ -277,7 +277,7 @@ void simulation::runSimulation() {
 				start_flow_event(flow->getStartTimeMs(), *this, *flow);
 		addEvent(fevent);
 	}
-	*/
+	
 
 	// Loop over the events in the events queue, running the one with the
 	// smallest start time.
@@ -298,15 +298,15 @@ void simulation::runSimulation() {
 	}
 
 	// Check resulting routing tables
-	if (debug) {
-		for (map<string, netrouter*>::iterator it_rt = routers.begin();
-			 it_rt != routers.end(); it_rt++) {
+	
+	for (map<string, netrouter*>::iterator it_rt = routers.begin();
+		 it_rt != routers.end(); it_rt++) {
 
-			
-			it_rt->second->printHelper(cout);
-			cout << endl;
-		}
+		
+		it_rt->second->printHelper(cout);
+		cout << endl;
 	}
+	
 
 }
 

@@ -64,7 +64,7 @@ receive_packet_event::~receive_packet_event() { }
 
 void receive_packet_event::runEvent() {
  
-	if(debug) {
+	if(debug && this) {
 		debug_os << getTime() << "\tRECEIVING " << pkt.getTypeString()
 				<< " PACKET: " << pkt.getSeq() << endl;
 				// TODO: figure out why uncommenting this causes segfault
@@ -136,7 +136,7 @@ void receive_packet_event::runEvent() {
 
 		// TODO refactor following into the receivedAck method.
 
-		if(debug) {
+		if(debug && this) {
 			debug_os << "Got ACK #" << pkt.getSeq() << endl;
 		}
 
@@ -161,7 +161,7 @@ void receive_packet_event::runEvent() {
 		int i = 0;
 		while(pkt_it != pkts_to_send.end()) {
 
-			if(debug) {
+			if(debug && this) {
 				debug_os << "  Sending packet #" << pkt_it->getSeq() << endl;
 			}
 
@@ -225,7 +225,7 @@ router_discovery_event::~router_discovery_event() { }
 
 void router_discovery_event::runEvent() {
 
-	if(debug) {
+	if(debug && this) {
 		debug_os << "ROUTING: " << *this << endl;
 	}
 
@@ -344,7 +344,7 @@ netnode *send_packet_event::getDestinationNode() const {
 
 void send_packet_event::runEvent() {
 
-	if(debug) {
+	if(debug && this) {
 		debug_os << getTime() << "\tSENDING " << pkt.getTypeString()
 				<< " PACKET: "
 				<< pkt.getSeq() << ", win size: " << window_size
@@ -393,7 +393,6 @@ void send_packet_event::runEvent() {
 
 void send_packet_event::printHelper(ostream &os) {
 	event::printHelper(os);
-
 	flow->setNestingDepth(1);
 	link->setNestingDepth(1);
 	pkt.setNestingDepth(1);
@@ -418,7 +417,7 @@ start_flow_event::~start_flow_event() { }
 
 void start_flow_event::runEvent() {
 
-	if(debug) {
+	if(debug && this) {
 		debug_os << getTime() << "\tSTARTING FLOW: " << *this << endl;
 	}
 
@@ -481,7 +480,7 @@ timeout_event::~timeout_event() { }
 
 void timeout_event::runEvent() {
 
-	if(debug) {
+	if(debug && this) {
 		debug_os << getTime() << "\tTIMEOUT TRIGGERED: "
 				<< *this << endl;
 	}
@@ -550,7 +549,7 @@ ack_event::~ack_event() { }
 
 void ack_event::runEvent() {
 
-	if(debug) {
+	if(debug && this) {
 		debug_os << getTime() << "\tACK TRIGGERED: "
 				<< dup_pkt.getSeq() << endl;
 		//		<< *this << endl;
