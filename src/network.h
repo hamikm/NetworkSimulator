@@ -14,7 +14,7 @@
 #include <map>
 #include <queue>
 #include <cmath>
-#include <climits>
+#include <limits>
 #include <set>
 
 // Custom headers
@@ -119,6 +119,10 @@ public:
 
 	netnode (string name, vector<netlink *> links);
 
+	/** Returns the node connected to the input link that is not *this 
+	 *  node. */
+	netnode *getOtherNode(netlink *link);
+
 	virtual void addLink (netlink &link);
 
 	const vector<netlink *> &getLinks() const;
@@ -219,6 +223,13 @@ public:
 	 */
 	void receiveRoutingPacket(double time, simulation &sim, netflow &flow, 
 			packet &pkt, netlink &link);
+
+	/**
+	 * Called once at the beginning of the simulation, after parsing in an
+	 * input file. Sets distance to self and adjacent hosts to 0.
+	 */
+	void initializeTables(map<string, nethost*> host_list, 
+						  map<string, netrouter*> router_list);
 
 	/**
 	 * Print helper function which partially overrides the one in @c netdevice.

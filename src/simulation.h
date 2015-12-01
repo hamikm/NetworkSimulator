@@ -137,6 +137,11 @@ public:
 	 */
 	void print_network(ostream &os) const;
 
+	map<string, nethost *> getHosts() const;
+
+	map<string, netrouter *> getRouters() const;
+
+
 	/**
 	 * Runs the simulation by loading some initial events into the @c events
 	 * queue then starts a loop over the events, calling the @c runEvent

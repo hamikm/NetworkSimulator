@@ -238,7 +238,25 @@ void simulation::print_network(ostream &os) const {
 	}
 }
 
+map<string, nethost *> simulation::getHosts() const { return hosts; }
+
+map<string, netrouter *> simulation::getRouters() const { return routers; }
+
 void simulation::runSimulation() {
+
+	// Initialize routing tables
+	for (map<string, netrouter*>::iterator it_rt = routers.begin();
+		 it_rt != routers.end(); it_rt++) {
+		it_rt->second->initializeTables(hosts, routers);
+
+
+		if (debug) {
+			it_rt->second->printHelper(cout);
+			cout << endl;
+		}
+	}
+	// Router discovery initiation events not implemented yet
+	exit(0);
 
 	// Loop over the flows, making a start flow event for each and adding
 	// it to the events queue

@@ -43,6 +43,24 @@ void netnode::addLink (netlink &link) { links.push_back(&link); }
 
 bool netnode::isRoutingNode() const { return false; }
 
+netnode *netnode::getOtherNode(netlink *link) {
+	// Confirm that this node is indeed connected to input link
+	assert((strcmp(this->getName().c_str(),
+				   link->getEndpoint1()->getName().c_str()) == 0) ||
+		   (strcmp(this->getName().c_str(),
+				   link->getEndpoint2()->getName().c_str()) == 0));
+
+	netnode *other_node;
+	if (strcmp(link->getEndpoint1()->getName().c_str(),
+						       this->getName().c_str()) == 0) {
+		other_node = link->getEndpoint2();
+	}
+	else {
+		other_node = link->getEndpoint1();
+	}
+	return other_node;
+}
+
 const vector<netlink *> &netnode::getLinks() const { return links; }
 
 void netnode::printHelper(ostream &os) const { // TODO automate nesting
@@ -138,14 +156,7 @@ void netrouter::receiveRoutingPacket(double time, simulation &sim, netflow &flow
 		vector<netlink *> adj_links = getLinks();
 		for (unsigned i = 0; i < adj_links.size(); i++) {
 
-			netnode *other_node;
-			if (adj_links[i]->getEndpoint1()->getName().c_str() == 
-									 this->getName().c_str()) {
-				other_node = adj_links[i]->getEndpoint2();
-			}
-			else {
-				other_node = adj_links[i]->getEndpoint1();
-			}
+			netnode *other_node = this->getOtherNode(adj_links[i]);
 
 			// Check if other_node points to router
 			if (other_node->isRoutingNode()) {
@@ -166,9 +177,46 @@ void netrouter::receiveRoutingPacket(double time, simulation &sim, netflow &flow
 
 }
 
+void netrouter::initializeTables(map<string, nethost*> host_list, 
+								 map<string, netrouter*> router_list) {
+	// Add routers
+	for (map<string, netrouter*>::iterator it_r = router_list.begin();
+		 it_r != router_list.end(); it_r++) {
+
+		// TODO router: Initialize to a default link instead of NULL?
+		rtable[it_r->first] = NULL;
+
+		// Set distance to self = 0
+		if (strcmp(it_r->first.c_str(), getName().c_str()) == 0) {
+			rdistances[it_r->first] = 0;
+		}
+		// Set distance to others = infinity
+		else {
+			rdistances[it_r->first] = numeric_limits<double>::max();
+		}
+	}
+	// Add hosts
+	for (map<string, nethost*>::iterator it_h = host_list.begin();
+		it_h != host_list.end(); it_h++) {
+		// Check if connected to this router
+		nethost *host = it_h->second;
+
+		// TODO router: add a helper function for safe node comparison with strcmp
+		if (strcmp(host->getOtherNode(host->getLink())->getName().c_str(),
+					getName().c_str()) == 0) {
+			rtable[it_h->first] = host->getLink();
+			rdistances[it_h->first] = 0;
+		}
+		else {
+			rtable[it_h->first] = NULL;
+			rdistances[it_h->first] = numeric_limits<double>::max();
+		}
+	}
+}
+
 void netrouter::printHelper(ostream &os) const {
 	netnode::printHelper(os);
-	os << " <-- router. routing table: ";
+	os << " <-- router. routing table: " << endl;
 	if (rtable.size() == 0) {
 		os << "{ }";
 		return;
@@ -176,8 +224,19 @@ void netrouter::printHelper(ostream &os) const {
 	os << "{ " << endl;
 	map<string, netlink *>::const_iterator itr;
 	for (itr = rtable.begin(); itr != rtable.end(); itr++) {
+		string link_name = (itr->second == NULL) ? 
+							"Out-link not set" : itr->second->getName();
 		os << nestingPrefix(1) << "(" <<
-				itr->first << "<--" << itr->second << ")";
+				itr->first << "<--" << link_name << ")" << endl;
+	}
+	os << nestingPrefix(0) << "}";
+
+	os << "{ " << endl;
+	os << " <-- router. routing distances: " << endl;
+	map<string, double>::const_iterator itr_d;
+	for(itr_d = rdistances.begin(); itr_d != rdistances.end(); itr_d++) {
+		os << nestingPrefix(1) << "(" <<
+				itr_d->first << "<--" << itr_d->second << ")" << endl;
 	}
 	os << nestingPrefix(0) << "}";
 }
