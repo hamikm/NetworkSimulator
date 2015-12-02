@@ -354,6 +354,7 @@ int netflow::getPktTally() const {
 }
 
 void netflow::updatePktTally(double time) {
+	
 	// if receive_packet_event arrives within window
 	if ((time <= rightTime) && (time > leftTime)) {
 		pktTally++;
@@ -420,13 +421,12 @@ double netflow::getLinGrowthWinsizeThreshold() const {
 
 double netflow::getFlowRateBytesPerSec() const {
 	return getPktTally() * FLOW_PACKET_SIZE / RATE_INTERVAL;
-	//return window_size * FLOW_PACKET_SIZE / avg_RTT;
 }
 
 double netflow::getFlowRateMbps() const {
 	// something seems fishy about this calculatiion dim-analysis wise
 	double bytes = (double) getPktTally() * FLOW_PACKET_SIZE / RATE_INTERVAL;
-	return bytes / BYTES_PER_MEGABIT;
+	return bytes * BYTES_PER_MEGABIT;
 }
 
 double netflow::getPktDelay(double currTime) const {
