@@ -83,10 +83,6 @@ void receive_packet_event::runEvent() {
 	 * router class takes care of that by consulting the routing
 	 * table for the link, then this function uses it to generate a
 	 * send_packet_event down that link.
-	 *
-	 * TODO This likely works for ACK, FLOW, as well as ROUTING packets, since
-	 * the receivePacket function just returns all the packets to send and
-	 * corresponding links to follow.
 	 */
 	if (step_destination->isRoutingNode()) {
 		netrouter *router = dynamic_cast<netrouter *>(step_destination);
@@ -137,8 +133,6 @@ void receive_packet_event::runEvent() {
 	 */
 	else if (pkt.getType() == ACK) {
 		flow->receivedAck(pkt, getTime(), link->getLinkFreeAtTime());
-
-		// TODO refactor following into the receivedAck method.
 
 		if(debug && this) {
 			debug_os << "Got ACK #" << pkt.getSeq() << endl;
@@ -223,7 +217,7 @@ void receive_packet_event::printHelper(ostream &os) {
 
 router_discovery_event::router_discovery_event(
 		double time, simulation &sim) :
-				event(time, sim) { }
+				event(time, sim), router(NULL) { }
 
 router_discovery_event::~router_discovery_event() { }
 
@@ -254,7 +248,8 @@ void router_discovery_event::runEvent() {
 			// Check if other_node points to router
 			if (other_node->isRoutingNode()) {
 
-				packet rpack = packet(ROUTING, r->getName(), other_node->getName());
+				packet rpack = packet(ROUTING, r->getName(),
+						other_node->getName());
 				rpack.setDistances(r->getRDistances()); 
 				rpack.setTransmitTimestamp(getTime());
 
@@ -268,7 +263,6 @@ void router_discovery_event::runEvent() {
 
 		}
 	}
-
 }
 
 void router_discovery_event::printHelper(ostream &os) {

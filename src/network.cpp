@@ -111,6 +111,8 @@ void nethost::printHelper(ostream &os) const {
 
 // ------------------------------ netrouter class -----------------------------
 
+netrouter::netrouter () : netnode() { }
+
 netrouter::netrouter (string name) : netnode(name) { }
 
 netrouter::netrouter (string name, vector<netlink *> links) :
@@ -305,6 +307,8 @@ void netflow::constructorHelper (double start_time, double size_mb,
 	this->avg_RTT = -1;
 	this->std_RTT = -1;
 	this->pkt_RRT = -1;
+	this->dont_send_duplicate_ack_until = -1;
+	this->waiting_for_seqnum_before_resuming = -1;
 
 	this->sim = &sim;
 }
@@ -446,8 +450,25 @@ timeout_event *netflow::delayFlowTimeout(double new_time) {
 void netflow::registerSendDuplicateAckAction(int seq, double time) {
 	// Update and queue up new ack_event
 	packet p = packet(ACK, *this, seq);
-	ack_event *e = new ack_event(time, *sim, *this, p);
-	sim->addEvent(e);
+
+	// If we're sending a duplicate ACK then set the
+	// dont_send_duplicate_ack_until time for subsequent duplicate ACKs
+	if (seq == highest_received_flow_seqnum) {
+
+		if (time > dont_send_duplicate_ack_until) {
+			dont_send_duplicate_ack_until = time + avg_RTT;
+			ack_event *e = new ack_event(time, *sim, *this, p);
+			sim->addEvent(e);
+		}
+		// don't send a duplicate ACK if time hasn't gone past
+		// the RTT threshold for the next one
+	}
+	else {
+		dont_send_duplicate_ack_until = -1;
+		ack_event *e = new ack_event(time, *sim, *this, p);
+		sim->addEvent(e);
+	}
+
 }
 
 vector<packet> netflow::peekOutstandingPackets() {
@@ -459,10 +480,19 @@ vector<packet> netflow::peekOutstandingPackets() {
 
 	vector<packet> outstanding_pkts;
 
+	int window_end;
+	if (waiting_for_seqnum_before_resuming == -1) {
+		window_end = window_start + window_size;
+	}
+	else {
+		// so only send one packet (the lost one) until it's ACK'd
+		window_end = highest_sent_flow_seqnum + 2;
+	}
+
 	// Iterate over the sequence numbers that haven't had corresponding
 	// packets sent. Make packets for each and collect them into a vector.
 	for (int i = highest_sent_flow_seqnum + 1;
-			i < window_start + window_size; i++) {
+			i < window_end; i++) {
 		outstanding_pkts.push_back(packet(FLOW, *this, i));
 	}
 
@@ -535,6 +565,20 @@ void netflow::receivedAck(packet &pkt, double end_time_ms,
 
 	assert(pkt.getType() == ACK);
 
+	// Situation normal, we're not waiting for anything.
+	if (waiting_for_seqnum_before_resuming == -1) {
+		// Do nothing, continue.
+	}
+	// Got the packet we were waiting for after fast retransmit. Reset
+	// waiting for variable.
+	else if (waiting_for_seqnum_before_resuming == pkt.getSeq()) {
+		waiting_for_seqnum_before_resuming = -1;
+	}
+	// Return, since we're waiting for a packet we haven't received.
+	else {
+		return;
+	}
+
 	/*
 	 * Check if sequence number is the same as the last one (i.e., duplicate
 	 * ACK); if so then update duplicate ACKs field and potentially get ready
@@ -560,6 +604,8 @@ void netflow::receivedAck(packet &pkt, double end_time_ms,
 			window_size = window_size / 2 > 1 ? window_size / 2 : 1;
 			lin_growth_winsize_threshold = window_size;
 			num_duplicate_acks = 0;
+
+			waiting_for_seqnum_before_resuming = pkt.getSeq() + 1;
 
 			//delayFlowTimeout(end_time_ms + timeout_length_ms);
 		}

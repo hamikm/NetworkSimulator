@@ -195,6 +195,8 @@ private:
 
 public:
 
+	netrouter ();
+
 	netrouter (string name);
 
 	netrouter (string name, vector<netlink *> links);
@@ -355,8 +357,17 @@ private:
 	 */
 	map<int, double> rtts;
 
-	set<int> receivedPackets;
-	multiset<int> receivedAcks;
+	/**
+	 * Don't send a duplicate ACK until this time. This time should be set to
+	 * roughly another RTT when a duplicate ACK is sent.
+	 */
+	double dont_send_duplicate_ack_until;
+
+	/**
+	 * Wait for an ACK w/ this sequence number before resuming transmission
+	 * after a duplicate ACK situation.
+	 */
+	int waiting_for_seqnum_before_resuming;
 
 	/** Pointer to simulation so timeout_events can be made in this class. */
 	simulation *sim;
