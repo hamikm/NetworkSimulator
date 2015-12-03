@@ -128,6 +128,8 @@ void receive_packet_event::runEvent() {
 	 */
 	else if (pkt.getType() == FLOW) {
 		flow->receivedFlowPacket(pkt, getTime());
+		// update pktTally used to plot flow rate
+		flow->updatePktTally(time);
 	}
 	
 	/*
