@@ -184,13 +184,14 @@ class netrouter : public netnode {
 
 private:
 
-	/** Routing table implemented as map from destination names to a 
-	 * pair containing distance next-hop link. */
+	/** Routing table implemented as map from destination names to
+	 * next-hop link. */
 	map<string, netlink *> rtable;
 
 	/** Table of distances from this router to each node in the network.
 	 * Distance to self and adjacent HOSTS are initialized to 0. Distance
-	 * to other routers are initialized to max double (defined in <climits>) */
+	 * to other routers are initialized to max double 
+	 * (defined in <climits>) */
 	map<string, double> rdistances;
 
 public:

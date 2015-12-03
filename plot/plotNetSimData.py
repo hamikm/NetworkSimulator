@@ -79,30 +79,30 @@ def plotLinkData(time, linksData):
 	# plot link rates, buff occup, packet loss for all links
 	# note: 'o' is to ensure scatterplot
 	for link in linksData.keys():
-		lrates.plot(time, linksData[link]["Link Rate (Mbps)"], 'o',
+		lrates.plot(time, linksData[link]["Link Rate (Mbps)"], '-',
 				label=str(link),
 				markersize=2, markeredgewidth=0.0)
-		buffocc.plot(time, linksData[link]["Buffer Occupancy (KB)"], 'o',
+		buffocc.plot(time, linksData[link]["Buffer Occupancy (KB)"], '-',
 				label=str(link),
 				markersize=2, markeredgewidth=0.0)
-		pktloss.plot(time, linksData[link]["Packet Loss (pkts)"], 'o',
+		pktloss.plot(time, linksData[link]["Packet Loss (pkts)"], '-',
 				label=str(link),
 				markersize=2, markeredgewidth=0.0)
 	
 	# add titles, labels and legend; set lower bound of y axis
 	lrates.set_xlabel('Time (ms)')
 	lrates.set_ylabel('Link Rate (Mbps)')
-	lrates.legend()
+	lrates.legend(loc='best')
 	lrates.set_ylim(ymin=0)
 	
 	buffocc.set_xlabel('Time (ms)')
 	buffocc.set_ylabel('Buffer Occupancy (KB)')
-	buffocc.legend()
+	buffocc.legend(loc='best')
 	buffocc.set_ylim(ymin=0)
 	
 	pktloss.set_xlabel('Time (ms)')
 	pktloss.set_ylabel('Packet Loss (pkts)')
-	pktloss.legend()
+	pktloss.legend(loc='best')
 	pktloss.set_ylim(ymin=0)
 
 	# set window title
@@ -119,30 +119,30 @@ def plotFlowData(time, flowsData):
 	# plot flow rates, buff occup, packet loss for all links
 	# note: 'o' is to ensure scatterplot
 	for flow in flowsData.keys():
-		frates.plot(time, flowsData[flow]["Flow Rate (Mbps)"], 'o',
+		frates.plot(time, flowsData[flow]["Flow Rate (Mbps)"], '',
 				label=str(flow),
 				markersize=2, markeredgewidth=0.0)
-		winsize.plot(time, flowsData[flow]["Window Size (pkts)"], 'o',
+		winsize.plot(time, flowsData[flow]["Window Size (pkts)"], '-',
 				label=str(flow),
 				markersize=2, markeredgewidth=0.0)
-		pktdelay.plot(time, flowsData[flow]["Packet Delay (ms)"], 'o',
+		pktdelay.plot(time, flowsData[flow]["Packet Delay (ms)"], '-',
 				label=str(flow),
 				markersize=2, markeredgewidth=0.0)
 	
 	# add titles, labels, and legends to plots; set lower bound of y axis
 	frates.set_xlabel('Time (ms)')
 	frates.set_ylabel('Flow Rate (Mbps)')
-	frates.legend()
+	frates.legend(loc='best')
 	frates.set_ylim(ymin=0)
 	
 	winsize.set_xlabel('Time (ms)')
 	winsize.set_ylabel('Window Size (pkts)')
-	winsize.legend()
+	winsize.legend(loc='best')
 	winsize.set_ylim(ymin=0)
 	
 	pktdelay.set_xlabel('Time (ms)')
 	pktdelay.set_ylabel('Packet Delay (ms)')
-	pktdelay.legend()
+	pktdelay.legend(loc='best')
 	pktdelay.set_ylim(ymin=0)
 
 	# set window title
