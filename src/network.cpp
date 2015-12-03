@@ -85,6 +85,8 @@ void netnode::printHelper(ostream &os) const { // TODO automate nesting
 
 // ------------------------------- nethost class ------------------------------
 
+nethost::nethost () : netnode() { }
+
 nethost::nethost (string name) : netnode(name) { }
 
 nethost::nethost (string name, netlink &link) : netnode(name) {
@@ -308,9 +310,20 @@ void netflow::constructorHelper (double start_time, double size_mb,
 	this->std_RTT = -1;
 	this->pkt_RRT = -1;
 	this->dont_send_duplicate_ack_until = -1;
-	this->waiting_for_seqnum_before_resuming = -1;
+	this->waiting_for_seqnum_before_resuming = NOT_WAITING_SENTINEL;
 
 	this->sim = &sim;
+
+	this->fast_recovery = false;
+	this->post_retransmit = false;
+	this->dont_transmit = false;
+	//setFlowTimeout(getStartTimeMs() + timeout_length_ms);
+}
+
+netflow::netflow() : netelement() {
+	nethost h1, h2;
+	simulation s;
+	constructorHelper(-1.0, -1.0, h1, h2, -1.0, -1.0, s);
 }
 
 netflow::netflow (string name, double start_time, double size_mb,
@@ -347,7 +360,6 @@ nethost *netflow::getSource() const {
 void netflow::setSource(nethost &source) {
 	this->source = &source;
 }
-
 
 int netflow::getPktTally() const {
 	return pktTally;
@@ -481,7 +493,7 @@ vector<packet> netflow::peekOutstandingPackets() {
 	vector<packet> outstanding_pkts;
 
 	int window_end;
-	if (waiting_for_seqnum_before_resuming == -1) {
+	if (waiting_for_seqnum_before_resuming == NOT_WAITING_SENTINEL) {
 		window_end = window_start + window_size;
 	}
 	else {
@@ -489,11 +501,22 @@ vector<packet> netflow::peekOutstandingPackets() {
 		window_end = highest_sent_flow_seqnum + 2;
 	}
 
+	if (debug) {
+		cout << "Returning packets ";
+	}
+
 	// Iterate over the sequence numbers that haven't had corresponding
 	// packets sent. Make packets for each and collect them into a vector.
 	for (int i = highest_sent_flow_seqnum + 1;
 			i < window_end; i++) {
+		if (debug) {
+			cout << i << " ";
+		}
+
 		outstanding_pkts.push_back(packet(FLOW, *this, i));
+	}
+	if (debug) {
+		cout << endl;
 	}
 
 	return outstanding_pkts;
@@ -508,6 +531,11 @@ vector<packet> netflow::popOutstandingPackets(double start_time,
 		return vector<packet>();
 	}
 
+	if (dont_transmit) {
+		return vector<packet>();
+	}
+
+	// step 2
 	vector<packet> outstanding_pkts = peekOutstandingPackets();
 
 	// Iterate over the packets about to be sent, keeping their start times
@@ -523,6 +551,12 @@ vector<packet> netflow::popOutstandingPackets(double start_time,
 	}
 
 	highest_sent_flow_seqnum += outstanding_pkts.size();
+
+	if (post_retransmit) { // step 3.
+		window_size = min(lin_growth_winsize_threshold + 3,
+				MAX_WINSIZE);
+		post_retransmit = false;
+	}
 
 	return outstanding_pkts;
 }
@@ -560,24 +594,23 @@ void netflow::updateTimeoutLength(double end_time_ms, int flow_seqnum) {
 	timeout_length_ms = avg_RTT + 4 * std_RTT;
 }
 
+void netflow::setNotWaitingForCorrectAck() {
+	waiting_for_seqnum_before_resuming = NOT_WAITING_SENTINEL;
+}
+
+int netflow::getWaitingForAck() const {
+	return waiting_for_seqnum_before_resuming;
+}
+
+bool netflow::isWaitingForCorrectAck() const {
+	return waiting_for_seqnum_before_resuming != NOT_WAITING_SENTINEL;
+}
+
 void netflow::receivedAck(packet &pkt, double end_time_ms,
 		double linkFreeAtTime) {
 
 	assert(pkt.getType() == ACK);
 
-	// Situation normal, we're not waiting for anything.
-	if (waiting_for_seqnum_before_resuming == -1) {
-		// Do nothing, continue.
-	}
-	// Got the packet we were waiting for after fast retransmit. Reset
-	// waiting for variable.
-	else if (waiting_for_seqnum_before_resuming == pkt.getSeq()) {
-		waiting_for_seqnum_before_resuming = -1;
-	}
-	// Return, since we're waiting for a packet we haven't received.
-	else {
-		return;
-	}
 
 	/*
 	 * Check if sequence number is the same as the last one (i.e., duplicate
@@ -593,21 +626,25 @@ void netflow::receivedAck(packet &pkt, double end_time_ms,
 				FAST_RETRANSMIT_DUPLICATE_ACK_THRESHOLD) {
 
 			if(debug && this) {
-				cout << "Saw " << FAST_RETRANSMIT_DUPLICATE_ACK_THRESHOLD
+				cout << "Saw " << num_duplicate_acks
 						<< "-th duplicate ACK, so fast retransmitting."
 						<< endl;
 			}
 
-			highest_sent_flow_seqnum = pkt.getSeq()-1;
+			highest_sent_flow_seqnum = pkt.getSeq() - 1;
 			window_start = pkt.getSeq();
 
-			window_size = window_size / 2 > 1 ? window_size / 2 : 1;
-			lin_growth_winsize_threshold = window_size;
-			num_duplicate_acks = 0;
-
-			waiting_for_seqnum_before_resuming = pkt.getSeq() + 1;
-
-			//delayFlowTimeout(end_time_ms + timeout_length_ms);
+			if (!fast_recovery) {
+				fast_recovery = true;
+				lin_growth_winsize_threshold = window_size / 2; // step 1
+				post_retransmit = true; // for step 3
+				//return;
+			}
+			else {
+				window_size = min(window_size + 1,
+						MAX_WINSIZE); // step 4
+				//return;
+			}
 		}
 
 		// Got a duplicate ACK but don't have enough of them to do a fast
@@ -619,12 +656,8 @@ void netflow::receivedAck(packet &pkt, double end_time_ms,
 				cout << "Saw pre-threshold duplicate ACK!!!" <<
 						"Num duplicates: " << num_duplicate_acks << endl;
 			}
-
-			// Don't push back the timeout (for now)
-
-			// TODO: make sure interval between duplicate ACK retransmit
-			// is less than timeout length.
 		}
+		dont_transmit = false;
 	}
 
 	// Otherwise if the ACK number is one more than highest ACK we've seen we
@@ -632,6 +665,15 @@ void netflow::receivedAck(packet &pkt, double end_time_ms,
 	// average and std of RTTs so the timeout length can be set, and remove
 	// the corresponding timeout event from the flow.
 	else if (pkt.getSeq() == highest_received_ack_seqnum + 1) {
+
+		if(fast_recovery) {
+			fast_recovery = false;
+			num_duplicate_acks = 0;
+			// step 5.
+			window_size = min(lin_growth_winsize_threshold,
+					MAX_WINSIZE);
+		}
+
 		// Update the last successfully received ack
 		highest_received_ack_seqnum++;
 
@@ -647,29 +689,28 @@ void netflow::receivedAck(packet &pkt, double end_time_ms,
 		window_start++;
 		if (lin_growth_winsize_threshold < 0) { // hasn't been initialized, so
 											    // just do exponential growth
-			window_size++;
+			window_size = min(window_size + 1, MAX_WINSIZE);
 		}
 		else if (window_size < lin_growth_winsize_threshold) { // exp. part
-			window_size++;
+			window_size = min(window_size + 1, MAX_WINSIZE);
 		}
 		else { // linear growth part
-			window_size += 1 / window_size;
+			window_size = min(window_size + 1 / window_size,
+					MAX_WINSIZE);
+		}
+		dont_transmit = false;
+	}
+	// highest received ACK isn't same as packet number and isn't one less
+	// than packet number
+	else {
+
+		if(debug) {
+			cout << "Highest received ACK is: " << highest_received_ack_seqnum
+					<< ", current ACK received is: " << pkt.getSeq() << endl;
 		}
 
-		// Successfully received an ACK, so we push back the timeout.
-		//delayFlowTimeout(end_time_ms + timeout_length_ms);
+		dont_transmit = true;
 	}
-
-	/*
-	cerr << " --------------- " << endl;
-	cerr << "highest_received_ack_seqnum" << highest_received_ack_seqnum
-			<< endl;
-	cerr << "highest_sent_flow_seqnum" << highest_sent_flow_seqnum << endl;
-	cerr << "window start" << window_start << endl;
-	cerr << "window size" << window_size << endl;
-	cerr << " --------------- " << endl;
-	*/
-
 }
 
 void netflow::receivedFlowPacket(packet &pkt, double arrival_time) {
@@ -681,10 +722,6 @@ void netflow::receivedFlowPacket(packet &pkt, double arrival_time) {
 
 	if (pkt.getSeq() ==  highest_received_flow_seqnum + 1) {
 		highest_received_flow_seqnum++;
-
-
-		// TODO: without following timeouts are triggered too early?
-		// delayFlowTimeout(arrival_time + timeout_length_ms);
 	}
 
 	// Make and queue (locally and on the simulation event queue) an immediate
@@ -695,27 +732,25 @@ void netflow::receivedFlowPacket(packet &pkt, double arrival_time) {
 
 double netflow::getTimeoutLengthMs() const { return timeout_length_ms; }
 
-timeout_event* netflow::setFlowTimeout(timeout_event *e) {
-	this->flow_timeout = e;
-	return this->flow_timeout;
-}
+timeout_event* netflow::setFlowTimeout(double time) {
 
-timeout_event* netflow::initFlowTimeout() {
-
-	timeout_event *e = new timeout_event(getStartTimeMs() + timeout_length_ms,
-	 									 *sim, *this);
+	timeout_event *e = new timeout_event(time, *sim, *this);
 	this->flow_timeout = e;
 	this->sim->addEvent(e);
 	return e;
 }
 
 void netflow::timeoutOccurred() {
+	/*
 	lin_growth_winsize_threshold = window_size / 2;
 	window_size = 1;
 	window_start = highest_received_ack_seqnum;
 	num_duplicate_acks = 0;
 	rtts.clear();
 	highest_sent_flow_seqnum = window_start - 1;
+
+	waiting_for_seqnum_before_resuming = window_start + 1;
+	*/
 }
 
 void netflow::printHelper(ostream &os) const {
@@ -790,7 +825,8 @@ void netlink::setEndpoint2(netnode &endpoint2) {
 	this->endpoint2 = &endpoint2;
 }
 
-double netlink::getCapacityBytesPerSec() const { return rate_bpms * MS_PER_SEC; }
+double netlink::getCapacityBytesPerSec() const {
+	return rate_bpms * MS_PER_SEC; }
 
 double netlink::getCapacityMbps() const {
 	return ((double) rate_bpms) / BYTES_PER_MEGABIT * MS_PER_SEC;

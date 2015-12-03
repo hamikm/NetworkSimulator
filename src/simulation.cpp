@@ -262,7 +262,7 @@ void simulation::runSimulation() {
 	addEvent(r_event);
 
 	
-	for (int update_t = 550; update_t < 20000; update_t += 1000) {
+	for (int update_t = 550; update_t < 120000; update_t += 1000) {
 		router_discovery_event *r_event = new 
 				router_discovery_event(update_t, *this);
 		addEvent(r_event);

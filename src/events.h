@@ -143,8 +143,7 @@ private:
 	int window_start;
 
 	void constructorHelper(netflow *flow, packet &pkt,
-			netnode *step_destination, netlink *link,
-			int window_size, int window_start);
+			netnode *step_destination, netlink *link);
 public:
 
 	/**
@@ -161,15 +160,6 @@ public:
 	 */
 	receive_packet_event(double time, simulation &sim, packet &pkt, 
 			netnode &step_destination, netlink &link);
-
-	/**
-	 * Constructor for receive packets events for packets that belong to
-	 * window loads; the window size and window start values are set to the
-	 * given ones.
-	 */
-	receive_packet_event(double time, simulation &sim,
-			netflow &flow, packet &pkt, netnode &step_destination,
-			netlink &link, int window_size, int window_start);
 
 	~receive_packet_event();
 
@@ -287,14 +277,6 @@ public:
 	 */
 	send_packet_event(double time, simulation &sim, packet &pkt, 
 			netlink &link, netnode &departure_node);
-
-	/**
-	 * Constructor for windowloads of packets--window_size is set to the given
-	 * value and window_start is set to the given value.
-	 */
-	send_packet_event(double time, simulation &sim, netflow &flow,
-			packet &pkt, netlink &link, netnode &departure_node,
-			int window_size, int window_start);
 
 	~send_packet_event();
 

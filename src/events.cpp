@@ -31,8 +31,7 @@ void event::printHelper(ostream &os) {
 // ------------------------- receive_packet_event class -----------------------
 
 void receive_packet_event::constructorHelper(netflow *flow, packet &pkt,
-			netnode *step_destination, netlink *link,
-			int window_size, int window_start) {
+			netnode *step_destination, netlink *link) {
 	this->flow = flow;
 	this->pkt = pkt;
 	this->step_destination = step_destination;
@@ -44,20 +43,12 @@ void receive_packet_event::constructorHelper(netflow *flow, packet &pkt,
 receive_packet_event::receive_packet_event(double time, simulation &sim,
 			netflow &flow, packet &pkt, netnode &step_destination,
 			netlink &link) : event(time, sim) {
-	constructorHelper(&flow, pkt, &step_destination, &link, 1, pkt.getSeq());
+	constructorHelper(&flow, pkt, &step_destination, &link);
 }
 
 receive_packet_event::receive_packet_event(double time, simulation &sim, 
 			packet &pkt, netnode &step_destination, netlink &link) {
-	constructorHelper(NULL, pkt, &step_destination, &link, 1, 
-		SEQNUM_FOR_NONFLOWS);
-}
-
-receive_packet_event::receive_packet_event(double time, simulation &sim,
-		netflow &flow, packet &pkt, netnode &step_destination,
-		netlink &link, int window_size, int window_start) : event(time, sim) {
-	constructorHelper(&flow, pkt, &step_destination, &link,
-			window_size, window_start);
+	constructorHelper(NULL, pkt, &step_destination, &link);
 }
 
 receive_packet_event::~receive_packet_event() { }
@@ -86,7 +77,6 @@ void receive_packet_event::runEvent() {
 	 */
 	if (step_destination->isRoutingNode()) {
 		netrouter *router = dynamic_cast<netrouter *>(step_destination);
-		//cout << "REACHED RECEIVED 2" << endl;
 
 		if (pkt.getType() == ROUTING) {
 			// Handle routing packets differently here
@@ -134,43 +124,71 @@ void receive_packet_event::runEvent() {
 	 * of FLOW packets.
 	 */
 	else if (pkt.getType() == ACK) {
-		flow->receivedAck(pkt, getTime(), link->getLinkFreeAtTime());
 
-		if(debug && this) {
-			debug_os << "Got ACK #" << pkt.getSeq() << endl;
+		bool processAck = true;
+
+		/*
+		// Situation normal, we're not waiting for anything.
+		if (!flow->isWaitingForCorrectAck()) {
+			// Do nothing, continue.
 		}
+		// Got the packet we were waiting for after fast retransmit. Reset
+		// waiting for variable.
+		else if (flow->getWaitingForAck() == pkt.getSeq()) {
 
-		// Get the current window's packet(s) to send.
-		double linkFreeAt = flow->getSource()->getLink()->getLinkFreeAtTime();
-		vector<packet> pkts_to_send =
-				flow->popOutstandingPackets(getTime(),
-						linkFreeAt == 0 ? getTime() : linkFreeAt);
-
-		// Iterate over the packets to send, making send_packet_events for
-		// each. The timout_events have already been added to the flow and to
-		// the simulation's queue.
-		int window_size = pkts_to_send.size();
-
-		if (debug) {
-			cout << "Num packets to send: " <<  pkts_to_send.size() << endl;
-		}
-
-		int first_seqnum_in_window = pkts_to_send.size() == 0 ? -1 :
-				pkts_to_send[0].getSeq();
-		vector<packet>::iterator pkt_it = pkts_to_send.begin();
-		int i = 0;
-		while(pkt_it != pkts_to_send.end()) {
-
-			if(debug && this) {
-				debug_os << "  Sending packet #" << pkt_it->getSeq() << endl;
+			if (debug) {
+				cout << "Received ACK we were waiting for: "
+						<< flow->getWaitingForAck() << endl;
 			}
 
-			send_packet_event *e = new send_packet_event(
-					getTime() + i++ * netflow::TIME_EPSILON, *sim,
-					*flow, *pkt_it, *(flow->getSource()->getLink()),
-					*(flow->getSource()), window_size, first_seqnum_in_window);
-			sim->addEvent(e);
-			pkt_it++;
+			flow->setNotWaitingForCorrectAck();
+		}
+		// Otherwise we're waiting for a packet we haven't received.
+		else {
+
+			if (debug) {
+				cout << "Still waiting for ACK: "
+						<< flow->getWaitingForAck() << endl;
+			}
+
+			processAck = false;
+		}
+		*/
+
+		if (processAck) {
+			//flow->delayFlowTimeout(getTime() + flow->getTimeoutLengthMs());
+			flow->receivedAck(pkt, getTime(), link->getLinkFreeAtTime());
+
+			if(debug && this) {
+				debug_os << "Got ACK #" << pkt.getSeq() << endl;
+			}
+
+			// Get the current window's packet(s) to send.
+			double linkFreeAt =
+					flow->getSource()->getLink()->getLinkFreeAtTime();
+			vector<packet> pkts_to_send =
+					flow->popOutstandingPackets(getTime(),
+							linkFreeAt == 0 ? getTime() : linkFreeAt);
+
+			if (debug) {
+				cout << "Num packets to send: " <<  pkts_to_send.size() << endl;
+			}
+
+			vector<packet>::iterator pkt_it = pkts_to_send.begin();
+			int i = 0;
+			while(pkt_it != pkts_to_send.end()) {
+
+				if(debug && this) {
+					debug_os << "  Sending packet #" << pkt_it->getSeq() << endl;
+				}
+
+				send_packet_event *e = new send_packet_event(
+						getTime() + i++ * netflow::TIME_EPSILON, *sim,
+						*flow, *pkt_it, *(flow->getSource()->getLink()),
+						*(flow->getSource()));
+				sim->addEvent(e);
+				pkt_it++;
+			}
 		}
 	}
 	else if (pkt.getType() == ROUTING) {
@@ -317,13 +335,6 @@ send_packet_event::send_packet_event(double time, simulation &sim,
 	constructorHelper(&flow, pkt, &link, &departure_node, 1, pkt.getSeq());
 }
 
-send_packet_event::send_packet_event(double time, simulation &sim,
-		netflow &flow, packet &pkt, netlink &link, netnode &departure_node,
-		int window_size, int window_start) : event(time, sim) {
-	constructorHelper(&flow, pkt, &link, &departure_node,
-			window_size, window_start);
-}
-
 send_packet_event::~send_packet_event() { }
 
 netnode *send_packet_event::getDestinationNode() const {
@@ -348,8 +359,10 @@ void send_packet_event::runEvent() {
 	if(debug && this) {
 		debug_os << getTime() << "\tSENDING " << pkt.getTypeString()
 				<< " PACKET: "
-				<< pkt.getSeq() << ", win size: " << window_size
-				<< ", window start: " << window_start << endl;
+				<< pkt.getSeq() << ", flow win size: " << (flow == NULL ? -1 :
+						flow->getWindowSize())
+				<< ", flow window start: " << (flow == NULL ? -1 :
+						flow->getWindowStart()) << endl;
 
 		debug_os << "Before send: ";
 		link->printBuffer(debug_os);
@@ -362,7 +375,8 @@ void send_packet_event::runEvent() {
 	// Find (absolute) arrival time to the next node from the given departure
 	// node down the given link, taking into account that packets in window-
 	// loads incur the link delay penalty once per WINDOW, not once per packet.
-	bool use_delay = !link->isSameDirectionAsLastPacket(getDestinationNode());
+	bool use_delay = !link->isSameDirectionAsLastPacket(getDestinationNode())
+			|| link->getBufferOccupancy() == 0;
 	double arrival_time =
 			link->getArrivalTime(pkt, use_delay, getTime());
 	if (debug) {
@@ -375,8 +389,12 @@ void send_packet_event::runEvent() {
 	// Use the arrival time to queue a receive_packet_event (does nothing if
 	// the link buffer has no room, thereby dropping the packet).
 	if (link->sendPacket(pkt, getDestinationNode(), use_delay, getTime())) {
-		receive_packet_event *e = new receive_packet_event(arrival_time, *sim,
-				*flow, pkt, *getDestinationNode(), *link);
+		netflow dummy;
+		receive_packet_event *e =
+				new receive_packet_event(arrival_time, *sim,
+						flow == NULL ? dummy : *flow, pkt,
+								*getDestinationNode(),
+						*link);
 		sim->addEvent(e);
 	}
 	else { // packet was dropped
@@ -443,13 +461,11 @@ void start_flow_event::runEvent() {
 	// Iterate over the packets to send, making a send_packet_event for each.
 	// The timout_events have already been added to the flow and to the
 	// simulation's queue.
-	int window_size = pkts_to_send.size();
-	int first_seqnum_in_window = pkts_to_send[0].getSeq(); // assume is ordered
 	vector<packet>::iterator pkt_it = pkts_to_send.begin();
 	while(pkt_it != pkts_to_send.end()) {
 		send_packet_event *e = new send_packet_event(getTime(), *sim, *flow,
 				*pkt_it, *(flow->getSource()->getLink()),
-				*(flow->getSource()), window_size, first_seqnum_in_window);
+				*(flow->getSource()));
 		sim->addEvent(e);
 		pkt_it++;
 	}
@@ -502,22 +518,17 @@ void timeout_event::runEvent() {
 	// Iterate over the packets to send, making a send_packet_event for each.
 	// The timout_events have already been added to the flow and to the
 	// simulation's queue.
-	int window_size = pkts_to_send.size();
-	int first_seqnum_in_window = pkts_to_send[0].getSeq(); // assume is ordered
 	vector<packet>::iterator pkt_it = pkts_to_send.begin();
 	while(pkt_it != pkts_to_send.end()) {
 		send_packet_event *e = new send_packet_event(getTime(), *sim, *flow,
 				*pkt_it, *(flow->getSource()->getLink()),
-				*(flow->getSource()), window_size, first_seqnum_in_window);
+				*(flow->getSource()));
 		sim->addEvent(e);
 		pkt_it++;
 	}
 
 	// Queue up a new timeout event
-	timeout_event *new_te = new timeout_event(getTime() +
-			flow->getTimeoutLengthMs(), *sim, *flow);
-	flow->setFlowTimeout(new_te);
-	sim->addEvent(new_te);
+	//flow->setFlowTimeout(getTime() + flow->getTimeoutLengthMs());
 
 	// log data
 	double currTime = getTime();

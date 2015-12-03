@@ -8,6 +8,8 @@
 #ifndef UTIL_H
 #define UTIL_H
 
+#include <cmath>
+
 /** Size of a flow packet in bytes. */
 static const long FLOW_PACKET_SIZE = 1024;
 
@@ -44,5 +46,14 @@ const int SEQNUM_FOR_NONFLOWS = -1;
 
 /** Time interval in ms over which to compute flow rate */
 const int RATE_INTERVAL = 1000;
+
+/**
+ * We're "waiting" for this packet number before taking  further action,
+ * meaning we're not waiting.
+ */
+const int NOT_WAITING_SENTINEL = -999;
+
+/** Maximum window size. */
+const double MAX_WINSIZE = 50;
 
 #endif // UTIL_H

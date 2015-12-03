@@ -16,6 +16,7 @@
 #include <cmath>
 #include <limits>
 #include <set>
+#include <algorithm>
 
 // Custom headers
 #include "util.h"
@@ -149,6 +150,8 @@ class nethost : public netnode {
 private:
 
 public:
+
+	nethost ();
 
 	nethost (string name);
 
@@ -372,6 +375,18 @@ private:
 	/** Pointer to simulation so timeout_events can be made in this class. */
 	simulation *sim;
 
+	/** If true then fast recovery mode is active. */
+	bool fast_recovery;
+
+	/**
+	 * If true then set window size to three more than linear growth
+	 * threshold.
+	 */
+	bool post_retransmit;
+
+	/** If true the packet is not sent. */
+	bool dont_transmit;
+
 	void updateTimeoutLength(double end_time_ms, int flow_seqnum);
 
 	void constructorHelper (double start_time, double size_mb,
@@ -398,6 +413,8 @@ public:
 	 * regular send packet events.
 	 */
 	static constexpr double TIME_EPSILON = 0.0000000001;
+
+	netflow ();
 
 	/**
 	 * Initializes the flow's basic attributes as well as attributes required
@@ -465,6 +482,10 @@ public:
 
 	double getLinGrowthWinsizeThreshold() const;
 
+	bool isWaitingForCorrectAck() const;
+
+	int getWaitingForAck() const;
+
 	const map<int, timeout_event *>& getFutureTimeoutsEvents() const;
 
 	const map<int, ack_event*>& getFutureSendAckEvents() const;
@@ -489,6 +510,8 @@ public:
 
 	// --------------------------- Mutators -----------------------------------
 
+	void setNotWaitingForCorrectAck();
+
 	void setSource(nethost &source);
 
 	void setDestination(nethost &destination);
@@ -507,10 +530,12 @@ public:
 	void setRightTime(double newTime);
 
 	/** 
-	 * Creates the first timeout event associated with a flow. This is called
-	 * in the start_flow_event. 
+	 * Creates a timeout event associated with a flow at the given time. Puts
+	 * it on the simulation's event queue and in the netflow object.
+	 * @param time
+	 * @return reference to created timeout
 	 */
-	timeout_event *initFlowTimeout();
+	timeout_event *setFlowTimeout(double time);
 
 	/**
 	 * Postpones runnng the timeout_event by removing it from the event queue
@@ -518,8 +543,6 @@ public:
 	 * scheduled execution time.
 	 */
 	timeout_event *delayFlowTimeout(double new_time);
-
-	timeout_event *setFlowTimeout(timeout_event *e);
 
 	/**
 	 * Cancels a future duplicate_ack_event. Invoke after an in-order FLOW
