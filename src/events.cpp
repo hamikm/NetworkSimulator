@@ -208,7 +208,8 @@ void receive_packet_event::printHelper(ostream &os) {
 	os << "<-- receive_packet_event. {" << endl <<
 			"  flow: " << *flow << endl <<
 			"  packet: " << pkt << endl <<
-			"  link: " << *link << endl << "}";
+			"  link: " << *link << endl <<
+			"  destination: " << *step_destination << endl << "}";
 
 	flow->setNestingDepth(0);
 	link->setNestingDepth(0);
@@ -401,7 +402,8 @@ void send_packet_event::printHelper(ostream &os) {
 	os << "<-- send_packet_event. {" << endl <<
 			"  flow: " << *flow << endl <<
 			"  packet: " << pkt << endl <<
-			"  link: " << *link << endl << "}";
+			"  link: " << *link << endl <<
+			"  departing from: " << *departure_node << endl << "}";
 
 	flow->setNestingDepth(0);
 	link->setNestingDepth(0);

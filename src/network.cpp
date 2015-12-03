@@ -815,7 +815,8 @@ double netlink::getLinkFreeAtTime() const {
 }
 
 void netlink::printBuffer(ostream &os) {
-	os << nestingPrefix(0) << "Link buffer: " << endl;
+	os << nestingPrefix(0) << "Link buffer for \"" << getName() << "\""
+			<< endl;
 	map<double, packet>::iterator it;
 	for(it = buffer.begin(); it != buffer.end(); it++) {
 		os << nestingPrefix(1) << "(arrival time: " << it->first
