@@ -600,8 +600,9 @@ void netflow::receivedAck(packet &pkt, double end_time_ms,
 
 			highest_sent_flow_seqnum = pkt.getSeq()-1;
 			window_start = pkt.getSeq();
-
-			window_size = window_size / 2 > 1 ? window_size / 2 : 1;
+			
+			window_size = 1;
+			//window_size = window_size / 2 > 1 ? window_size / 2 : 1;
 			lin_growth_winsize_threshold = window_size;
 			num_duplicate_acks = 0;
 

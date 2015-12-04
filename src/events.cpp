@@ -362,7 +362,8 @@ void send_packet_event::runEvent() {
 	// Find (absolute) arrival time to the next node from the given departure
 	// node down the given link, taking into account that packets in window-
 	// loads incur the link delay penalty once per WINDOW, not once per packet.
-	bool use_delay = !link->isSameDirectionAsLastPacket(getDestinationNode());
+	bool use_delay = !link->isSameDirectionAsLastPacket(getDestinationNode())
+		|| link->getBufferOccupancy() == 0;
 	double arrival_time =
 			link->getArrivalTime(pkt, use_delay, getTime());
 	if (debug) {
