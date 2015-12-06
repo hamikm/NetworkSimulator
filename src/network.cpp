@@ -290,15 +290,15 @@ void netflow::constructorHelper (double start_time, double size_mb,
 	this->size_mb = size_mb;
 	this->source = &source;
 	this->destination = &destination;
-
+	
 	this->amt_received_mb = 0;
 	this->pktTally = 0;
 	this->leftTime = start_time;
 	this->rightTime = start_time + RATE_INTERVAL;
-
+	
 	this->highest_received_ack_seqnum = 1;
 	this->highest_sent_flow_seqnum = 0;
-	this->highest_received_flow_seqnum = 0;
+	this->next_ack_seqnum = 1;
 	this->window_size = window_size;
 	this->window_start = 1;
 	this->num_duplicate_acks = 0;
@@ -309,8 +309,12 @@ void netflow::constructorHelper (double start_time, double size_mb,
 	this->pkt_RRT = -1;
 	this->dont_send_duplicate_ack_until = -1;
 	this->waiting_for_seqnum_before_resuming = -1;
-
+	
 	this->sim = &sim;
+	
+	// initialize all values of received vector except index 0 to false
+	received = vector<bool> (getNumTotalPackets(), false);	
+	this->received[0] = true;
 }
 
 netflow::netflow (string name, double start_time, double size_mb,
@@ -453,7 +457,8 @@ void netflow::registerSendDuplicateAckAction(int seq, double time) {
 
 	// If we're sending a duplicate ACK then set the
 	// dont_send_duplicate_ack_until time for subsequent duplicate ACKs
-	if (seq == highest_received_flow_seqnum) {
+	// highest_received_flow_seqnum = next_ack_seqnum - 1
+	if (seq == next_ack_seqnum - 1) {
 
 		if (time > dont_send_duplicate_ack_until) {
 			dont_send_duplicate_ack_until = time + avg_RTT;
@@ -679,19 +684,21 @@ void netflow::receivedFlowPacket(packet &pkt, double arrival_time) {
 
 	// Make the corresponding ACK packet and set the highest received flow
 	// sequence number.
-
-	if (pkt.getSeq() ==  highest_received_flow_seqnum + 1) {
-		highest_received_flow_seqnum++;
-
+	
+	// set slot of received flow pkt to true, no effect if already true
+	received[pkt.getSeq()] = true;
+	// update next_ack_seqnum to next false slot after 		
+	while ((received[next_ack_seqnum] == true)	
+			&& (next_ack_seqnum <= getNumTotalPackets())) {
+		next_ack_seqnum++;	
+	}
 
 		// TODO: without following timeouts are triggered too early?
 		// delayFlowTimeout(arrival_time + timeout_length_ms);
-	}
 
 	// Make and queue (locally and on the simulation event queue) an immediate
 	// duplicate_ack_event.
-	registerSendDuplicateAckAction(highest_received_flow_seqnum + 1,
-			arrival_time);
+	registerSendDuplicateAckAction(next_ack_seqnum, arrival_time);
 }
 
 double netflow::getTimeoutLengthMs() const { return timeout_length_ms; }

@@ -293,9 +293,16 @@ private:
 
 	/** Highest sent FLOW packet sequence number (at source). */
 	int highest_sent_flow_seqnum;
+	
+	/** Vector keeping track of which flow packets have/have not been 
+	 * received. The value at index i indicates whether flow packet 
+	 * i has been received at the destination */
+	vector<bool> received;
 
-	/** Highest received FLOW sequence number (at destination). */
-	int highest_received_flow_seqnum;
+	/** seqnum of next ack to be received
+ 	 * This should be the first empty slot after a contiguous sequence
+	 * received vector */
+	int next_ack_seqnum;
 
 	/** The TCP protocol's window size. */
 	double window_size;
@@ -343,10 +350,11 @@ private:
 	double pkt_RRT;
 
 	/**
-	 * Pointer to the timer associated with the flow. Each time an ack is received,
-	 * the timer is pushed back by removing this timeout event from the events
-	 * queue and replacing it with a new timeout event. The new event's timer
-	 * extends the previous event's timer by timeout_length_ms.
+	 * Pointer to the timer associated with the flow. Each time an ack is
+	 * received, the timer is pushed back by removing this timeout event 
+	 * from the events queue and replacing it with a new timeout event. The
+	 * new event's timer extends the previous event's timer by
+	 * timeout_length_ms.
 	 */
 	timeout_event *flow_timeout;
 
