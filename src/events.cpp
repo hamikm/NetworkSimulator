@@ -295,7 +295,7 @@ update_window_event::~update_window_event() { }
 void update_window_event::runEvent() {
 	double w = flow->getWindowSize();
 	double new_windowsize = min(2*w, (1.0 - GAMMA) * w + 
-		GAMMA * (flow->getMinRTT()/flow->getAvgRTT() + ALPHA));
+		GAMMA * (flow->getMinRTT()*w/flow->getAvgRTT() + ALPHA));
 
 	flow->setFASTWindowSize(new_windowsize);
 
