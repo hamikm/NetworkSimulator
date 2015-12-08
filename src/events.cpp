@@ -293,7 +293,12 @@ update_window_event::update_window_event(
 update_window_event::~update_window_event() { }
 
 void update_window_event::runEvent() {
-	// TODO
+	double w = flow->getWindowSize();
+	double new_windowsize = min(2*w, (1.0 - GAMMA) * w + 
+		GAMMA * (flow->getMinRTT()/flow->getAvgRTT() + ALPHA));
+
+	flow->setFASTWindowSize(new_windowsize);
+
 }
 
 void update_window_event::printHelper(ostream &os) {

@@ -47,7 +47,7 @@ const int RATE_INTERVAL = 1000;
 
 /** Fairness parameters for FAST TCP. Currently each flow uses 
  * the same values. */
-const double GAMMA = 20;
-const double ALPHA = 0.5;
+const double GAMMA = 0.5;
+const double ALPHA = 20;
 
 #endif // UTIL_H
