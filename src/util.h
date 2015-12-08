@@ -45,4 +45,9 @@ const int SEQNUM_FOR_NONFLOWS = -1;
 /** Time interval in ms over which to compute flow rate */
 const int RATE_INTERVAL = 1000;
 
+/** Fairness parameters for FAST TCP. Currently each flow uses 
+ * the same values. */
+const double GAMMA = 20;
+const double ALPHA = 0.5;
+
 #endif // UTIL_H

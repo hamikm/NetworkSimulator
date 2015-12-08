@@ -227,6 +227,33 @@ public:
 	void printHelper(ostream &os);
 };
 
+// --------------------------- update_window_event class ------------------------
+
+/**
+ * Event that triggers update of a given flow's window size. 
+ * Only to be used for FAST TCP.
+ */
+class update_window_event : public event {
+
+private:
+	/** Flow whose window size will be modified by this event. */
+	netflow *flow;
+
+public: 
+	update_window_event(double time, simulation &sim, netflow &flow);
+
+	~update_window_event();
+
+	/** Updates window size based on FAST specifications. */
+	void runEvent();
+
+	/**
+	 * Print helper function.
+	 * @param os The output stream to which to write event information.
+	 */
+	void printHelper(ostream &os);
+};
+
 // --------------------------- send_packet_event class ------------------------
 
 /**

@@ -282,7 +282,7 @@ void netrouter::printHelper(ostream &os) const {
 
 void netflow::constructorHelper (double start_time, double size_mb,
 		nethost &source, nethost &destination, double window_size,
-		double timeout_length_ms, simulation &sim) {
+		bool usingFAST, double timeout_length_ms, simulation &sim) {
 
 	this->start_time_sec = start_time;
 	this->size_mb = size_mb;
@@ -304,16 +304,26 @@ void netflow::constructorHelper (double start_time, double size_mb,
 	this->lin_growth_winsize_threshold = -1;
 	this->avg_RTT = -1;
 	this->std_RTT = -1;
+	this->min_RTT = numeric_limits<double>::max();
 	this->pkt_RRT = -1;
+	this->FAST_TCP = usingFAST;
 
 	this->sim = &sim;
+}
+
+netflow::netflow (string name, double start_time, double size_mb,
+			nethost &source, nethost &destination, bool usingFAST,
+			simulation &sim) :
+				netelement(name) {
+	constructorHelper(start_time, size_mb, source, destination, 1,
+			usingFAST, DEFAULT_INITIAL_TIMEOUT, sim);
 }
 
 netflow::netflow (string name, double start_time, double size_mb,
 			nethost &source, nethost &destination, simulation &sim) :
 				netelement(name) {
 	constructorHelper(start_time, size_mb, source, destination, 1,
-			DEFAULT_INITIAL_TIMEOUT, sim);
+			false, DEFAULT_INITIAL_TIMEOUT, sim);
 }
 
 
@@ -349,6 +359,18 @@ int netflow::getPktTally() const {
 	return pktTally;
 }
 
+double netflow::getAvgRTT() const {
+	return avg_RTT;
+}
+
+double netflow::getMinRTT() const {
+	return min_RTT;
+}
+
+bool netflow::isUsingFAST() const {
+	return FAST_TCP;
+}
+
 void netflow::updatePktTally(double time) {
 	// if receive_packet_event arrives within window
 	if ((time <= rightTime) && (time > leftTime)) {
@@ -364,6 +386,10 @@ void netflow::updatePktTally(double time) {
 		updatePktTally(time);
 	}
 	else { cout << "Should never hit this case" << endl; }
+}
+
+void netflow::setFASTWindowSize(double new_size) {
+	window_size = new_size;
 }
 	
 double netflow::getLeftTime() const { return leftTime; }
@@ -526,6 +552,11 @@ void netflow::updateTimeoutLength(double end_time_ms, int flow_seqnum) {
 				B_TIMEOUT_CALC * abs(rtt - avg_RTT);
 	}
 
+	// Update minimum round-trip time (which is initialized to max double)
+	if (rtt < min_RTT) {
+		min_RTT = rtt;
+	}
+
 	// Now update the timeout length
 	timeout_length_ms = avg_RTT + 4 * std_RTT;
 }
@@ -557,8 +588,11 @@ void netflow::receivedAck(packet &pkt, double end_time_ms,
 			highest_sent_flow_seqnum = pkt.getSeq()-1;
 			window_start = pkt.getSeq();
 
-			window_size = window_size / 2 > 1 ? window_size / 2 : 1;
-			lin_growth_winsize_threshold = window_size;
+			if (!FAST_TCP) {
+				window_size = window_size / 2 > 1 ? window_size / 2 : 1;
+				lin_growth_winsize_threshold = window_size;
+			}
+
 			num_duplicate_acks = 0;
 
 			//delayFlowTimeout(end_time_ms + timeout_length_ms);
@@ -599,30 +633,23 @@ void netflow::receivedAck(packet &pkt, double end_time_ms,
 		// start by one to the right, and we can adjust the window size
 		// by whether we're in exponential or linear growth mode.
 		window_start++;
-		if (lin_growth_winsize_threshold < 0) { // hasn't been initialized, so
-											    // just do exponential growth
-			window_size++;
-		}
-		else if (window_size < lin_growth_winsize_threshold) { // exp. part
-			window_size++;
-		}
-		else { // linear growth part
-			window_size += 1 / window_size;
+
+		if (!FAST_TCP) {
+			if (lin_growth_winsize_threshold < 0) { // hasn't been initialized, so
+												    // just do exponential growth
+				window_size++;
+			}
+			else if (window_size < lin_growth_winsize_threshold) { // exp. part
+				window_size++;
+			}
+			else { // linear growth part
+				window_size += 1 / window_size;
+			}
 		}
 
 		// Successfully received an ACK, so we push back the timeout.
 		//delayFlowTimeout(end_time_ms + timeout_length_ms);
 	}
-
-	/*
-	cerr << " --------------- " << endl;
-	cerr << "highest_received_ack_seqnum" << highest_received_ack_seqnum
-			<< endl;
-	cerr << "highest_sent_flow_seqnum" << highest_sent_flow_seqnum << endl;
-	cerr << "window start" << window_start << endl;
-	cerr << "window size" << window_size << endl;
-	cerr << " --------------- " << endl;
-	*/
 
 }
 

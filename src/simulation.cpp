@@ -148,6 +148,7 @@ void simulation::parse_JSON_input (string jsonstring) {
 		assert(textflows[i].IsObject());
 		const Value& thisflow = textflows[i];
 		string flowname = thisflow["id"].GetString();
+		bool usingFAST = thisflow["FAST"].GetBool();
 
 		// Make sure that the source and destination of this flow are hosts.
 		string srcname = thisflow["src"].GetString();
@@ -184,7 +185,8 @@ void simulation::parse_JSON_input (string jsonstring) {
 				new netflow (flowname,
 						(float) thisflow["start"].GetDouble(),
 						(float) thisflow["size"].GetDouble(),
-						*source_host, *destination_host, *this);
+						*source_host, *destination_host, usingFAST,
+						*this);
 		flows[flowname] = curr_flow;
 	}
 }
@@ -257,7 +259,7 @@ void simulation::runSimulation() {
 
 	// At regular time intervals, push router discovery events onto events
 	// queue. 
-	// TODO: determine proper time interval. For now just try once:
+
 	router_discovery_event *r_event = new router_discovery_event(0, *this);
 	addEvent(r_event);
 
@@ -269,13 +271,30 @@ void simulation::runSimulation() {
 	}
 	
 	// Loop over the flows, making a start flow event for each and adding
-	// it to the events queue
+	// it to the events queue.
+	// If the flow is using FAST TCP for congestrion control, also push 
+	// update_window_events at regular intervals.
 	for (map<string, netflow *>::iterator itr = flows.begin();
 			itr != flows.end(); itr++) {
 		netflow *flow = itr->second;
 		start_flow_event *fevent = new
 				start_flow_event(flow->getStartTimeMs(), *this, *flow);
 		addEvent(fevent);
+
+		// Add update_window_events here if necessary.
+		if (flow->isUsingFAST()) {
+
+			// TODO: When should the first window update be, and how often
+			// should we update?
+			// Also, should probably add these parameters to the input file
+			// and parse them in.
+			for (int update_w = flow->getStartTimeMs(); update_w < 20000;
+					update_w += 2000) {
+				update_window_event *w_event = new
+						update_window_event(update_w, *this, *flow);
+				addEvent(w_event);
+			}
+		}
 	}
 	
 
