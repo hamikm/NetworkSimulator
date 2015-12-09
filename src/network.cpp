@@ -576,7 +576,7 @@ void netflow::receivedAck(packet &pkt, double end_time_ms,
 	}
 	// Got the packet we were waiting for after fast retransmit. Reset
 	// waiting for variable.
-	else if (waiting_for_seqnum_before_resuming == pkt.getSeq()) {
+	else if (waiting_for_seqnum_before_resuming <= pkt.getSeq()) {
 		waiting_for_seqnum_before_resuming = -1;
 	}
 	// Return, since we're waiting for a packet we haven't received.
@@ -605,10 +605,10 @@ void netflow::receivedAck(packet &pkt, double end_time_ms,
 
 			highest_sent_flow_seqnum = pkt.getSeq()-1;
 			window_start = pkt.getSeq();
-			
+			lin_growth_winsize_threshold = window_size / 2;
 			window_size = 1;
 			//window_size = window_size / 2 > 1 ? window_size / 2 : 1;
-			lin_growth_winsize_threshold = window_size;
+			
 			num_duplicate_acks = 0;
 
 			waiting_for_seqnum_before_resuming = pkt.getSeq() + 1;
@@ -639,7 +639,7 @@ void netflow::receivedAck(packet &pkt, double end_time_ms,
 	// the corresponding timeout event from the flow.
 	else if (pkt.getSeq() == highest_received_ack_seqnum + 1) {
 		// Update the last successfully received ack
-		highest_received_ack_seqnum++;
+		highest_received_ack_seqnum = pkt.getSeq();
 
 		// The corresponding FLOW packet had sequence number one less
 		int flow_seqnum = pkt.getSeq() - 1;
