@@ -279,6 +279,36 @@ void router_discovery_event::printHelper(ostream &os) {
 	router->setNestingDepth(0);
 }
 
+// --------------------------- update_window_event class ------------------------
+
+update_window_event::update_window_event(
+		double time, simulation &sim, netflow &flow) :
+				event(time, sim) { 
+	this->flow = &flow;
+}
+
+update_window_event::~update_window_event() { }
+
+void update_window_event::runEvent() {
+	double w = flow->getWindowSize();
+	double new_windowsize = min(2*w, (1.0 - GAMMA) * w + 
+		GAMMA * (flow->getMinRTT()*w/flow->getAvgRTT() + ALPHA));
+
+	flow->setFASTWindowSize(new_windowsize);
+
+}
+
+void update_window_event::printHelper(ostream &os) {
+	event::printHelper(os);
+
+	flow->setNestingDepth(1);
+
+	os << "<-- update_window_event. {" << endl <<
+			"  flow: " << *flow << endl << "}";
+
+	flow->setNestingDepth(0);
+}
+
 // -------------------------- send_packet_event class -------------------------
 
 void send_packet_event::constructorHelper(netflow *flow, packet &pkt,

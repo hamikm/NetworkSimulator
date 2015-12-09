@@ -331,6 +331,12 @@ private:
 	double lin_growth_winsize_threshold;
 
 	/**
+	 * Flag that is true if this flow is using FAST TCP for congestion
+	 * control. 
+	 */
+	bool FAST_TCP;
+
+	/**
 	 * Average round-trip time for a packet in this flow. If zero should be
 	 * initialized to first RTT.
 	 */
@@ -341,6 +347,11 @@ private:
 	 * should be initialized to first RTT.
 	 */
 	double std_RTT;
+
+	/**
+	 * Minimum round-trip time for a packet in this flow.
+	 */
+	double min_RTT;
 	
 	/** 
 	 * Time elapsed since packet was send and corresponding acknowledgment
@@ -385,7 +396,7 @@ private:
 
 	void constructorHelper (double start_time, double size_mb,
 			nethost &source, nethost &destination, double window_size,
-			double timeout_length_ms, simulation &sim);
+			bool usingFAST, double timeout_length_ms, simulation &sim);
 
 public:
 
@@ -413,6 +424,10 @@ public:
 	 * to perform TCP Reno transmissions, like window size, last ACK seen,
 	 * number of duplicate ACKs, etc.
 	 */
+	netflow (string name, double start_time, double size_mb,
+			nethost &source, nethost &destination, bool usingFAST,
+			simulation &sim);
+
 	netflow (string name, double start_time, double size_mb,
 			nethost &source, nethost &destination, simulation &sim);
 
@@ -462,6 +477,12 @@ public:
 	int getHighestSentSeqnum() const;
 
 	int getNumDuplicateAcks() const;
+
+	double getAvgRTT() const;
+
+	double getMinRTT() const;
+
+	bool isUsingFAST() const;
 
 	timeout_event* getFlowTimeout() const;
 
@@ -513,6 +534,10 @@ public:
 	 * occurr during rate_interval
 	 */
 	void updatePktTally(double time);
+
+	/** Changes a flow's window size during an update_window_event. Used only 
+	 * if the flow is using FAST TCP for congestion control. */
+	void setFASTWindowSize(double new_size);
 	
 	/** sets left time */
 	void setLeftTime(double newTime);

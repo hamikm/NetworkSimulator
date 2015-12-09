@@ -1,0 +1,18 @@
+{
+    "hosts": [ "H1", "H2" ],
+    "routers": [],
+    "links": [ 
+        { "id": "L1", 
+          "rate": 10, 
+          "delay": 10,
+          "buf_len": 64,
+          "endpt_1": "H1",
+          "endpt_2": "H2" } ],
+    "flows": [
+        { "id": "F1",
+          "src": "H1",
+          "dst": "H2",
+          "size": 160,
+          "start": 1.0,
+          "FAST": false } ]
+}

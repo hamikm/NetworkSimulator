@@ -54,4 +54,12 @@ const int PRINT_PACKET_INFO_MILESTONE = 5000;
 /** Log every (this many) events. */
 const int LOG_FREQUENCY = 10;
 
+/** Fairness parameter for FAST TCP. Currently each flow uses 
+ * the same values. */
+const double GAMMA = 0.5;
+
+/** Fairness parameter for FAST TCP. Currently each flow uses 
+ * the same values. */
+const double ALPHA = 20;
+
 #endif // UTIL_H

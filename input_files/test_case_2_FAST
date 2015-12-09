@@ -61,15 +61,18 @@
           "src": "S1",
           "dst": "T1",
           "size": 280,
-          "start": 0.5 },
+          "start": 0.5,
+          "FAST": true },
         { "id": "F2",
           "src": "S2",
           "dst": "T2",
           "size": 120,
-          "start": 10.0 },
+          "start": 10.0,
+          "FAST": true },
         { "id": "F3",
           "src": "S3",
           "dst": "T3",
           "size": 240,
-          "start": 20.0 } ]
+          "start": 20.0,
+          "FAST": true } ]
 }
