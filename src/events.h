@@ -392,6 +392,9 @@ private:
 	/** Flow to which to register a timeout. */
 	netflow *flow;
 
+	/** Sequence number that timed out. */
+	int seqnum;
+
 public:
 
 	timeout_event();
@@ -400,7 +403,7 @@ public:
 	 * Initializes this event's time to the given one, sets the event ID,
 	 * and sets the flow to which this timeout_event belongs.
 	 */
-	timeout_event(double time, simulation &sim, netflow &flow);
+	timeout_event(double time, simulation &sim, netflow &flow, int seqnum);
 
 	~timeout_event();
 

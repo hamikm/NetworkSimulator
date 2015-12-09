@@ -408,6 +408,18 @@ void send_packet_event::runEvent() {
 	if (link->sendPacket(pkt, getDestinationNode(), use_delay, getTime())) {
 		receive_packet_event *e = new receive_packet_event(arrival_time, *sim,
 				*flow, pkt, *getDestinationNode(), *link);
+
+		// If we're at a host and are sending a FLOW packet then queue
+		// up a timeout_event
+		if(!departure_node->isRoutingNode() && pkt.getType() == FLOW) {
+			/*
+			timeout_event *te = new timeout_event(
+					getTime() + flow->getTimeoutLengthMs(),
+					*sim, *flow, pkt.getSeq());
+			sim->addEvent(te);
+			*/
+		}
+
 		sim->addEvent(e);
 	}
 	else { // packet was dropped
@@ -504,15 +516,24 @@ void start_flow_event::printHelper(ostream &os) {
 // ----------------------------- timeout_event class --------------------------
 
 timeout_event::timeout_event() :
-		event(), flow(NULL) { }
+		event(), flow(NULL), seqnum(-1) { }
 
 timeout_event::timeout_event(
-		double time, simulation &sim, netflow &flow) :
-				event(time, sim), flow(&flow) { }
+		double time, simulation &sim, netflow &flow, int seqnum) :
+				event(time, sim), flow(&flow), seqnum(seqnum) { }
 
 timeout_event::~timeout_event() { }
 
 void timeout_event::runEvent() {
+
+	// When this timeout_event was created so was a negative round-trip time
+	// in the flow for the packet that was being sent; if a corresponding
+	// ACK was received then then RTT was removed. So if there's no RTT
+	// for this sequence number then we don't need to run this timeout.
+	if (flow->getRoundTripTimes().find(seqnum) ==
+			flow->getRoundTripTimes().end()) {
+		return; // do nothing.
+	}
 
 	if(debug && this) {
 		debug_os << getTime() << "\tTIMEOUT TRIGGERED: "
@@ -543,12 +564,6 @@ void timeout_event::runEvent() {
 		sim->addEvent(e);
 		pkt_it++;
 	}
-
-	// Queue up a new timeout event
-	timeout_event *new_te = new timeout_event(getTime() +
-			flow->getTimeoutLengthMs(), *sim, *flow);
-	flow->setFlowTimeout(new_te);
-	sim->addEvent(new_te);
 
 	// log data
 	double currTime = getTime();

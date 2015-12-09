@@ -467,20 +467,6 @@ double netflow::getPktDelay(double currTime) const {
 	return pkt_RRT;
 }
 
-timeout_event *netflow::delayFlowTimeout(double new_time) {
-
-	// Find and remove the current timeout_event in the global event queue.
-	this->sim->removeEvent(this->flow_timeout);
-
-	// Queue up new event scheduled for input time
-	timeout_event *e = new timeout_event(new_time, *sim, *this);
-	this->sim->addEvent(e);
-
-	// Make sure the flow has a pointer to this event for future updates.
-	this->flow_timeout = e;
-	return e;
-}
-
 void netflow::registerSendDuplicateAckAction(int seq, double time) {
 	// Update and queue up new ack_event
 	packet p = packet(ACK, *this, seq);
@@ -681,6 +667,9 @@ void netflow::receivedAck(packet &pkt, double end_time_ms,
 	// average and std of RTTs so the timeout length can be set, and remove
 	// the corresponding timeout event from the flow.
 	else if (pkt.getSeq() >= highest_received_ack_seqnum + 1) {
+
+		int diff = pkt.getSeq() - highest_received_ack_seqnum; // should be 1
+
 		// Update the last successfully received ack
 		highest_received_ack_seqnum = pkt.getSeq();
 
@@ -695,16 +684,20 @@ void netflow::receivedAck(packet &pkt, double end_time_ms,
 		// by whether we're in exponential or linear growth mode.
 		window_start++;
 		
-		if (!FAST_TCP) {
-			if (lin_growth_winsize_threshold < 0) { // hasn't been initialized, so
-												    // just do exponential growth
-				window_size++;
-			}
-			else if (window_size < lin_growth_winsize_threshold) { // exp. part
-				window_size++;
-			}
-			else { // linear growth part
-				window_size += 1 / window_size;
+		// Adjust the window size for each packet between the old received one
+		// and the new one.
+		for (int i = 0; i < diff; i++) {
+			if (!FAST_TCP) {
+				if (lin_growth_winsize_threshold < 0) { // hasn't been initialized, so
+													    // just do exponential growth
+					window_size++;
+				}
+				else if (window_size < lin_growth_winsize_threshold) { // exp. part
+					window_size++;
+				}
+				else { // linear growth part
+					window_size += 1 / window_size;
+				}
 			}
 		}
 
@@ -747,21 +740,12 @@ timeout_event* netflow::setFlowTimeout(timeout_event *e) {
 	return this->flow_timeout;
 }
 
-timeout_event* netflow::initFlowTimeout() {
-
-	timeout_event *e = new timeout_event(getStartTimeMs() + timeout_length_ms,
-	 									 *sim, *this);
-	this->flow_timeout = e;
-	this->sim->addEvent(e);
-	return e;
-}
-
 void netflow::timeoutOccurred() {
 	lin_growth_winsize_threshold = window_size / 2;
 	window_size = 1;
 	window_start = highest_received_ack_seqnum;
 	num_duplicate_acks = 0;
-	rtts.clear();
+	//rtts.clear();
 	highest_sent_flow_seqnum = window_start - 1;
 }
 

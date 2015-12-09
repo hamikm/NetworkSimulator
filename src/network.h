@@ -545,19 +545,6 @@ public:
 	/** sets right time */
 	void setRightTime(double newTime);
 
-	/** 
-	 * Creates the first timeout event associated with a flow. This is called
-	 * in the start_flow_event. 
-	 */
-	timeout_event *initFlowTimeout();
-
-	/**
-	 * Postpones runnng the timeout_event by removing it from the event queue
-	 * and replacing it with a new timeout_event with new_time passed in as the
-	 * scheduled execution time.
-	 */
-	timeout_event *delayFlowTimeout(double new_time);
-
 	timeout_event *setFlowTimeout(timeout_event *e);
 
 	/**

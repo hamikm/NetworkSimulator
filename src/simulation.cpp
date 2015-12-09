@@ -263,7 +263,6 @@ void simulation::runSimulation() {
 	router_discovery_event *r_event = new router_discovery_event(0, *this);
 	addEvent(r_event);
 
-	
 	for (int update_t = 550; update_t < UPPER_TIME_ROUTING_LIMIT;
 			update_t += 1000) {
 		router_discovery_event *r_event = new 
@@ -368,7 +367,7 @@ int simulation::initializeLog(string filename) {
 	// store name of logger file
 	logName = filename;
 	// opening file with intent of appending to EOF
-    logger.open(logName, ios::out |ios::app);
+    logger.open(logName.c_str(), ios::out |ios::app);
     // write in first line
     string firstLine = "{ \"Simulation Event Metrics\" : [\n";
     logger << firstLine ;
@@ -382,7 +381,7 @@ int simulation::closeLog() {
 	ofstream logger;
 	
 	// opening file with intent of appending to EOF
-    logger.open(logName, ios::out |ios::app);
+    logger.open(logName.c_str(), ios::out |ios::app);
 
     // add last line and close json file
     string lastLine = "] }";
@@ -438,7 +437,7 @@ int simulation::logEvent(double currTime) {
 
     // write to file
     ofstream logger;
-    logger.open(logName, ios::out |ios::app);
+    logger.open(logName.c_str(), ios::out |ios::app);
 
     appendEventMetric(event, logger, eventCount);
 
