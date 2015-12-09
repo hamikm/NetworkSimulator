@@ -262,7 +262,8 @@ void simulation::runSimulation() {
 	addEvent(r_event);
 
 	
-	for (int update_t = 550; update_t < 15000; update_t += 1000) {
+	for (int update_t = 550; update_t < UPPER_TIME_ROUTING_LIMIT;
+			update_t += 1000) {
 		router_discovery_event *r_event = new 
 				router_discovery_event(update_t, *this);
 		addEvent(r_event);
@@ -380,6 +381,12 @@ int simulation::logEvent(double currTime) {
     json allFlows;
     json currEvent;
 
+    // Log only as frequency as LOG_FREQUENCY
+    if (eventCount % LOG_FREQUENCY != 0) {
+    	eventCount++;
+    	return 0;
+    }
+
     // initalize iterators
     map<string, netlink *>::const_iterator litr;
     map<string, netflow *>::const_iterator fitr;
@@ -455,8 +462,9 @@ json simulation::logFlowMetric(netflow flow, double currTime) {
   
 	// retrieve flow metrics
     string name = flow.getName();
-    //double rate = flow.getPktTally() * 1024 / RATE_INTERVAL / BYTES_PER_MEGABIT;
-    double rate = flow.getFlowRateMbps();
+    // double rate = flow.getFlowRateMbps(currTime);
+    // above line is correct, below line is for debugging for time being
+    double percent = flow.getFlowPercentage();
     int window = flow.getWindowSize();
     double delay = flow.getPktDelay(currTime);
 
@@ -464,7 +472,8 @@ json simulation::logFlowMetric(netflow flow, double currTime) {
     json flowMetric =
     {
         {"FlowID" , name},
-        {"FlowRate" , rate},
+        //{"FlowRate" , rate},
+		{"Flow%", percent},
         {"WinSize" , window},
         {"PktDelay" , delay},
     };

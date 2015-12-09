@@ -45,4 +45,13 @@ const int SEQNUM_FOR_NONFLOWS = -1;
 /** Time interval in ms over which to compute flow rate */
 const int RATE_INTERVAL = 1000;
 
+/** Send routing packets until this time (in milliseconds) is reached. */
+const int UPPER_TIME_ROUTING_LIMIT = 400000;
+
+/** Print information about packets every (this many) packets. */
+const int PRINT_PACKET_INFO_MILESTONE = 5000;
+
+/** Log every (this many) events. */
+const int LOG_FREQUENCY = 10;
+
 #endif // UTIL_H

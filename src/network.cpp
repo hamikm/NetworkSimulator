@@ -427,10 +427,14 @@ double netflow::getFlowRateBytesPerSec() const {
 	return getPktTally() * FLOW_PACKET_SIZE / RATE_INTERVAL;
 }
 
-double netflow::getFlowRateMbps() const {
+double netflow::getFlowRateMbps(double time) const {
 	// something seems fishy about this calculatiion dim-analysis wise
 	double bytes = (double) getPktTally() * FLOW_PACKET_SIZE / RATE_INTERVAL;
 	return bytes * BYTES_PER_MEGABIT;
+}
+
+double netflow::getFlowPercentage() const {
+	return amt_received_mb / size_mb * 100;
 }
 
 double netflow::getPktDelay(double currTime) const {
@@ -478,11 +482,6 @@ void netflow::registerSendDuplicateAckAction(int seq, double time) {
 
 vector<packet> netflow::peekOutstandingPackets() {
 
-	// If we're done sending this flow's data then return nothing.
-	if (amt_received_mb >= size_mb) {
-		return vector<packet>();
-	}
-
 	vector<packet> outstanding_pkts;
 
 	int window_end;
@@ -498,6 +497,12 @@ vector<packet> netflow::peekOutstandingPackets() {
 	// packets sent. Make packets for each and collect them into a vector.
 	for (int i = highest_sent_flow_seqnum + 1;
 			i < window_end; i++) {
+
+		// Stop if we've reached the end of the flow.
+		if (i > getNumTotalPackets()) {
+			break;
+		}
+
 		outstanding_pkts.push_back(packet(FLOW, *this, i));
 	}
 
@@ -508,8 +513,9 @@ vector<packet> netflow::popOutstandingPackets(double start_time,
 		double linkFreeAt) {
 
 	// If we're done sending this flow's data then return nothing.
-	if (highest_sent_flow_seqnum * FLOW_PACKET_SIZE / BYTES_PER_MEGABIT
-			>= getSizeMb()) {
+	if (amt_received_mb >= size_mb) {
+		// Print that final packet(s) was received.
+		cout << "Flow finished: " << *this << endl;
 		return vector<packet>();
 	}
 
@@ -567,10 +573,12 @@ void netflow::updateTimeoutLength(double end_time_ms, int flow_seqnum) {
 
 void netflow::receivedAck(packet &pkt, double end_time_ms,
 		double linkFreeAtTime) {
-	
-	// delte later
-	if (pkt.getSeq() >= 250) { cout << *this << endl; }	
-	
+
+	if (pkt.getSeq() % PRINT_PACKET_INFO_MILESTONE == 0) {
+		cout << "Received packet " << pkt.getSeq() << " in flow " <<
+				*this << endl;
+	}
+
 	assert(pkt.getType() == ACK);
 
 	// Situation normal, we're not waiting for anything.
@@ -689,15 +697,19 @@ void netflow::receivedFlowPacket(packet &pkt, double arrival_time) {
 	// sequence number.
 	
 	// set slot of received flow pkt to true, no effect if already true
+	if (!received[pkt.getSeq()]) {
+		amt_received_mb += ((double) FLOW_PACKET_SIZE) / BYTES_PER_MEGABIT;
+	}
 	received[pkt.getSeq()] = true;
+
 	// update next_ack_seqnum to next false slot after 		
 	while ((received[next_ack_seqnum] == true)	
 			&& (next_ack_seqnum <= getNumTotalPackets())) {
 		next_ack_seqnum++;	
 	}
 
-		// TODO: without following timeouts are triggered too early?
-		// delayFlowTimeout(arrival_time + timeout_length_ms);
+	// TODO: without following timeouts are triggered too early?
+	// delayFlowTimeout(arrival_time + timeout_length_ms);
 
 	// Make and queue (locally and on the simulation event queue) an immediate
 	// duplicate_ack_event.
@@ -743,7 +755,7 @@ void netflow::printHelper(ostream &os) const {
 			<< nestingPrefix(1) << "destination: \"" <<
 				(destination == NULL ? "NULL" : destination->getName()) <<
 				"\"," << endl
-			<< nestingPrefix(1) << "data sent: " <<
+			<< nestingPrefix(1) << "data received: " <<
 				amt_received_mb << " megabits," << endl
 			<< nestingPrefix(1) << "linear growth threshold: " <<
 				lin_growth_winsize_threshold << " packets," << endl

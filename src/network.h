@@ -488,7 +488,12 @@ public:
 	double getFlowRateBytesPerSec() const;
 
 	/** @return flow rate in megabits per second. */
-	double getFlowRateMbps() const;
+	double getFlowRateMbps(double time) const;
+
+	/** returns percentage of flow that has been transmitted so far
+	 * Useful for debugging.
+	 */
+	double getFlowPercentage() const;
 
 	/** @returns packet delay 
 	 * Defined as time elapsed since packet is send and acknowledgement is

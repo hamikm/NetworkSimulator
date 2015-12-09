@@ -131,7 +131,8 @@ def plotFlowData(time, flowsData):
 	
 	# add titles, labels, and legends to plots; set lower bound of y axis
 	frates.set_xlabel('Time (ms)')
-	frates.set_ylabel('Flow Rate (Mbps)')
+	#frates.set_ylabel('Flow Rate (Mbps)')
+	frates.set_ylabel('Flow Percentage (Mbps)')
 	frates.legend(loc='best')
 	frates.set_ylim(ymin=0)
 	
