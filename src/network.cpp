@@ -567,7 +567,10 @@ void netflow::updateTimeoutLength(double end_time_ms, int flow_seqnum) {
 
 void netflow::receivedAck(packet &pkt, double end_time_ms,
 		double linkFreeAtTime) {
-
+	
+	// delte later
+	if (pkt.getSeq() >= 250) { cout << *this << endl; }	
+	
 	assert(pkt.getType() == ACK);
 
 	// Situation normal, we're not waiting for anything.
@@ -637,7 +640,7 @@ void netflow::receivedAck(packet &pkt, double end_time_ms,
 	// had a successful transmission, so slide and grow the window, adjust the
 	// average and std of RTTs so the timeout length can be set, and remove
 	// the corresponding timeout event from the flow.
-	else if (pkt.getSeq() == highest_received_ack_seqnum + 1) {
+	else if (pkt.getSeq() >= highest_received_ack_seqnum + 1) {
 		// Update the last successfully received ack
 		highest_received_ack_seqnum = pkt.getSeq();
 
@@ -729,6 +732,8 @@ void netflow::timeoutOccurred() {
 void netflow::printHelper(ostream &os) const {
 	netelement::printHelper(os);
 	os << " <-- flow. {" << endl
+			<< nestingPrefix(1) << "waiting4seq#b4resuming: " <<
+				waiting_for_seqnum_before_resuming << endl
 			<< nestingPrefix(1) << "start: " <<
 				start_time_sec << " secs," << endl
 			<< nestingPrefix(1) << "size: " <<
