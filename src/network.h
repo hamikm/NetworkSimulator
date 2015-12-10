@@ -63,19 +63,36 @@ private:
 
 public:
 
+	/** Default constructor. Sets nesting depth to 0, name to empty string. */
 	netelement ();
 
+	/**
+	 * Sets name to given one and sets nesting depth to 0.
+	 * @param name of this network element.
+	 */
 	netelement (string name);
 
+	/** Destructor. */
 	virtual ~netelement();
 
+	/**
+	 * Getter for name.
+	 * @return name of this network element.
+	 */
 	const string &getName() const;
 
+	/**
+	 * Setter for the nesting depth.
+	 * @param depth
+	 */
 	void setNestingDepth(int depth);
 
 	/**
+	 * Gets a string with as many spaces as (nesting depth + delta) *
+	 * spaces per level.
 	 * @param delta effective nesting depth will be actual depth + delta
-	 * @return string with twice as many spaces as nesting depth + delta.
+	 * @return string with number of spaces determined by desting depth
+	 * and the delta from that desting depth.
 	 */
 	string nestingPrefix(int delta) const;
 
@@ -110,27 +127,58 @@ class netnode : public netelement {
 
 protected:
 
-	/** Pointers to all the links attached to this node. */
+	/**
+	 * Pointers to all the links attached to this node. Devices with
+	 * constraints on number of links that can be attached, like hosts,
+	 * must enforce those constraints themselves.
+	 */
 	vector<netlink *> links;
 
 public:
 
+	/** Default constructor. */
 	netnode ();
 
+	/**
+	 * Sets name to the given value and calls netelement's constuctor.
+	 * @param name of this device
+	 */
 	netnode (string name);
 
+	/**
+	 * Sets the name of this device to the given one and copies the list
+	 * of given link pointers into this object's list of links.
+	 * @param name of this device
+	 * @param links vector of pointers to links attached to this device
+	 */
 	netnode (string name, vector<netlink *> links);
 
-	/** Returns the node connected to the input link that is not *this 
-	 *  node. */
+	/**
+	 * Returns the node connected to the input link that is not *this
+	 * node.
+	 * @param link get the node at the other end of this link
+	 * @return pointer to the node at the other end of this link
+	 */
 	netnode *getOtherNode(netlink *link);
 
+	/**
+	 * Mutator that adds links to this device's list of links.
+	 * @param link to add to this device's list of links
+	 */
 	virtual void addLink (netlink &link);
 
+	/**
+	 * Getter for the list of links attached to this device.
+	 * @return the list of links attached to this device
+	 */
 	const vector<netlink *> &getLinks() const;
 
-	/** @return true if this node is capable of routing packets. */
-	virtual bool isRoutingNode() const;
+	/**
+	 * Should be defined so this function returns true for packet-routers and
+	 * false for packet-consumers.
+	 * @return true if this node is capable of routing packets.
+	 */
+	virtual bool isRoutingNode() const = 0;
 
 	/**
 	 * Print helper function. Partially overrides superclass's.
@@ -142,18 +190,36 @@ public:
 // ------------------------------- nethost class ------------------------------
 
 /**
- * Represents a host in a simple network.
+ * Represents a host. The main difference between a @c nethost and a @c netnode
+ * is that a host can be attached to only one link. Hosts implement a
+ * selective ACK scheme; see the @c received field in @c netflow.
  */
 class nethost : public netnode {
 
 private:
 
+	// No new fields.
+
 public:
 
+	/**
+	 * Sets the name to the given one and the nesting depth to 0 via the
+	 * @c netnode constructor.
+	 * @param name of this host
+	 */
 	nethost (string name);
 
+	/**
+	 * Sets the name to the given one and sets exactly one link for this host.
+	 * @param name of this host
+	 * @param link the only link that's attached to this host
+	 */
 	nethost (string name, netlink &link);
 
+	/**
+	 * Returns false because this is a host, not a router.
+	 * @return false
+	 */
 	bool isRoutingNode() const;
 
 	/**
@@ -164,7 +230,7 @@ public:
 
 	/**
 	 * Deletes all links then adds the given one.
-	 * @param link link to add after deleteing the others
+	 * @param link link to add after deleting the others
 	 */
 	void setLink(netlink &link);
 
@@ -178,44 +244,68 @@ public:
 // ------------------------------ netrouter class -----------------------------
 
 /**
- * Represents a router in a simple network.
+ * Represents a router in a simple network. The main difference from a
+ * @c netnode is that this object contains a routing table and a collection
+ * of distances to other nodes which is used to update the routing table.
  */
 class netrouter : public netnode {
 
 private:
 
-	/** Routing table implemented as map from destination names to
-	 * next-hop link. */
+	/**
+	 * Routing table implemented as map from destination names to
+	 * next-hop link.
+	 */
 	map<string, netlink *> rtable;
 
-	/** Table of distances from this router to each node in the network.
-	 * Distance to self and adjacent HOSTS are initialized to 0. Distance
-	 * to other routers are initialized to max double 
-	 * (defined in <climits>) */
+	/**
+	 * Table of distances from this router to each node in the network.
+	 * Distance to self and adjacent hosts are initialized to 0. Distance
+	 * to other routers are initialized to max double, which is defined in
+	 * @c climits.
+	 */
 	map<string, double> rdistances;
 
 public:
 
+	/**
+	 * Default constructor. Sets name to empty string and nesting depth to 0.
+	 */
 	netrouter ();
 
+	/**
+	 * Sets name to the given one and nesting depth to 0.
+	 * @param name of this router
+	 */
 	netrouter (string name);
 
+	/**
+	 * Sets name to the given one and the list of links attached to this
+	 * router to the given one.
+	 * @param name of this router
+	 * @param links list of pointers to links attached to this router to copy
+	 * into this object's list of link pointers
+	 */
 	netrouter (string name, vector<netlink *> links);
 
+	/**
+	 * Returns true, since this is a router.
+	 * @return true
+	 */
 	virtual bool isRoutingNode() const;
 
 	/**
-	 * If this is an ACK or FLOW packet this function forwards it along the
-	 * best link for it to get to its destination as determined by the routing
-	 * table; if it's a ROUTING packet then... TODO
-	 *
-	 * Note that it's the caller's responsibility to generate the actual
-	 * send_packet_events based on the returned map.
+	 * This function forwards it along the best link for it to get to its
+	 * destination as determined by the routing table. Note that it's the
+	 * caller's responsibility to generate the actual send_packet_events based
+	 * on the returned map.
 	 * @param time of packet receipt
 	 * @param sim
 	 * @param flow parent flow, NULL if ROUTING type
 	 * @param pkt the arriving packet
-	 * @return a map from the links to use for the corresponding packets
+	 * @return a map from the links to use to the corresponding packets
+	 * @warning deprecated for use with ROUTING packets! Use
+	 * @c receiveRoutingPacket instead.
 	 */
 	map<netlink *, packet> receivePacket(double time, simulation &sim,
 			netflow &flow, packet &pkt);
@@ -225,10 +315,18 @@ public:
 	 * routing table and distances table if necessary. If an update is made,
 	 * it will also trigger send_packet_events to deliver additional routing
 	 * packets to its neighbors.
+	 * @param time of receipt of trigger packet
+	 * @param sim
+	 * @param pkt received
+	 * @param link it was received on
 	 */
 	void receiveRoutingPacket(double time, simulation &sim, 
 			packet &pkt, netlink &link);
 
+	/**
+	 * Getter for the node distances collection.
+	 * @return collection of the distances of this router from all other nodes
+	 */
 	map<string, double> getRDistances() const;
 
 	/**
@@ -236,6 +334,9 @@ public:
 	 * input file. Sets distance to self and adjacent hosts to 0. 
 	 * Sets the correct link to adjacent hosts since each host
 	 * has only one outgoing link. Sets other links to NULL.
+	 *
+	 * @param host_list list of all hosts
+	 * @param router_list list of all routers
 	 */
 	void initializeTables(map<string, nethost*> host_list, 
 						  map<string, netrouter*> router_list);
@@ -243,6 +344,8 @@ public:
 	/**
 	 * Called from each router_discovery_event before recalculating distances.
 	 * Sets distances to all other routers and nonadjacent hosts to infinity.
+	 * @param host_list list of all hosts
+	 * @param router_list list of all routers
 	 */
 	void resetDistances(map<string, nethost*> host_list, 
 						map<string, netrouter*> router_list);
@@ -257,8 +360,8 @@ public:
 // ------------------------------- netflow class ------------------------------
 
 /**
- * Represents a flow in a simple network. Assumes that flow sizes are multiples
- * of 1024 bytes.
+ * Represents a flow in a simple network. Uses various constants defined in
+ * @c util.cpp.
  */
 class netflow : public netelement {
 
@@ -294,14 +397,17 @@ private:
 	/** Highest sent FLOW packet sequence number (at source). */
 	int highest_sent_flow_seqnum;
 	
-	/** Vector keeping track of which flow packets have/have not been 
+	/**
+	 * Vector keeping track of which flow packets have/have not been
 	 * received. The value at index i indicates whether flow packet 
-	 * i has been received at the destination */
+	 * i has been received at the destination.
+	 */
 	vector<bool> received;
 
-	/** seqnum of next ack to be received
- 	 * This should be the first empty slot after a contiguous sequence
-	 * received vector */
+	/**
+	 * Seqnum of next ack to be received. This should be the first empty slot
+	 * after a contiguous sequence in the received vector.
+	 */
 	int next_ack_seqnum;
 
 	/** The TCP protocol's window size. */
@@ -358,7 +464,7 @@ private:
 	 * was received by the source. Updated every receive_packet_event.
 	 * Exists for purpose of plotting metric packet delay.
 	 */ 
-	double pkt_RRT;
+	double pkt_RTT;
 
 	/**
 	 * Pointer to the timer associated with the flow. Each time an ack is
@@ -392,8 +498,20 @@ private:
 	/** Pointer to simulation so timeout_events can be made in this class. */
 	simulation *sim;
 
+	/**
+	 * Updates the average round-trip time and standard deviation of round-
+	 * trip times using recursive formulas.
+	 * @param end_time_ms time of receipt of a packet. Used to compute the
+	 * round-trip time.
+	 * @param flow_seqnum the sequence number of the packet that was just
+	 * received.
+	 */
 	void updateTimeoutLength(double end_time_ms, int flow_seqnum);
 
+	/**
+	 * Constructor helper. Does naive assignments; logic should be in the
+	 * calling constructors.
+	 */
 	void constructorHelper (double start_time, double size_mb,
 			nethost &source, nethost &destination, double window_size,
 			bool usingFAST, double timeout_length_ms, simulation &sim);
@@ -423,42 +541,80 @@ public:
 	 * Initializes the flow's basic attributes as well as attributes required
 	 * to perform TCP Reno transmissions, like window size, last ACK seen,
 	 * number of duplicate ACKs, etc.
+	 * @param name of this flow
+	 * @param start_time in seconds at which this flow starts
+	 * @param size_mb size of this flow in megabits
+	 * @param source host at which this flow starts
+	 * @param destination host at which this flow ends
+	 * @param usingFAST true if using FAST TCP, false if using TCP Tahoe
+	 * @param sim
 	 */
 	netflow (string name, double start_time, double size_mb,
 			nethost &source, nethost &destination, bool usingFAST,
 			simulation &sim);
 
+	/**
+	 * Same as other constructor but @c usingFAST is set to false.
+	 * @param name of this flow
+	 * @param start_time in seconds at which this flow starts
+	 * @param size_mb size of this flow in megabits
+	 * @param source host at which this flow starts
+	 * @param destination host at which this flow ends
+	 * @param sim
+	 */
 	netflow (string name, double start_time, double size_mb,
 			nethost &source, nethost &destination, simulation &sim);
 
 	// --------------------------- Accessors ----------------------------------
 
-	/** @return start time in seconds from beginning of simulation. */
+	/**
+	 * Getter for start time in seconds.
+	 * @return start time in seconds from beginning of simulation.
+	 */
 	double getStartTimeSec() const;
 
-	/**  @return start time in milliseconds from beginning of simulation. */
+	/**
+	 * Getter for start time in milliseconds.
+	 * @return start time in milliseconds from beginning of simulation.
+	 */
 	double getStartTimeMs() const;
 
-	/** @return size in megabits */
+	/**
+	 * Getter for size in megabits.
+	 * @return size in megabits
+	 */
 	double getSizeMb() const;
 
+	/**
+	 * Getter for pointer to destination host.
+	 * @return pointer to destination host.
+	 */
 	nethost *getDestination() const;
 
+	/**
+	 * Getter for pointer to source host.
+	 * @return get pointer to the source host.
+	 */
 	nethost *getSource() const;
 
-	/** @returns number of flow packets received by source w/in interval */
-
+	/**
+	 * Getter for the count of flow packets received by destination within the
+	 * interval.
+	 * @return number of flow packets received
+	 */
 	int getPktTally() const;
 	
-	/** @returns start time of the packet count interval */
+	/**
+	 * Getter for the start time of the packet count interval.
+	 * @return left side of pkt count interval
+	 */
 	double getLeftTime() const;
 	
-	/** @returns end time of the packet count interval */
+	/**
+	 * Getter for the ending time of the packet count interval.
+	 * @returns right side of pkt count interval
+	 */
 	double getRightTime() const;
-
-
-	/**  @return last ACK's sequence number. */
-	int getLastAck() const;
 
 	/**
 	 * Getter for number of packets used in a flawless transmission of this
@@ -469,35 +625,69 @@ public:
 	 */
 	int getNumTotalPackets() const;
 
-	/** @return dynamically adjusted timeout length in milliseconds. */
+	/**
+	 * Getter for the dynamically adjusted timeout length in milliseconds.
+	 * @return timeout length in milliseconds.
+	 */
 	double getTimeoutLengthMs() const;
 
+	/**
+	 * Getter for the sequence number of the last ACK seen.
+	 * @return last ACK's sequence number.
+	 */
 	int getHighestAckSeqnum() const;
 
-	int getHighestSentSeqnum() const;
-
+	/**
+	 * Getter for the number of duplicate ACKs seen so far.
+	 * @return num duplicate ACKs
+	 */
 	int getNumDuplicateAcks() const;
 
+	/**
+	 * Getter for the average round trip time.
+	 * @return average RTT
+	 */
 	double getAvgRTT() const;
 
+	/**
+	 * Getter for the minimum round trip time seen so far for this flow.
+	 * @return min RTT
+	 */
 	double getMinRTT() const;
 
+	/**
+	 * True if using TCP FAST, false if Tahoe.
+	 * @return true for FAST, false for Tahoe
+	 */
 	bool isUsingFAST() const;
 
-	timeout_event* getFlowTimeout() const;
-
+	/**
+	 * Getter for a const reference to the round-trip times map. This map
+	 * stores the start time for packets in transit; when packets arrive
+	 * their arrival times are added to their (negated) start times to get
+	 * the round trip time, then their entries are removed from the RTT map.
+	 * @return const reference to round trip times map
+	 */
 	const map<int, double>& getRoundTripTimes() const;
 
+	/**
+	 * Getter for the current window size
+	 * @return window size
+	 */
 	double getWindowSize() const;
 
-	/** @return the packet on which the window starts. */
+	/**
+	 * Getter for the sequence number at which the current window starts.
+	 * @return the packet on which the window starts.
+	 */
 	int getWindowStart() const;
 
+	/**
+	 * Getter for the linear growth threshold (i.e., the window size after
+	 * which the window size will be increased as 1/n instead of 1 per ACK)
+	 * @return linear growth window size threshold
+	 */
 	double getLinGrowthWinsizeThreshold() const;
-
-	const map<int, timeout_event *>& getFutureTimeoutsEvents() const;
-
-	const map<int, ack_event*>& getFutureSendAckEvents() const;
 
 	/**
 	 * Print helper function which partially overrides the one in netdevice.
@@ -505,75 +695,86 @@ public:
 	 */
 	virtual void printHelper(ostream &os) const;
 	
-	/** returns flow rate in bytes per sec */
+	/**
+	 * Getter for the flow rate in bytes per second.
+	 * @return flow rate in bytes/sec.
+	 */
 	double getFlowRateBytesPerSec() const;
 
-	/** @return flow rate in megabits per second. */
+	/**
+	 * Getter for the flow rate in megabits per second.
+	 * @return flow rate.
+	 */
 	double getFlowRateMbps(double time) const;
 
-	/** returns percentage of flow that has been transmitted so far
-	 * Useful for debugging.
+	/**
+	 * Getter for the percentage of flow that has been transmitted so far
+	 * Useful for debugging; can be graphed along with other flow metrics.
+	 * @return the percentage of the flow that's been completed.
 	 */
 	double getFlowPercentage() const;
 
-	/** @returns packet delay 
-	 * Defined as time elapsed since packet is send and acknowledgement is
-	 * received.
+	/**
+	 * Packet delay is defined as time elapsed since packet is send and
+	 * acknowledgment is received.
+	 * @param currTime current time
+	 * @returns packet delay
 	 */
 	double getPktDelay(double currTime) const;
 
 	// --------------------------- Mutators -----------------------------------
 
+	/**
+	 * Setter for the source host.
+	 * @param source
+	 */
 	void setSource(nethost &source);
 
+	/**
+	 * Setter for the destination host.
+	 * @param destination
+	 */
 	void setDestination(nethost &destination);
-
-	void setLastACKNum(int new_seqnum);
 	
-	/** Updates packet tally depending on whether receive_packet_event
-	 * occurr during rate_interval
+	/**
+	 * Updates packet tally depending on whether @c receive_packet_event
+	 * occurs during rate_interval.
+	 * @param time
 	 */
 	void updatePktTally(double time);
 
-	/** Changes a flow's window size during an update_window_event. Used only 
-	 * if the flow is using FAST TCP for congestion control. */
+	/**
+	 * Changes a flow's window size during an update_window_event. Used only
+	 * if the flow is using FAST TCP for congestion control.
+	 * @param new_size
+	 */
 	void setFASTWindowSize(double new_size);
 	
-	/** sets left time */
+	/**
+	 * Sets left time.
+	 * @param newTime
+	 */
 	void setLeftTime(double newTime);
 	
-	/** sets right time */
+	/**
+	 * Sets right time.
+	 * @param newTime
+	 */
 	void setRightTime(double newTime);
 
-	timeout_event *setFlowTimeout(timeout_event *e);
-
 	/**
-	 * Cancels a future duplicate_ack_event. Invoke after an in-order FLOW
-	 * packet is received, nullifying the pending duplicate_ack_event.
-	 * @param seq sequence number corresponding to the pending
-	 * duplicate_ack_event
-	 * @return the duplicate_ack_event that was cancelled
-	 * @post duplicate_ack_event erased from the local map and from the global
-	 * events queue.
-	 */
-
-	ack_event *cancelSendDuplicateAckAction(int seq);
-
-	/**
-	 * Makes a duplicate_ack_event and puts it in the local map and on the
-	 * simulation's event queue.
-	 * @param seq the duplicate_ack_event will contain an ACK packet with this
+	 * Makes an @c ack_event and puts it on the simulation's event queue.
+	 * @param seq the @c ack_event will contain an ACK packet with this
 	 * sequence number
-	 * @time time at which the duplicate_ack_event should run
-	 * @post duplicate_ack_event added to the local map and to the global
-	 * events queue.
+	 * @time time at which the @c ack_event should run
 	 */
-	void registerSendDuplicateAckAction(int seq, double time);
+	void registerAckEvent(int seq, double time);
 
 	/**
 	 * Gets all the packets in this window that must be sent. This function
 	 * assumes the user isn't going to send them, so it doesn't change the
 	 * last packet sent number.
+	 *
 	 * @return all the outstanding packets in the window
 	 */
 	vector<packet> peekOutstandingPackets();
@@ -584,27 +785,24 @@ public:
 	 * number. It also stores the starting time for each packet so RTTs
 	 * can be computed later. It stores corresponding timeout events locally
 	 * and puts them on the simulation's event queue too.
+	 *
 	 * @param start_time time at which packets will enter link buffer
 	 * @param linkFreeAt time in milliseconds at packets will get on the link
 	 * @return all the outstanding FLOW packets in the window
-	 * @post timeout events have been added locally and pushed onto simulation
-	 * event queue
 	 */
 	vector<packet> popOutstandingPackets(double start_time, double linkFreeAt);
-
-	// TODO handle out-of-order ACKs (e.g. ACK 3 might get routed a slow way),
-	// ACK 4 might get routed a fast way.
 
 	/**
 	 * When an ACK is received (it's assumed that the packet is arriving
 	 * at this flow's source) this function must be called so the window will
-	 * slide and resize, so duplicate ACKs will register, so the timeout
-	 * length will adjust, and so the corresonding timeout event will be
-	 * removed from this flow and simulation.
+	 * slide and resize, so duplicate ACKs will register, and so the timeout
+	 * length will adjust.
+	 *
 	 * @param pkt the received ACK packet.
 	 * @param end_time_ms time in milliseconds at which this ACK was received;
 	 * used to calculate RTTs.
 	 * @param linkFreeAtTime absolute time at which the link will be free
+	 *
 	 * @warning DOESN'T SEND PACKETS, use @c popOutstandingPackets to get the
 	 * packets to send after this function is called.
 	 */
@@ -618,6 +816,7 @@ public:
 	 * will also chain (queue) a future duplicate_ack_event in case the next
 	 * FLOW packet never comes. This function also removes the previous
 	 * packet's corresponding duplicate_ack_event from the local map.
+	 *
 	 * @param pkt arriving FLOW packet
 	 * @param arrival_time
 	 */
@@ -628,7 +827,6 @@ public:
 	 * change accordingly and so the old timeout_event can be cancelled. It's
 	 * the caller's responsibility to make and queue a new send_packet_event
 	 * and a new timeout_event.
-	 * @param to_pkt the packet that timed out
 	 */
 	void timeoutOccurred();
 };
@@ -636,7 +834,7 @@ public:
 // ------------------------------- netlink class ------------------------------
 
 /**
- * Represents a link in a simple network.
+ * Represents a half-duplex link.
  */
 class netlink : public netelement {
 
@@ -674,10 +872,10 @@ private:
 	 */
 	int packets_dropped = 0;
 	
-	/** For plotting link rate. 
-	 * Keeps track of how many packets of each type were passing
-	 * through link during given time interval.
-	 * Key is a string instead of packet_type for easier printing.
+	/**
+	 * For plotting link rate. Keeps track of how many packets of each type
+	 * were passing through link during given time interval. Key is a string
+	 * instead of packet_type for easier printing.
 	 */ 
 	map<string, int> linkTraffic = { {"ack", 0}, {"flow", 0}, {"rtr", 0} };
 
@@ -700,6 +898,7 @@ private:
 public:
 
 	/**
+	 * Use this when endpoints are known at construction time.
 	 * @param name of this link
 	 * @param rate_mbps link rate in megabits per second
 	 * @param delay_ms link delay in milliseconds
@@ -712,7 +911,7 @@ public:
 			netnode &endpoint1, netnode &endpoint2);
 
 	/**
-	 * Sets the endpoints of this link to NULL.
+	 * Use this when endpoints are not known at construction time.
 	 * @param name of this link
 	 * @param rate_mbps link rate in megabits per second
 	 * @param delay_ms link delay in milliseconds
@@ -723,37 +922,68 @@ public:
 
 	// --------------------------- Accessors ----------------------------------
 
-	/** @return buffer length in bytes. */
+	/**
+	 * Getter for the buffer's length in bytes (not occupancy).
+	 * @return buffer length in bytes.
+	 */
 	long getBuflen() const;
 
-	/**  @return buffer length in kilobytes. */
+	/**
+	 * Getter for the buffer's length in kilobytes (not occupancy).
+	 * @return buffer length in kB.
+	 */
 	long getBuflenKB() const;
 
-	/** @return delay in milliseconds. */
+	/**
+	 * Getter for the link delay.
+	 * @return delay in milliseconds.
+	 */
 	int getDelay() const;
 
+	/**
+	 * Getter for one of the endpoints that this link connects. This might be
+	 * a node or a router.
+	 * @return one of the endpoints
+	 */
 	netnode *getEndpoint1() const;
 
+	/**
+	 * Getter for the other endpoint that this link connects. This might be
+	 * a node or a router.
+	 * @return the other endpoint
+	 */
 	netnode *getEndpoint2() const;
 
-	/** @return link capacity in bytes per second. */
-	double getCapacityBytesPerSec() const;
+	/**
+	 * Getter for the capacity of this link in bits per second
+	 * @return link capacity (bps)
+	 */
+	double getCapacityBitsPerSec() const;
 
-	/** @return link capacity in megabits per second. */
+	/**
+	 * Getter for the capacity of this link in megabits per second
+	 * @return link capacity (mbps)
+	 */
 	double getCapacityMbps() const;
 
-	/** @return link rate in megabits per second */
+	/**
+	 * Getter for the current rate of the link in megabits per second.
+	 * @return current link rate (mbps)
+	 */
 	double getRateMbps();
 
 	/**
-	 * @return end-to-end time in milliseconds for the given packet on this
+	 * Getter for end-to-end time in milliseconds for the given packet on this
 	 * link NOT INCLUDING DELAY.
+	 * @param pkt
+	 * @return end-to-end time for this packet (ms)
 	 */
 	double getTransmissionTimeMs(const packet &pkt) const;
 
 	/**
-	 * @return time absolute time in milliseconds when this link will be
+	 * Getter for the absolute time in milliseconds when this link will be
 	 * available for the next packet.
+	 * @return time at which link will be available for next-queued packet
 	 * @warning if zero need to substitute current time in for free at time!
 	 * the link doesn't know the current time, so it can't tell you when
 	 * the link is free if there's nothing in the buffer.
@@ -761,27 +991,32 @@ public:
 	double getLinkFreeAtTime() const;
 
 	/**
-	 * @return the buffer occupancy
+	 * Getter for the number of bytes of the link buffer than are in-use.
+	 * @return the buffer occupancy (bytes)
 	 */
 	long getBufferOccupancy() const;
 
 	/**
-	 * @return packet loss, which is number of packets dropped since
-	 * we are assuming nothing happens to a backet while in transit
+	 * Gette for the packet loss, which is number of packets dropped since
+	 * we are assuming nothing happens to a packet while in transit.
+	 * @return packet loss
 	 */
 	int getPktLoss() const;
 
 	/** 
+	 * Getter for the link traffic.
 	 * @return linkTraffic
 	 */
 	map<string, int> getLinkTraffic() const;
 
 	/**
+	 * This function is critical for our half-duplex implementation.
 	 * Returns true if the direction of the last packet in the buffer is the
 	 * same as the direction of the packet about to be added; if the
 	 * direction is the same then the link delay should not be used, since it
 	 * was already used once for the first packet in this run of same-direction
 	 * packets.
+	 * @param destination
 	 * @return true if the destination is the same as the destination of the
 	 * last packet in the buffer
 	 */
@@ -796,7 +1031,11 @@ public:
 	 */
 	double getArrivalTime(const packet &pkt, bool useDelay, double time);
 
-	/** Prints the contents and size of the buffer to the given stream. */
+	/**
+	 * Prints the contents and size of the buffer to the given stream.
+	 * Extremely useful for debugging.
+	 * @param os print the buffer contents to this output stream.
+	 */
 	void printBuffer(ostream &os);
 
 	/**
@@ -807,18 +1046,28 @@ public:
 
 	// --------------------------- Mutators -----------------------------------
 
+	/**
+	 * Setter for the first endpoint.
+	 * @param endpoint1
+	 */
 	void setEndpoint1(netnode &endpoint1);
 
+	/**
+	 * Setter for the first endpoint.
+	 * @param endpoint1
+	 */
 	void setEndpoint2(netnode &endpoint2);
 	
 	/**
 	 * If the link buffer has space the given packet is added to the buffer
 	 * and the rolling wait time and buffer occupancy are increased.
+	 *
 	 * @param pkt the packet to add to the buffer
 	 * @param destination of the packet
 	 * @param useDelay true if link delay should be used to sum into the
 	 * buffer's wait time. Should be used ONCE per window
 	 * @param time at which we're trying to send this packet
+	 *
 	 * @return true if added to buffer successfully, false if dropped
 	 */
 	bool sendPacket(const packet &pkt, netnode *destination,
@@ -827,8 +1076,10 @@ public:
 	/**
 	 * Called when a lone packet is received to free the link for subsequent
 	 * packets; just dequeues the packet from the buffer.
+	 *
 	 * @param pkt_id the given packet ID number must match the ID of the
 	 * packet about to be dequeued.
+	 *
 	 * @return true if the packet was dequeued (i.e. the given id matched
 	 * and the buffer wasn't empty)
 	 */
@@ -841,21 +1092,25 @@ public:
 	 * is decreasing by the link delay + one transmission time, but for
 	 * subsequent packets the buffer wait time is decreased by only one
 	 * transmission time.
+	 *
 	 * @param pkt_id the given packet ID number must match the ID of the
 	 * packet about to be dequeued.
-	 * @first_packet true if first packet in the window
+	 * @param first_packet true if first packet in the window
+	 *
 	 * @return true if the packet was dequeued (i.e. the given id matched
 	 * and the buffer wasn't empty)
 	 */
 	bool receivedPacketInWindow(long pkt_id, bool first_packet);
 
 	/**
-	 * Resets all values in linkTraffic map to 0
+	 * Resets all values in linkTraffic map to 0.
 	 */
 	void resetLinkTraffic();	
 	
 	/**
 	 * Updates value of linkTraffic accordingly
+	 * @param time
+	 * @param type
 	 */
 	void updateLinkTraffic(int time, packet_type type);
 };
@@ -917,18 +1172,23 @@ public:
 	/** Unique ID number generator. Initialized in corresponding cpp file. */
 	static long id_gen;
 
+	/**
+	 * Default contructor. Sets everything to dummy values.
+	 */
 	packet();
 
 	/**
 	 * This constructor infers the size of a packet from the given type, which
 	 * must be ROUTING since there's no parent flow and no sequence number.
 	 * and no sequence number.
+	 *
 	 * @param type one of the values of the @c packet_type enum, but must
 	 * be ROUTING for this constructor
 	 * @param source_ip the NAME (since this simulation uses names, not IPs)
 	 * of the original source which must be a router
 	 * @param dest_ip the NAME of the ultimate destination, which must be a
 	 * router
+	 *
 	 * @warning assertion triggered if the packet type isn't ROUTING
 	 */
 	packet(packet_type type, const string &source_ip, const string &dest_ip);
@@ -937,6 +1197,7 @@ public:
 	 * This constructor infers the size of a packet from the given type, which
 	 * must be ACK or FLOW since the source and destination are inferred from
 	 * a parent flow.
+	 *
 	 * @param type one of the values of the @c packet_type enum, but must
 	 * be ROUTING for this constructor
 	 * @param parent_flow flow to which this packet belongs. ACK and FLOW
@@ -944,6 +1205,7 @@ public:
 	 * @param seqnum sequence number for this packet, where the first packet in
 	 * flow is numbered 1. Pass in anything (or @c SEQNUM_FOR_NONFLOWS) for ACK
 	 * packets; their seqnums are just set to @c SEQNUM_FOR_NONFLOWS.
+	 *
 	 * @warning assertion is triggered if the packet type is not ACK or FLOW.
 	 */
 	packet(packet_type type, netflow &parent_flow, int seqnum);
@@ -953,37 +1215,87 @@ public:
 	 * packet constructor makes packets with ids of 0, and they're considered
 	 * null in calling functions. This function just checks if a given packet
 	 * is a "fake" packet.
-	 * @return
+	 *
+	 * @return true if null packets
 	 */
 	bool isNullPacket() const;
 
+	/**
+	 * Getter for the source host of this packet.
+	 * @return source host name
+	 */
 	string getSource() const;
 
+	/**
+	 * Getter for the destination host of this packet.
+	 * @return destination host name
+	 */
 	string getDestination() const;
 
+	/**
+	 * Getter for the sequence number of this packet.
+	 * @return sequence number
+	 */
 	int getSeq() const;
 
+	/**
+	 * Getter for the unique ID of this packet.
+	 * @return ID number
+	 */
 	long getId() const;
 
-	map<string, double> getDistances() const;
+	/**
+	 * Getter for the distances map.
+	 * @return distnaces map
+	 */
+	const map<string, double> &getDistances() const;
 
+	/**
+	 * Setter for the distances map.
+	 * @param distances
+	 */
 	void setDistances(map<string, double> distances);
 
+	/**
+	 * Getter for the parent flow of this packet.
+	 * @return parent flow
+	 */
 	netflow *getParentFlow() const;
 
+	/**
+	 * Getter for the type of this packet.
+	 * @return packet type
+	 */
 	packet_type getType() const;
 
-	/** @return size in megabits. */
+	/**
+	 * Getter for the size in megabits of this packet.
+	 * @return size in megabits.
+	 */
 	double getSizeMb() const;
 
-	/** @return size in bytes. */
+	/**
+	 * Getter for the size in bytes of this packet.
+	 * @return size in bytes.
+	 */
 	long getSizeBytes() const;
 
-	/** @return type as a string */
+	/**
+	 * Getter for the type of this packet as a string.
+	 * @return type as a string.
+	 */
 	string getTypeString() const;
 
+	/**
+	 * Getter for the transmit timestamp for this packet.
+	 * @return transmit timestamp
+	 */
 	double getTransmitTimestamp() const;
 
+	/**
+	 * Setter for the transmit timestamp.
+	 * @param time
+	 */
 	void setTransmitTimestamp(double time);
 
 	/**

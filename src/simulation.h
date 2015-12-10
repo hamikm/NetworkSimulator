@@ -200,7 +200,7 @@ public:
 	 * Helper function to logEvent.
 	 * Appends a .json formatted event metric to a logger file
 	 */
-	void appendEventMetric(json event, ofstream& logger, int eventNum);
+	void appendEventMetric(json event, ofstream& logger);
 
 	/**
 	 * Helper function to logEvent.

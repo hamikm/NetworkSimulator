@@ -39,7 +39,7 @@ extern ostream &debug_os;
 // -------------------------------- event class -------------------------------
 
 /**
- * Base class for events in an event-driven network simulation.
+ * Base class for events in our event-driven network simulation.
  */
 class event {
 
@@ -64,18 +64,31 @@ public:
 	/** Unique ID number generator. Initialized in corresponding cpp file. */
 	static long id_generator;
 
+	/** Default constructor; sets time and ID to -1 and simulation to NULL. */
 	event();
 
 	/**
 	 * Initializes this event's time to the given one and sets the event id
-	 * to whatever the static ID generates spits out.
+	 * to whatever the static ID generates spits out. Also sets the
+	 * simulation pointer.
+	 * @param time at which this event should run
+	 * @param sim
 	 */
 	event(double time, simulation &sim);
 
+	/** Destructor */
 	virtual ~event();
 
+	/**
+	 * Getter for the time at which this event should run.
+	 * @return time at which this event should run.
+	 */
 	double getTime() const;
 
+	/**
+	 * Getter for the unique ID number generated for this event.
+	 * @return ID number
+	 */
 	long getId() const;
 
 	/**
@@ -116,8 +129,10 @@ class receive_packet_event : public event {
 
 private:
 
-	/**  Flow to which the received packet belongs. Is NULL for routing
-	 * packets. */
+	/**
+	 * Flow to which the received packet belongs. Is NULL for routing
+	 * packets.
+	 */
 	netflow *flow;
 
 	/** Packet received by the flow. */
@@ -129,22 +144,12 @@ private:
 	/** Link on which this packet arrived. */
 	netlink *link;
 
-	/** Size of the window to which this packet belongs, 1 for lone packets. */
-	int window_size;
-
 	/**
-	 * Sequence number of the first packet in this windowload. Assuming the
-	 * sequence numbers of the packets are contiguous (i.e., no selective
-	 * ACK scheme) then we can stack the transmissions of the packets in
-	 * the window (ordered by their sequence numbers) using the relative
-	 * distance from the first sequence number of the windowload to find
-	 * the arrival time of each packet.
+	 * Constructor helper. Does naive assignments; logic should be in the
+	 * calling constructors.
 	 */
-	int window_start;
-
 	void constructorHelper(netflow *flow, packet &pkt,
-			netnode *step_destination, netlink *link,
-			int window_size, int window_start);
+			netnode *step_destination, netlink *link);
 public:
 
 	/**
@@ -162,15 +167,7 @@ public:
 	receive_packet_event(double time, simulation &sim, packet &pkt, 
 			netnode &step_destination, netlink &link);
 
-	/**
-	 * Constructor for receive packets events for packets that belong to
-	 * window loads; the window size and window start values are set to the
-	 * given ones.
-	 */
-	receive_packet_event(double time, simulation &sim,
-			netflow &flow, packet &pkt, netnode &step_destination,
-			netlink &link, int window_size, int window_start);
-
+	/** Destructor. */
 	~receive_packet_event();
 
 	/**
@@ -213,6 +210,7 @@ public:
 	 */
 	router_discovery_event(double time, simulation &sim);
 
+	/** Destructor */
 	~router_discovery_event();
 
 	/**
@@ -230,18 +228,27 @@ public:
 // --------------------------- update_window_event class ------------------------
 
 /**
- * Event that triggers update of a given flow's window size. 
- * Only to be used for FAST TCP.
+ * Event that triggers update of a given flow's window size. Only to be used
+ * for FAST TCP.
  */
 class update_window_event : public event {
 
 private:
+
 	/** Flow whose window size will be modified by this event. */
 	netflow *flow;
 
 public: 
+
+	/**
+	 * Constructor.
+	 * @param time
+	 * @param sim
+	 * @param flow
+	 */
 	update_window_event(double time, simulation &sim, netflow &flow);
 
+	/** Destructor. */
 	~update_window_event();
 
 	/** Updates window size based on FAST specifications. */
@@ -278,32 +285,29 @@ private:
 	/** Node from which the packet is going to leave. */
 	netnode *departure_node;
 
-	/** Size of the window to which this packet belongs, 1 for lone packets. */
-	int window_size;
-
-	/**
-	 * Sequence number of the first packet in this windowload. Assuming the
-	 * sequence numbers of the packets are contiguous (i.e., no selective
-	 * ACK scheme) then we can stack the transmissions of the packets in
-	 * the window (ordered by their sequence numbers) using the relative
-	 * distance from the first sequence number of the windowload to find
-	 * the arrival time of each packet.
-	 */
-	int window_start;
-
 	/** @return node at which this packet arrives. */
 	netnode *getDestinationNode() const;
 
+	/**
+	 * Constructor helper. Does naive assignments; logic should be in the
+	 * calling constructors.
+	 */
 	void constructorHelper(netflow *flow, packet &pkt,
-			netlink *link, netnode *departure_node,
-			int window_size, int window_start);
+			netlink *link, netnode *departure_node);
 public:
 
+	/** Default constructor. Sets everything to dummy or NULL values. */
 	send_packet_event();
 
 	/**
-	 * Constuctor for lone packets--window size is set to 1 and window_start
+	 * Constructor for lone packets--window size is set to 1 and window_start
 	 * is set to this packet's sequence number.
+	 * @param time time at which to send the packet
+	 * @param sim
+	 * @param flow flow to which this packet belongs
+	 * @param pkt packet to send
+	 * @param link to send the packet on
+	 * @param departure_node node from which this packet will leave
 	 */
 	send_packet_event(double time, simulation &sim, netflow &flow,
 			packet &pkt, netlink &link, netnode &departure_node);
@@ -311,18 +315,16 @@ public:
 	/**
 	 * Constructor for packets that do not belong to a flow (i.e., routing 
 	 * packets).
+	 * @param time time at which to send the packet
+	 * @param sim
+	 * @param pkt packet to send
+	 * @param link to send the packet on
+	 * @param departure_node node from which this packet will leave
 	 */
 	send_packet_event(double time, simulation &sim, packet &pkt, 
 			netlink &link, netnode &departure_node);
 
-	/**
-	 * Constructor for windowloads of packets--window_size is set to the given
-	 * value and window_start is set to the given value.
-	 */
-	send_packet_event(double time, simulation &sim, netflow &flow,
-			packet &pkt, netlink &link, netnode &departure_node,
-			int window_size, int window_start);
-
+	/** Destructor */
 	~send_packet_event();
 
 	/**
@@ -363,6 +365,7 @@ public:
 	 */
 	start_flow_event(double time, simulation &sim, netflow &flow);
 
+	/** Destructor. */
 	~start_flow_event();
 
 	/**
@@ -381,6 +384,7 @@ public:
 // ---------------------------- timeout_event class ---------------------------
 
 /**
+ * @deprecated because timeouts aren't currently being used
  * Event that sets the window size to one then sends a packet. This event
  * queues another timeout_event; timeout_events are chained so that the
  * flow will keep trying to send packets in the face of timeouts indefinitely.
@@ -397,14 +401,21 @@ private:
 
 public:
 
+	/** Default constructor, sets everything to dummy or NULL. */
 	timeout_event();
 
 	/**
 	 * Initializes this event's time to the given one, sets the event ID,
 	 * and sets the flow to which this timeout_event belongs.
+	 *
+	 * @param time
+	 * @param sim
+	 * @param flow
+	 * @param seqnum
 	 */
 	timeout_event(double time, simulation &sim, netflow &flow, int seqnum);
 
+	/** Destructor. */
 	~timeout_event();
 
 	/**
@@ -444,6 +455,7 @@ private:
 
 public:
 
+	/** Default constructor, sets everything to dummy or NULL. */
 	ack_event();
 
 	/**
@@ -453,6 +465,7 @@ public:
 	ack_event(double time, simulation &sim,
 			netflow &flow, packet &dup_pkt);
 
+	/** Destructor. */
 	~ack_event();
 
 	/**
