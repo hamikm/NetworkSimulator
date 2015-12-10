@@ -440,7 +440,7 @@ int simulation::logEvent(double currTime) {
     ofstream logger;
     logger.open(logName, ios::out |ios::app);
 
-    appendEventMetric(event, logger, eventCount);
+    appendEventMetric(event, logger);
 
     // update eventCount
     eventCount++;
@@ -448,8 +448,8 @@ int simulation::logEvent(double currTime) {
     return 0;
 }
 
-void simulation::appendEventMetric(json event, ofstream& logger, int eventNum) {
-	if (eventNum != 0) {
+void simulation::appendEventMetric(json event, ofstream& logger) {
+	if (eventCount != 0) {
         logger << ',' <<'\n';
     }
 
