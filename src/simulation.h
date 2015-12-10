@@ -1,6 +1,7 @@
 /**
  * @file
- * @auther Jessica Li, Jingwen Wang, Hamik Mukelyan
+ *
+ * Contains the declaration of the simulation class.
  */
 
 #ifndef SIMULATION_H
@@ -47,28 +48,10 @@ extern bool detail;
 extern ostream &debug_os;
 
 /**
- * Comparison functor for use in container templates like @c priority_queue.
- * Sorts on events' times.
- */
-class eventTimeSorter {
-
-public:
-
-	/**
-	 * Comparison function; compares on times.
-	 * @param e1
-	 * @param e2
-	 * @return true if time of @c e1 is less than time of @c e2.
-	 */
-	bool operator() (const event &e1, const event &e2);
-};
-
-/**
- * Represents the simulation.
- * Sets up network based on .json input file and runs network simulation. TCP protocol
- * to use indicated as flow parameter in .json input file.
- * Each simulation object has an associated logger file to which simulation metrics
- * are written.
+ * Represents the simulation. Sets up network based on .json input file and
+ * runs network simulation. TCP protocol to use indicated as flow parameter in
+ * .json input file. Each simulation object has an associated logger file to
+ * which simulation metrics re written.
  */
 class simulation {
 
@@ -157,8 +140,8 @@ public:
 	 * or link data structures in this simulation object, (2) add new events
 	 * to this simulation object's event queue, or (3) log data into this
 	 * simulation object's related log file. This function is not responsible
-	 * for writing the data logger's data to disk--the caller (individual event)
-	 * is.
+	 * for writing the data logger's data to disk--the caller
+	 * (individual event) is.
 	 */
 	void runSimulation();
 
@@ -225,7 +208,7 @@ public:
 
 	/**
 	 * Helper function to logEvent.
-	 * Retrieves link ID, link rate, link buffer occupancy, and packet loss of a
+	 * Retrieves link ID, link rate, link buffer occupancy, and packet loss of
 	 * single link and formats metrics into json.
 	 * @param link
 	 * @param currTime occurrance time of event currently being logged

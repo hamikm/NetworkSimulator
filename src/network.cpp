@@ -669,11 +669,11 @@ void netflow::receivedAck(packet &pkt, double end_time_ms,
 		// and the new one.
 		for (int i = 0; i < diff; i++) {
 			if (!FAST_TCP) {
-				if (lin_growth_winsize_threshold < 0) { // hasn't been initialized, so
-													    // just do exponential growth
+				if (lin_growth_winsize_threshold < 0) { // hasn't been init'd
+													    // just do exp growth
 					window_size++;
 				}
-				else if (window_size < lin_growth_winsize_threshold) { // exp. part
+				else if (window_size < lin_growth_winsize_threshold) { // exp
 					window_size++;
 				}
 				else { // linear growth part

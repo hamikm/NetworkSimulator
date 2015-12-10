@@ -1,7 +1,5 @@
 /**
  * @file
- * @auther Jessica Li, Jingwen Wang, Hamik Mukelyan
- *
  * This file reads a network description from a JSON file then starts a
  * simulation of the network. It logs data as the simulation progresses then
  * dumps it to to disk so scripts can generate graphs.

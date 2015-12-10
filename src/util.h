@@ -1,7 +1,5 @@
 /**
  * @file
- * @auther Jessica Li, Jingwen Wang, Hamik Mukelyan
- *
  * Contains some constants used in the simulation.
  */
 

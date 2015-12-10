@@ -1,6 +1,8 @@
 /**
  * @file
- * @author Jessica Li, Jingwen Wang, Hamik Mukelyan
+ *
+ * Contains the declarations of all the network device classes as well as the
+ * packet class.
  */
 
 #ifndef NETWORK_H

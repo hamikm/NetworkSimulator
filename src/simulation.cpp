@@ -4,11 +4,6 @@
 
 #include "simulation.h"
 
-bool eventTimeSorter::operator() (const event &e1, const event &e2) {
-	return e1.getTime() == e2.getTime() ? e1.getId() < e2.getId() :
-			e1.getTime() < e2.getTime();
-}
-
 simulation::simulation () {}
 
 simulation::simulation (const char *inputfile) {
@@ -284,10 +279,6 @@ void simulation::runSimulation() {
 		// Add update_window_events here if necessary.
 		if (flow->isUsingFAST()) {
 
-			// TODO: When should the first window update be, and how often
-			// should we update?
-			// Also, should probably add these parameters to the input file
-			// and parse them in.
 			for (int update_w = flow->getStartTimeMs(); update_w < 20000;
 					update_w += 2000) {
 				update_window_event *w_event = new

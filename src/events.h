@@ -1,6 +1,9 @@
 /**
  * @file
- * @author Jessica Li, Jingwen Wang, Hamik Mukelyan
+ *
+ * Contains the declarations of all the event classes used in this
+ * simulation. Objects of these events are put onto an event queu in a
+ * global simulation object.
  */
 
 #ifndef EVENTS_H
@@ -384,10 +387,10 @@ public:
 // ---------------------------- timeout_event class ---------------------------
 
 /**
- * @deprecated because timeouts aren't currently being used
  * Event that sets the window size to one then sends a packet. This event
  * queues another timeout_event; timeout_events are chained so that the
  * flow will keep trying to send packets in the face of timeouts indefinitely.
+ * @deprecated because timeouts aren't currently being used
  */
 class timeout_event : public event {
 
