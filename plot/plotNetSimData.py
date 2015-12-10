@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 '''
+@package docstring
 In Network Simulation project for Caltech CS 143, the following metrics are
 measured and then graphed as a time trace and overall average:
     For each link:
@@ -13,6 +14,10 @@ measured and then graphed as a time trace and overall average:
         -- packet delay
 The simulator records data into a .json file, from which data is extracted
 and graphed.
+
+For how data is logged, please see simulation.cpp.
+For log formatting, please see sampleDataFile.json
+For how data is plotted, please continue.
 
 For each subplot in each window (Link Metric, Flow Metric), the viewer can
 choose which data set to view by clicking on the associated line 'symbol'

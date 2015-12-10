@@ -19,7 +19,7 @@
 #include <queue>
 
 // Libraries.
- /* NOTE: rapidjson is used for parsing input while
+/* NOTE: rapidjson is used for parsing input while
  *       "JSON for Modern C++" (found here: https://github.com/nlohmann/json)
  *       is used to parse and format .json logger file.
  */
@@ -137,10 +137,17 @@ public:
 	 */
 	void print_network(ostream &os) const;
 
+	/**
+	 * Getter for the string to host-pointer map.
+	 * @return hosts
+	 */
 	map<string, nethost *> getHosts() const;
 
+	/**
+	 * Getter for the string to router-pointer map.
+	 * @return router
+	 */
 	map<string, netrouter *> getRouters() const;
-
 
 	/**
 	 * Runs the simulation by loading some initial events into the @c events
@@ -169,23 +176,32 @@ public:
 	 */
 	void removeEvent(event *e);
 
-	/********** SIMULATION LOGGER RELATED FUNCTIONS **********/
+	// SIMULATION LOGGER RELATED FUNCTIONS
 	
-	/** @return eventCount */
+	/**
+	 * Helper function for logging once every LOG_FREQUENCY.
+	 * @return eventCount counter for number of events logged so far
+	 */
 	int getEvtCount() const;
 
-	/** @return logName */
+	/**
+	 * Getter for the logger filename
+	 * @return logName name of log file
+	 */
 	string getLogName() const;
 
 	/**
-	 * Initializes a data log for the simulation object by creating
-	 * new file called "filename.json" and adds the first line.
+	 * Initializes and sets up a data log for the simulation object
+	 * by creating new file called "filename.json" and adds the first line.
+	 * @param filename name to give to log file
+	 * @return 0 returned if successful
 	 */
 	int initializeLog(string filename);
 
 	/**
 	 * After simulation has finished i.e. all events have logged data
-	 * adds the last line to make the .json logger file valid.
+	 * adds the last line to make the logger a valid JSON file.
+	 * @return 0 returned if successful
 	 */
 	int closeLog();
 	
@@ -193,12 +209,17 @@ public:
 	 * Called everytime an event is run/"popped".
 	 * Sweeps for all relevant metrics of time currTime stored in event object
 	 * and then writes to file.
+	 * @param currTime occurrance time of event currently being logged
+	 * @return 0 returned if successful
 	 */
 	int logEvent(double currTime);
 
 	/**
 	 * Helper function to logEvent.
-	 * Appends a .json formatted event metric to a logger file
+	 * Appends a ',' before appending a .json formatted event metric 
+	 * to a logger file, except for the first event logged.
+	 * @param event current event being logged
+	 * @param logger file to log data into
 	 */
 	void appendEventMetric(json event, ofstream& logger);
 
@@ -206,6 +227,9 @@ public:
 	 * Helper function to logEvent.
 	 * Retrieves link ID, link rate, link buffer occupancy, and packet loss of a
 	 * single link and formats metrics into json.
+	 * @param link
+	 * @param currTime occurrance time of event currently being logged
+	 * @param returns metrics for input link in JSON format
 	 */
 	json logLinkMetric(netlink link, double currTime);
 
@@ -213,6 +237,9 @@ public:
 	 * Helper function to logEvent.
 	 * Retrieves flow ID, flow rate, window size, and packet delay of a single
 	 * flow, and formats metrics into json.
+	 * @param flow
+	 * @param currTime occurrance time of event currently being logged
+	 * @param returns metrics for input flow in JSON format
 	 */
 	json logFlowMetric(netflow flow, double currTime);
 };
