@@ -1,0 +1,533 @@
+\hypertarget{classnetlink}{\section{netlink Class Reference}
+\label{classnetlink}\index{netlink@{netlink}}
+}
+
+
+Represents a half-\/duplex link.  
+
+
+
+
+{\ttfamily \#include $<$network.\-h$>$}
+
+Inheritance diagram for netlink\-:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classnetlink}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{classnetlink_a80fb314878612a849029c50ffaca2493}{netlink} (string name, double rate\-\_\-mbps, int delay\-\_\-ms, int buflen\-\_\-kb, \hyperlink{classnetnode}{netnode} \&endpoint1, \hyperlink{classnetnode}{netnode} \&endpoint2)
+\begin{DoxyCompactList}\small\item\em Use this when endpoints are known at construction time. \end{DoxyCompactList}\item 
+\hyperlink{classnetlink_ad82c705751d6eba3e0aee7cc51bc79ac}{netlink} (string name, double rate\-\_\-mbps, int delay\-\_\-ms, int buflen\-\_\-kb)
+\begin{DoxyCompactList}\small\item\em Use this when endpoints are not known at construction time. \end{DoxyCompactList}\item 
+long \hyperlink{classnetlink_abc9b2aa6e7f70d7c7c6d3db10ce4411e}{get\-Buflen} () const 
+\begin{DoxyCompactList}\small\item\em Getter for the buffer's length in bytes (not occupancy). \end{DoxyCompactList}\item 
+long \hyperlink{classnetlink_a620d116c9c81ba9acd3d6bddf26823e2}{get\-Buflen\-K\-B} () const 
+\begin{DoxyCompactList}\small\item\em Getter for the buffer's length in kilobytes (not occupancy). \end{DoxyCompactList}\item 
+int \hyperlink{classnetlink_acb7cdd8817ce85ce1c4a6641871f0768}{get\-Delay} () const 
+\begin{DoxyCompactList}\small\item\em Getter for the link delay. \end{DoxyCompactList}\item 
+\hyperlink{classnetnode}{netnode} $\ast$ \hyperlink{classnetlink_a3d479ae6579650a2137265132994c230}{get\-Endpoint1} () const 
+\begin{DoxyCompactList}\small\item\em Getter for one of the endpoints that this link connects. \end{DoxyCompactList}\item 
+\hyperlink{classnetnode}{netnode} $\ast$ \hyperlink{classnetlink_a94e8f2ac142cbf8f4d12ddba641d7f93}{get\-Endpoint2} () const 
+\begin{DoxyCompactList}\small\item\em Getter for the other endpoint that this link connects. \end{DoxyCompactList}\item 
+double \hyperlink{classnetlink_a67b47d5b1f4318769fa8f04af8496c79}{get\-Capacity\-Bits\-Per\-Sec} () const 
+\begin{DoxyCompactList}\small\item\em Getter for the capacity of this link in bits per second. \end{DoxyCompactList}\item 
+double \hyperlink{classnetlink_aa8a9e46c022c6be9078b1ffebe0c6083}{get\-Capacity\-Mbps} () const 
+\begin{DoxyCompactList}\small\item\em Getter for the capacity of this link in megabits per second. \end{DoxyCompactList}\item 
+double \hyperlink{classnetlink_a64822d2a7b2973f9bb3a8207798446d0}{get\-Rate\-Mbps} ()
+\begin{DoxyCompactList}\small\item\em Getter for the current rate of the link in megabits per second. \end{DoxyCompactList}\item 
+double \hyperlink{classnetlink_ae2cc1d19c2418172e5e36efd133deecb}{get\-Transmission\-Time\-Ms} (const \hyperlink{classpacket}{packet} \&pkt) const 
+\begin{DoxyCompactList}\small\item\em Getter for end-\/to-\/end time in milliseconds for the given packet on this link N\-O\-T I\-N\-C\-L\-U\-D\-I\-N\-G D\-E\-L\-A\-Y. \end{DoxyCompactList}\item 
+double \hyperlink{classnetlink_a20348993ebfa2fec8dbe30009e7d318d}{get\-Link\-Free\-At\-Time} () const 
+\begin{DoxyCompactList}\small\item\em Getter for the absolute time in milliseconds when this link will be available for the next packet. \end{DoxyCompactList}\item 
+long \hyperlink{classnetlink_a0fd7563496f463d8c044b8bf36a84cd8}{get\-Buffer\-Occupancy} () const 
+\begin{DoxyCompactList}\small\item\em Getter for the number of bytes of the link buffer than are in-\/use. \end{DoxyCompactList}\item 
+int \hyperlink{classnetlink_a16dda9d2d85bd71fd8ea610b4f9eccad}{get\-Pkt\-Loss} () const 
+\begin{DoxyCompactList}\small\item\em Gette for the packet loss, which is number of packets dropped since we are assuming nothing happens to a packet while in transit. \end{DoxyCompactList}\item 
+map$<$ string, int $>$ \hyperlink{classnetlink_a02c8a58b7691d074f2175bf4ef2cdb4b}{get\-Link\-Traffic} () const 
+\begin{DoxyCompactList}\small\item\em Getter for the link traffic. \end{DoxyCompactList}\item 
+bool \hyperlink{classnetlink_a4a44ff4a8b3fd1471f2b38d7c94dc48e}{is\-Same\-Direction\-As\-Last\-Packet} (\hyperlink{classnetnode}{netnode} $\ast$destination)
+\begin{DoxyCompactList}\small\item\em This function is critical for our half-\/duplex implementation. \end{DoxyCompactList}\item 
+double \hyperlink{classnetlink_a1af9572c35dadff0cf25621cbf1d31b0}{get\-Arrival\-Time} (const \hyperlink{classpacket}{packet} \&pkt, bool use\-Delay, double time)
+\begin{DoxyCompactList}\small\item\em Gets the arrival time of a packet on the other end of the link. \end{DoxyCompactList}\item 
+void \hyperlink{classnetlink_aea20be1cbfffa0ddc1dffa1b20be8305}{print\-Buffer} (ostream \&os)
+\begin{DoxyCompactList}\small\item\em Prints the contents and size of the buffer to the given stream. \end{DoxyCompactList}\item 
+virtual void \hyperlink{classnetlink_ade945f53c9730fcbeb3c3556da077d99}{print\-Helper} (ostream \&os) const 
+\begin{DoxyCompactList}\small\item\em Print helper function which partially overrides the one in {\ttfamily netdevice}. \end{DoxyCompactList}\item 
+void \hyperlink{classnetlink_ab92d2503ffd759aaf566bbc5c0f383d5}{set\-Endpoint1} (\hyperlink{classnetnode}{netnode} \&endpoint1)
+\begin{DoxyCompactList}\small\item\em Setter for the first endpoint. \end{DoxyCompactList}\item 
+void \hyperlink{classnetlink_a3e919ef44ab61692e5ff8af9bc08199d}{set\-Endpoint2} (\hyperlink{classnetnode}{netnode} \&endpoint2)
+\begin{DoxyCompactList}\small\item\em Setter for the first endpoint. \end{DoxyCompactList}\item 
+bool \hyperlink{classnetlink_ac0ccebbeb83abdbdc73533c29897250e}{send\-Packet} (const \hyperlink{classpacket}{packet} \&pkt, \hyperlink{classnetnode}{netnode} $\ast$destination, bool use\-Delay, double time)
+\begin{DoxyCompactList}\small\item\em If the link buffer has space the given packet is added to the buffer and the rolling wait time and buffer occupancy are increased. \end{DoxyCompactList}\item 
+bool \hyperlink{classnetlink_ad2f5311a0a1f6f0afc3667f3e1f1c0fe}{received\-Packet} (long pkt\-\_\-id)
+\begin{DoxyCompactList}\small\item\em Called when a lone packet is received to free the link for subsequent packets; just dequeues the packet from the buffer. \end{DoxyCompactList}\item 
+bool \hyperlink{classnetlink_ac345307525d371f1093b71d53665b8b7}{received\-Packet\-In\-Window} (long pkt\-\_\-id, bool first\-\_\-packet)
+\begin{DoxyCompactList}\small\item\em Call this instead of {\ttfamily received\-Lone\-Packet} when an arriving packet is a part of a window so that the link buffer's wait time is adjusted correctly. \end{DoxyCompactList}\item 
+\hypertarget{classnetlink_a354a84d64f26b8e1c811cac076967a4f}{void \hyperlink{classnetlink_a354a84d64f26b8e1c811cac076967a4f}{reset\-Link\-Traffic} ()}\label{classnetlink_a354a84d64f26b8e1c811cac076967a4f}
+
+\begin{DoxyCompactList}\small\item\em Resets all values in link\-Traffic map to 0. \end{DoxyCompactList}\item 
+void \hyperlink{classnetlink_a5100639202ca31e9459431e936ce5424}{update\-Link\-Traffic} (int time, \hyperlink{util_8h_ad875bcb78f9bd8625c5e454cafdc8de7}{packet\-\_\-type} type)
+\begin{DoxyCompactList}\small\item\em Updates value of link\-Traffic accordingly. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Represents a half-\/duplex link. 
+
+\subsection{Constructor \& Destructor Documentation}
+\hypertarget{classnetlink_a80fb314878612a849029c50ffaca2493}{\index{netlink@{netlink}!netlink@{netlink}}
+\index{netlink@{netlink}!netlink@{netlink}}
+\subsubsection[{netlink}]{\setlength{\rightskip}{0pt plus 5cm}netlink\-::netlink (
+\begin{DoxyParamCaption}
+\item[{string}]{name, }
+\item[{double}]{rate\-\_\-mbps, }
+\item[{int}]{delay\-\_\-ms, }
+\item[{int}]{buflen\-\_\-kb, }
+\item[{{\bf netnode} \&}]{endpoint1, }
+\item[{{\bf netnode} \&}]{endpoint2}
+\end{DoxyParamCaption}
+)}}\label{classnetlink_a80fb314878612a849029c50ffaca2493}
+
+
+Use this when endpoints are known at construction time. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em name} & of this link \\
+\hline
+{\em rate\-\_\-mbps} & link rate in megabits per second \\
+\hline
+{\em delay\-\_\-ms} & link delay in milliseconds \\
+\hline
+{\em buflen\-\_\-kb} & the size of the only buffer on this link in kilobytes. This is stored internally in bytes. \\
+\hline
+{\em endpoint1} & the host or router on one side of this link \\
+\hline
+{\em endpoint2} & the host or router on the other side of this link \\
+\hline
+\end{DoxyParams}
+\hypertarget{classnetlink_ad82c705751d6eba3e0aee7cc51bc79ac}{\index{netlink@{netlink}!netlink@{netlink}}
+\index{netlink@{netlink}!netlink@{netlink}}
+\subsubsection[{netlink}]{\setlength{\rightskip}{0pt plus 5cm}netlink\-::netlink (
+\begin{DoxyParamCaption}
+\item[{string}]{name, }
+\item[{double}]{rate\-\_\-mbps, }
+\item[{int}]{delay\-\_\-ms, }
+\item[{int}]{buflen\-\_\-kb}
+\end{DoxyParamCaption}
+)}}\label{classnetlink_ad82c705751d6eba3e0aee7cc51bc79ac}
+
+
+Use this when endpoints are not known at construction time. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em name} & of this link \\
+\hline
+{\em rate\-\_\-mbps} & link rate in megabits per second \\
+\hline
+{\em delay\-\_\-ms} & link delay in milliseconds \\
+\hline
+{\em buflen\-\_\-kb} & the size of the only buffer on this link in kilobytes This is stored internally in bytes. \\
+\hline
+\end{DoxyParams}
+
+
+\subsection{Member Function Documentation}
+\hypertarget{classnetlink_a1af9572c35dadff0cf25621cbf1d31b0}{\index{netlink@{netlink}!get\-Arrival\-Time@{get\-Arrival\-Time}}
+\index{get\-Arrival\-Time@{get\-Arrival\-Time}!netlink@{netlink}}
+\subsubsection[{get\-Arrival\-Time}]{\setlength{\rightskip}{0pt plus 5cm}double netlink\-::get\-Arrival\-Time (
+\begin{DoxyParamCaption}
+\item[{const {\bf packet} \&}]{pkt, }
+\item[{bool}]{use\-Delay, }
+\item[{double}]{time}
+\end{DoxyParamCaption}
+)}}\label{classnetlink_a1af9572c35dadff0cf25621cbf1d31b0}
+
+
+Gets the arrival time of a packet on the other end of the link. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em pkt} & \\
+\hline
+{\em use\-Delay} & \\
+\hline
+{\em time} & of the triggered event \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+arrival time 
+\end{DoxyReturn}
+\hypertarget{classnetlink_a0fd7563496f463d8c044b8bf36a84cd8}{\index{netlink@{netlink}!get\-Buffer\-Occupancy@{get\-Buffer\-Occupancy}}
+\index{get\-Buffer\-Occupancy@{get\-Buffer\-Occupancy}!netlink@{netlink}}
+\subsubsection[{get\-Buffer\-Occupancy}]{\setlength{\rightskip}{0pt plus 5cm}long netlink\-::get\-Buffer\-Occupancy (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classnetlink_a0fd7563496f463d8c044b8bf36a84cd8}
+
+
+Getter for the number of bytes of the link buffer than are in-\/use. 
+
+\begin{DoxyReturn}{Returns}
+the buffer occupancy (bytes) 
+\end{DoxyReturn}
+\hypertarget{classnetlink_abc9b2aa6e7f70d7c7c6d3db10ce4411e}{\index{netlink@{netlink}!get\-Buflen@{get\-Buflen}}
+\index{get\-Buflen@{get\-Buflen}!netlink@{netlink}}
+\subsubsection[{get\-Buflen}]{\setlength{\rightskip}{0pt plus 5cm}long netlink\-::get\-Buflen (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classnetlink_abc9b2aa6e7f70d7c7c6d3db10ce4411e}
+
+
+Getter for the buffer's length in bytes (not occupancy). 
+
+\begin{DoxyReturn}{Returns}
+buffer length in bytes. 
+\end{DoxyReturn}
+\hypertarget{classnetlink_a620d116c9c81ba9acd3d6bddf26823e2}{\index{netlink@{netlink}!get\-Buflen\-K\-B@{get\-Buflen\-K\-B}}
+\index{get\-Buflen\-K\-B@{get\-Buflen\-K\-B}!netlink@{netlink}}
+\subsubsection[{get\-Buflen\-K\-B}]{\setlength{\rightskip}{0pt plus 5cm}long netlink\-::get\-Buflen\-K\-B (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classnetlink_a620d116c9c81ba9acd3d6bddf26823e2}
+
+
+Getter for the buffer's length in kilobytes (not occupancy). 
+
+\begin{DoxyReturn}{Returns}
+buffer length in k\-B. 
+\end{DoxyReturn}
+\hypertarget{classnetlink_a67b47d5b1f4318769fa8f04af8496c79}{\index{netlink@{netlink}!get\-Capacity\-Bits\-Per\-Sec@{get\-Capacity\-Bits\-Per\-Sec}}
+\index{get\-Capacity\-Bits\-Per\-Sec@{get\-Capacity\-Bits\-Per\-Sec}!netlink@{netlink}}
+\subsubsection[{get\-Capacity\-Bits\-Per\-Sec}]{\setlength{\rightskip}{0pt plus 5cm}double netlink\-::get\-Capacity\-Bits\-Per\-Sec (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classnetlink_a67b47d5b1f4318769fa8f04af8496c79}
+
+
+Getter for the capacity of this link in bits per second. 
+
+\begin{DoxyReturn}{Returns}
+link capacity (bps) 
+\end{DoxyReturn}
+\hypertarget{classnetlink_aa8a9e46c022c6be9078b1ffebe0c6083}{\index{netlink@{netlink}!get\-Capacity\-Mbps@{get\-Capacity\-Mbps}}
+\index{get\-Capacity\-Mbps@{get\-Capacity\-Mbps}!netlink@{netlink}}
+\subsubsection[{get\-Capacity\-Mbps}]{\setlength{\rightskip}{0pt plus 5cm}double netlink\-::get\-Capacity\-Mbps (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classnetlink_aa8a9e46c022c6be9078b1ffebe0c6083}
+
+
+Getter for the capacity of this link in megabits per second. 
+
+\begin{DoxyReturn}{Returns}
+link capacity (mbps) 
+\end{DoxyReturn}
+\hypertarget{classnetlink_acb7cdd8817ce85ce1c4a6641871f0768}{\index{netlink@{netlink}!get\-Delay@{get\-Delay}}
+\index{get\-Delay@{get\-Delay}!netlink@{netlink}}
+\subsubsection[{get\-Delay}]{\setlength{\rightskip}{0pt plus 5cm}int netlink\-::get\-Delay (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classnetlink_acb7cdd8817ce85ce1c4a6641871f0768}
+
+
+Getter for the link delay. 
+
+\begin{DoxyReturn}{Returns}
+delay in milliseconds. 
+\end{DoxyReturn}
+\hypertarget{classnetlink_a3d479ae6579650a2137265132994c230}{\index{netlink@{netlink}!get\-Endpoint1@{get\-Endpoint1}}
+\index{get\-Endpoint1@{get\-Endpoint1}!netlink@{netlink}}
+\subsubsection[{get\-Endpoint1}]{\setlength{\rightskip}{0pt plus 5cm}{\bf netnode} $\ast$ netlink\-::get\-Endpoint1 (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classnetlink_a3d479ae6579650a2137265132994c230}
+
+
+Getter for one of the endpoints that this link connects. 
+
+This might be a node or a router. \begin{DoxyReturn}{Returns}
+one of the endpoints 
+\end{DoxyReturn}
+\hypertarget{classnetlink_a94e8f2ac142cbf8f4d12ddba641d7f93}{\index{netlink@{netlink}!get\-Endpoint2@{get\-Endpoint2}}
+\index{get\-Endpoint2@{get\-Endpoint2}!netlink@{netlink}}
+\subsubsection[{get\-Endpoint2}]{\setlength{\rightskip}{0pt plus 5cm}{\bf netnode} $\ast$ netlink\-::get\-Endpoint2 (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classnetlink_a94e8f2ac142cbf8f4d12ddba641d7f93}
+
+
+Getter for the other endpoint that this link connects. 
+
+This might be a node or a router. \begin{DoxyReturn}{Returns}
+the other endpoint 
+\end{DoxyReturn}
+\hypertarget{classnetlink_a20348993ebfa2fec8dbe30009e7d318d}{\index{netlink@{netlink}!get\-Link\-Free\-At\-Time@{get\-Link\-Free\-At\-Time}}
+\index{get\-Link\-Free\-At\-Time@{get\-Link\-Free\-At\-Time}!netlink@{netlink}}
+\subsubsection[{get\-Link\-Free\-At\-Time}]{\setlength{\rightskip}{0pt plus 5cm}double netlink\-::get\-Link\-Free\-At\-Time (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classnetlink_a20348993ebfa2fec8dbe30009e7d318d}
+
+
+Getter for the absolute time in milliseconds when this link will be available for the next packet. 
+
+\begin{DoxyReturn}{Returns}
+time at which link will be available for next-\/queued packet 
+\end{DoxyReturn}
+\begin{DoxyWarning}{Warning}
+if zero need to substitute current time in for free at time! the link doesn't know the current time, so it can't tell you when the link is free if there's nothing in the buffer. 
+\end{DoxyWarning}
+\hypertarget{classnetlink_a02c8a58b7691d074f2175bf4ef2cdb4b}{\index{netlink@{netlink}!get\-Link\-Traffic@{get\-Link\-Traffic}}
+\index{get\-Link\-Traffic@{get\-Link\-Traffic}!netlink@{netlink}}
+\subsubsection[{get\-Link\-Traffic}]{\setlength{\rightskip}{0pt plus 5cm}map$<$ string, int $>$ netlink\-::get\-Link\-Traffic (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classnetlink_a02c8a58b7691d074f2175bf4ef2cdb4b}
+
+
+Getter for the link traffic. 
+
+\begin{DoxyReturn}{Returns}
+link\-Traffic 
+\end{DoxyReturn}
+\hypertarget{classnetlink_a16dda9d2d85bd71fd8ea610b4f9eccad}{\index{netlink@{netlink}!get\-Pkt\-Loss@{get\-Pkt\-Loss}}
+\index{get\-Pkt\-Loss@{get\-Pkt\-Loss}!netlink@{netlink}}
+\subsubsection[{get\-Pkt\-Loss}]{\setlength{\rightskip}{0pt plus 5cm}int netlink\-::get\-Pkt\-Loss (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classnetlink_a16dda9d2d85bd71fd8ea610b4f9eccad}
+
+
+Gette for the packet loss, which is number of packets dropped since we are assuming nothing happens to a packet while in transit. 
+
+\begin{DoxyReturn}{Returns}
+packet loss 
+\end{DoxyReturn}
+\hypertarget{classnetlink_a64822d2a7b2973f9bb3a8207798446d0}{\index{netlink@{netlink}!get\-Rate\-Mbps@{get\-Rate\-Mbps}}
+\index{get\-Rate\-Mbps@{get\-Rate\-Mbps}!netlink@{netlink}}
+\subsubsection[{get\-Rate\-Mbps}]{\setlength{\rightskip}{0pt plus 5cm}double netlink\-::get\-Rate\-Mbps (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{classnetlink_a64822d2a7b2973f9bb3a8207798446d0}
+
+
+Getter for the current rate of the link in megabits per second. 
+
+\begin{DoxyReturn}{Returns}
+current link rate (mbps) 
+\end{DoxyReturn}
+\hypertarget{classnetlink_ae2cc1d19c2418172e5e36efd133deecb}{\index{netlink@{netlink}!get\-Transmission\-Time\-Ms@{get\-Transmission\-Time\-Ms}}
+\index{get\-Transmission\-Time\-Ms@{get\-Transmission\-Time\-Ms}!netlink@{netlink}}
+\subsubsection[{get\-Transmission\-Time\-Ms}]{\setlength{\rightskip}{0pt plus 5cm}double netlink\-::get\-Transmission\-Time\-Ms (
+\begin{DoxyParamCaption}
+\item[{const {\bf packet} \&}]{pkt}
+\end{DoxyParamCaption}
+) const}}\label{classnetlink_ae2cc1d19c2418172e5e36efd133deecb}
+
+
+Getter for end-\/to-\/end time in milliseconds for the given packet on this link N\-O\-T I\-N\-C\-L\-U\-D\-I\-N\-G D\-E\-L\-A\-Y. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em pkt} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+end-\/to-\/end time for this packet (ms) 
+\end{DoxyReturn}
+\hypertarget{classnetlink_a4a44ff4a8b3fd1471f2b38d7c94dc48e}{\index{netlink@{netlink}!is\-Same\-Direction\-As\-Last\-Packet@{is\-Same\-Direction\-As\-Last\-Packet}}
+\index{is\-Same\-Direction\-As\-Last\-Packet@{is\-Same\-Direction\-As\-Last\-Packet}!netlink@{netlink}}
+\subsubsection[{is\-Same\-Direction\-As\-Last\-Packet}]{\setlength{\rightskip}{0pt plus 5cm}bool netlink\-::is\-Same\-Direction\-As\-Last\-Packet (
+\begin{DoxyParamCaption}
+\item[{{\bf netnode} $\ast$}]{destination}
+\end{DoxyParamCaption}
+)}}\label{classnetlink_a4a44ff4a8b3fd1471f2b38d7c94dc48e}
+
+
+This function is critical for our half-\/duplex implementation. 
+
+Returns true if the direction of the last packet in the buffer is the same as the direction of the packet about to be added; if the direction is the same then the link delay should not be used, since it was already used once for the first packet in this run of same-\/direction packets. 
+\begin{DoxyParams}{Parameters}
+{\em destination} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true if the destination is the same as the destination of the last packet in the buffer 
+\end{DoxyReturn}
+\hypertarget{classnetlink_aea20be1cbfffa0ddc1dffa1b20be8305}{\index{netlink@{netlink}!print\-Buffer@{print\-Buffer}}
+\index{print\-Buffer@{print\-Buffer}!netlink@{netlink}}
+\subsubsection[{print\-Buffer}]{\setlength{\rightskip}{0pt plus 5cm}void netlink\-::print\-Buffer (
+\begin{DoxyParamCaption}
+\item[{ostream \&}]{os}
+\end{DoxyParamCaption}
+)}}\label{classnetlink_aea20be1cbfffa0ddc1dffa1b20be8305}
+
+
+Prints the contents and size of the buffer to the given stream. 
+
+Extremely useful for debugging. 
+\begin{DoxyParams}{Parameters}
+{\em os} & print the buffer contents to this output stream. \\
+\hline
+\end{DoxyParams}
+\hypertarget{classnetlink_ade945f53c9730fcbeb3c3556da077d99}{\index{netlink@{netlink}!print\-Helper@{print\-Helper}}
+\index{print\-Helper@{print\-Helper}!netlink@{netlink}}
+\subsubsection[{print\-Helper}]{\setlength{\rightskip}{0pt plus 5cm}void netlink\-::print\-Helper (
+\begin{DoxyParamCaption}
+\item[{ostream \&}]{os}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [virtual]}}}\label{classnetlink_ade945f53c9730fcbeb3c3556da077d99}
+
+
+Print helper function which partially overrides the one in {\ttfamily netdevice}. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em os} & The output stream to which to write. \\
+\hline
+\end{DoxyParams}
+\hypertarget{classnetlink_ad2f5311a0a1f6f0afc3667f3e1f1c0fe}{\index{netlink@{netlink}!received\-Packet@{received\-Packet}}
+\index{received\-Packet@{received\-Packet}!netlink@{netlink}}
+\subsubsection[{received\-Packet}]{\setlength{\rightskip}{0pt plus 5cm}bool netlink\-::received\-Packet (
+\begin{DoxyParamCaption}
+\item[{long}]{pkt\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{classnetlink_ad2f5311a0a1f6f0afc3667f3e1f1c0fe}
+
+
+Called when a lone packet is received to free the link for subsequent packets; just dequeues the packet from the buffer. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em pkt\-\_\-id} & the given packet I\-D number must match the I\-D of the packet about to be dequeued.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true if the packet was dequeued (i.\-e. the given id matched and the buffer wasn't empty) 
+\end{DoxyReturn}
+\hypertarget{classnetlink_ac345307525d371f1093b71d53665b8b7}{\index{netlink@{netlink}!received\-Packet\-In\-Window@{received\-Packet\-In\-Window}}
+\index{received\-Packet\-In\-Window@{received\-Packet\-In\-Window}!netlink@{netlink}}
+\subsubsection[{received\-Packet\-In\-Window}]{\setlength{\rightskip}{0pt plus 5cm}bool netlink\-::received\-Packet\-In\-Window (
+\begin{DoxyParamCaption}
+\item[{long}]{pkt\-\_\-id, }
+\item[{bool}]{first\-\_\-packet}
+\end{DoxyParamCaption}
+)}}\label{classnetlink_ac345307525d371f1093b71d53665b8b7}
+
+
+Call this instead of {\ttfamily received\-Lone\-Packet} when an arriving packet is a part of a window so that the link buffer's wait time is adjusted correctly. 
+
+For the first packet in a windowload the buffer's wait time is decreasing by the link delay + one transmission time, but for subsequent packets the buffer wait time is decreased by only one transmission time.
+
+
+\begin{DoxyParams}{Parameters}
+{\em pkt\-\_\-id} & the given packet I\-D number must match the I\-D of the packet about to be dequeued. \\
+\hline
+{\em first\-\_\-packet} & true if first packet in the window\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true if the packet was dequeued (i.\-e. the given id matched and the buffer wasn't empty) 
+\end{DoxyReturn}
+\hypertarget{classnetlink_ac0ccebbeb83abdbdc73533c29897250e}{\index{netlink@{netlink}!send\-Packet@{send\-Packet}}
+\index{send\-Packet@{send\-Packet}!netlink@{netlink}}
+\subsubsection[{send\-Packet}]{\setlength{\rightskip}{0pt plus 5cm}bool netlink\-::send\-Packet (
+\begin{DoxyParamCaption}
+\item[{const {\bf packet} \&}]{pkt, }
+\item[{{\bf netnode} $\ast$}]{destination, }
+\item[{bool}]{use\-Delay, }
+\item[{double}]{time}
+\end{DoxyParamCaption}
+)}}\label{classnetlink_ac0ccebbeb83abdbdc73533c29897250e}
+
+
+If the link buffer has space the given packet is added to the buffer and the rolling wait time and buffer occupancy are increased. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em pkt} & the packet to add to the buffer \\
+\hline
+{\em destination} & of the packet \\
+\hline
+{\em use\-Delay} & true if link delay should be used to sum into the buffer's wait time. Should be used O\-N\-C\-E per window \\
+\hline
+{\em time} & at which we're trying to send this packet\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true if added to buffer successfully, false if dropped 
+\end{DoxyReturn}
+\hypertarget{classnetlink_ab92d2503ffd759aaf566bbc5c0f383d5}{\index{netlink@{netlink}!set\-Endpoint1@{set\-Endpoint1}}
+\index{set\-Endpoint1@{set\-Endpoint1}!netlink@{netlink}}
+\subsubsection[{set\-Endpoint1}]{\setlength{\rightskip}{0pt plus 5cm}void netlink\-::set\-Endpoint1 (
+\begin{DoxyParamCaption}
+\item[{{\bf netnode} \&}]{endpoint1}
+\end{DoxyParamCaption}
+)}}\label{classnetlink_ab92d2503ffd759aaf566bbc5c0f383d5}
+
+
+Setter for the first endpoint. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em endpoint1} & \\
+\hline
+\end{DoxyParams}
+\hypertarget{classnetlink_a3e919ef44ab61692e5ff8af9bc08199d}{\index{netlink@{netlink}!set\-Endpoint2@{set\-Endpoint2}}
+\index{set\-Endpoint2@{set\-Endpoint2}!netlink@{netlink}}
+\subsubsection[{set\-Endpoint2}]{\setlength{\rightskip}{0pt plus 5cm}void netlink\-::set\-Endpoint2 (
+\begin{DoxyParamCaption}
+\item[{{\bf netnode} \&}]{endpoint2}
+\end{DoxyParamCaption}
+)}}\label{classnetlink_a3e919ef44ab61692e5ff8af9bc08199d}
+
+
+Setter for the first endpoint. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em endpoint1} & \\
+\hline
+\end{DoxyParams}
+\hypertarget{classnetlink_a5100639202ca31e9459431e936ce5424}{\index{netlink@{netlink}!update\-Link\-Traffic@{update\-Link\-Traffic}}
+\index{update\-Link\-Traffic@{update\-Link\-Traffic}!netlink@{netlink}}
+\subsubsection[{update\-Link\-Traffic}]{\setlength{\rightskip}{0pt plus 5cm}void netlink\-::update\-Link\-Traffic (
+\begin{DoxyParamCaption}
+\item[{int}]{time, }
+\item[{{\bf packet\-\_\-type}}]{type}
+\end{DoxyParamCaption}
+)}}\label{classnetlink_a5100639202ca31e9459431e936ce5424}
+
+
+Updates value of link\-Traffic accordingly. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em time} & \\
+\hline
+{\em type} & \\
+\hline
+\end{DoxyParams}
+
+
+The documentation for this class was generated from the following files\-:\begin{DoxyCompactItemize}
+\item 
+src/\hyperlink{network_8h}{network.\-h}\item 
+src/network.\-cpp\end{DoxyCompactItemize}

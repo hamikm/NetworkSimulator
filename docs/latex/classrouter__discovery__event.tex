@@ -1,0 +1,65 @@
+\hypertarget{classrouter__discovery__event}{\section{router\-\_\-discovery\-\_\-event Class Reference}
+\label{classrouter__discovery__event}\index{router\-\_\-discovery\-\_\-event@{router\-\_\-discovery\-\_\-event}}
+}
+
+
+Event that triggers a given router's routing-\/table-\/population algorithm.  
+
+
+
+
+{\ttfamily \#include $<$events.\-h$>$}
+
+Inheritance diagram for router\-\_\-discovery\-\_\-event\-:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classrouter__discovery__event}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{classrouter__discovery__event_af2a8465db9af4bde900f3bb1ccd8cde0}{\hyperlink{classrouter__discovery__event_af2a8465db9af4bde900f3bb1ccd8cde0}{router\-\_\-discovery\-\_\-event} (double time, \hyperlink{classsimulation}{simulation} \&\hyperlink{classevent_a08c6d828bfb6f5539dcd1491e8ac77d2}{sim})}\label{classrouter__discovery__event_af2a8465db9af4bde900f3bb1ccd8cde0}
+
+\begin{DoxyCompactList}\small\item\em Initializes this event's time to the given one and sets the event I\-D,. \end{DoxyCompactList}\item 
+\hypertarget{classrouter__discovery__event_a3c8b9beed6b979ee4240d1c0740b9488}{\hyperlink{classrouter__discovery__event_a3c8b9beed6b979ee4240d1c0740b9488}{$\sim$router\-\_\-discovery\-\_\-event} ()}\label{classrouter__discovery__event_a3c8b9beed6b979ee4240d1c0740b9488}
+
+\begin{DoxyCompactList}\small\item\em Destructor. \end{DoxyCompactList}\item 
+\hypertarget{classrouter__discovery__event_a170768272244ac6578a7c38ffd82733f}{void \hyperlink{classrouter__discovery__event_a170768272244ac6578a7c38ffd82733f}{run\-Event} ()}\label{classrouter__discovery__event_a170768272244ac6578a7c38ffd82733f}
+
+\begin{DoxyCompactList}\small\item\em Runs the distributed Bellman-\/\-Ford algorithm from this router. \end{DoxyCompactList}\item 
+void \hyperlink{classrouter__discovery__event_a32edb9914a54c925bbcb8a48d26451ed}{print\-Helper} (ostream \&os)
+\begin{DoxyCompactList}\small\item\em Print helper function. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Additional Inherited Members}
+
+
+\subsection{Detailed Description}
+Event that triggers a given router's routing-\/table-\/population algorithm. 
+
+\subsection{Member Function Documentation}
+\hypertarget{classrouter__discovery__event_a32edb9914a54c925bbcb8a48d26451ed}{\index{router\-\_\-discovery\-\_\-event@{router\-\_\-discovery\-\_\-event}!print\-Helper@{print\-Helper}}
+\index{print\-Helper@{print\-Helper}!router_discovery_event@{router\-\_\-discovery\-\_\-event}}
+\subsubsection[{print\-Helper}]{\setlength{\rightskip}{0pt plus 5cm}void router\-\_\-discovery\-\_\-event\-::print\-Helper (
+\begin{DoxyParamCaption}
+\item[{ostream \&}]{os}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [virtual]}}}\label{classrouter__discovery__event_a32edb9914a54c925bbcb8a48d26451ed}
+
+
+Print helper function. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em os} & The output stream to which to write event information. \\
+\hline
+\end{DoxyParams}
+
+
+Reimplemented from \hyperlink{classevent_a14ef1b59ef1f5a8311c7cac315c271df}{event}.
+
+
+
+The documentation for this class was generated from the following files\-:\begin{DoxyCompactItemize}
+\item 
+src/\hyperlink{events_8h}{events.\-h}\item 
+src/events.\-cpp\end{DoxyCompactItemize}

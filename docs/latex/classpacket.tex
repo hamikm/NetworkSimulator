@@ -1,0 +1,370 @@
+\hypertarget{classpacket}{\section{packet Class Reference}
+\label{classpacket}\index{packet@{packet}}
+}
+
+
+Describes a packet in the simulated network, which can be one of the types in the enumerated type {\ttfamily packet\-Type}.  
+
+
+
+
+{\ttfamily \#include $<$network.\-h$>$}
+
+Inheritance diagram for packet\-:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classpacket}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{classpacket_ae33ebc35602983d12aa139f050f77938}{packet} ()
+\begin{DoxyCompactList}\small\item\em Default contructor. \end{DoxyCompactList}\item 
+\hyperlink{classpacket_ae65d1c323eff4f7bc1c092d42b52fd30}{packet} (\hyperlink{util_8h_ad875bcb78f9bd8625c5e454cafdc8de7}{packet\-\_\-type} type, const string \&source\-\_\-ip, const string \&dest\-\_\-ip)
+\begin{DoxyCompactList}\small\item\em This constructor infers the size of a packet from the given type, which must be R\-O\-U\-T\-I\-N\-G since there's no parent flow and no sequence number. \end{DoxyCompactList}\item 
+\hyperlink{classpacket_a32d7fad8b9fb8e6b130d6d93fefb675d}{packet} (\hyperlink{util_8h_ad875bcb78f9bd8625c5e454cafdc8de7}{packet\-\_\-type} type, \hyperlink{classnetflow}{netflow} \&parent\-\_\-flow, int seqnum)
+\begin{DoxyCompactList}\small\item\em This constructor infers the size of a packet from the given type, which must be A\-C\-K or F\-L\-O\-W since the source and destination are inferred from a parent flow. \end{DoxyCompactList}\item 
+bool \hyperlink{classpacket_ae85fc39129ba8cc568a56d2b5f7dfa29}{is\-Null\-Packet} () const 
+\begin{DoxyCompactList}\small\item\em Some functions are forced to return a packet value, so the default packet constructor makes packets with ids of 0, and they're considered null in calling functions. \end{DoxyCompactList}\item 
+string \hyperlink{classpacket_a9df0e590a6e0528a44f5109059e67e87}{get\-Source} () const 
+\begin{DoxyCompactList}\small\item\em Getter for the source host of this packet. \end{DoxyCompactList}\item 
+string \hyperlink{classpacket_a1b2e0681850de65dd7cf384a0ac62b36}{get\-Destination} () const 
+\begin{DoxyCompactList}\small\item\em Getter for the destination host of this packet. \end{DoxyCompactList}\item 
+int \hyperlink{classpacket_a73ded904b5e293e7e33ae1a57d470fd5}{get\-Seq} () const 
+\begin{DoxyCompactList}\small\item\em Getter for the sequence number of this packet. \end{DoxyCompactList}\item 
+long \hyperlink{classpacket_a6bd880d868f03dd6ac2ef29053e6612d}{get\-Id} () const 
+\begin{DoxyCompactList}\small\item\em Getter for the unique I\-D of this packet. \end{DoxyCompactList}\item 
+const map$<$ string, double $>$ \& \hyperlink{classpacket_a65ccf9c5fd0833c0070b62204268d533}{get\-Distances} () const 
+\begin{DoxyCompactList}\small\item\em Getter for the distances map. \end{DoxyCompactList}\item 
+void \hyperlink{classpacket_a989bc3f928b4254b6130e286bff83db6}{set\-Distances} (map$<$ string, double $>$ distances)
+\begin{DoxyCompactList}\small\item\em Setter for the distances map. \end{DoxyCompactList}\item 
+\hyperlink{classnetflow}{netflow} $\ast$ \hyperlink{classpacket_aa6a8a41c8147772a01a97c1100b9ed11}{get\-Parent\-Flow} () const 
+\begin{DoxyCompactList}\small\item\em Getter for the parent flow of this packet. \end{DoxyCompactList}\item 
+\hyperlink{util_8h_ad875bcb78f9bd8625c5e454cafdc8de7}{packet\-\_\-type} \hyperlink{classpacket_ae71a8e7630d96485dac3b2a68371caff}{get\-Type} () const 
+\begin{DoxyCompactList}\small\item\em Getter for the type of this packet. \end{DoxyCompactList}\item 
+double \hyperlink{classpacket_a58e64ca03f52a042dca4268c608ca6b2}{get\-Size\-Mb} () const 
+\begin{DoxyCompactList}\small\item\em Getter for the size in megabits of this packet. \end{DoxyCompactList}\item 
+long \hyperlink{classpacket_a936359db71dc4a210e5b53d614cf3b79}{get\-Size\-Bytes} () const 
+\begin{DoxyCompactList}\small\item\em Getter for the size in bytes of this packet. \end{DoxyCompactList}\item 
+string \hyperlink{classpacket_ac5c6ad2cc857a2c93def278a6cb37829}{get\-Type\-String} () const 
+\begin{DoxyCompactList}\small\item\em Getter for the type of this packet as a string. \end{DoxyCompactList}\item 
+double \hyperlink{classpacket_a6deed8840b2e675824633f123b07734b}{get\-Transmit\-Timestamp} () const 
+\begin{DoxyCompactList}\small\item\em Getter for the transmit timestamp for this packet. \end{DoxyCompactList}\item 
+void \hyperlink{classpacket_ad9cf233e7dc54745944934d1aa9adf51}{set\-Transmit\-Timestamp} (double time)
+\begin{DoxyCompactList}\small\item\em Setter for the transmit timestamp. \end{DoxyCompactList}\item 
+virtual void \hyperlink{classpacket_a5f0d34c38a7f075a99cf701c6e9ee5bf}{print\-Helper} (ostream \&os) const 
+\begin{DoxyCompactList}\small\item\em Print helper function which partially overrides the one in {\ttfamily netdevice}. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Static Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+static long \hyperlink{classpacket_adc3b99f39d577549ea3701d4b4de2839}{id\-\_\-gen} = 1
+\begin{DoxyCompactList}\small\item\em Unique I\-D number generator. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Describes a packet in the simulated network, which can be one of the types in the enumerated type {\ttfamily packet\-Type}. 
+
+Note that a real packet would have a payload but this class doesn't provide for one. 
+
+\subsection{Constructor \& Destructor Documentation}
+\hypertarget{classpacket_ae33ebc35602983d12aa139f050f77938}{\index{packet@{packet}!packet@{packet}}
+\index{packet@{packet}!packet@{packet}}
+\subsubsection[{packet}]{\setlength{\rightskip}{0pt plus 5cm}packet\-::packet (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{classpacket_ae33ebc35602983d12aa139f050f77938}
+
+
+Default contructor. 
+
+Sets everything to dummy values. \hypertarget{classpacket_ae65d1c323eff4f7bc1c092d42b52fd30}{\index{packet@{packet}!packet@{packet}}
+\index{packet@{packet}!packet@{packet}}
+\subsubsection[{packet}]{\setlength{\rightskip}{0pt plus 5cm}packet\-::packet (
+\begin{DoxyParamCaption}
+\item[{{\bf packet\-\_\-type}}]{type, }
+\item[{const string \&}]{source\-\_\-ip, }
+\item[{const string \&}]{dest\-\_\-ip}
+\end{DoxyParamCaption}
+)}}\label{classpacket_ae65d1c323eff4f7bc1c092d42b52fd30}
+
+
+This constructor infers the size of a packet from the given type, which must be R\-O\-U\-T\-I\-N\-G since there's no parent flow and no sequence number. 
+
+and no sequence number.
+
+
+\begin{DoxyParams}{Parameters}
+{\em type} & one of the values of the {\ttfamily packet\-\_\-type} enum, but must be R\-O\-U\-T\-I\-N\-G for this constructor \\
+\hline
+{\em source\-\_\-ip} & the N\-A\-M\-E (since this simulation uses names, not I\-Ps) of the original source which must be a router \\
+\hline
+{\em dest\-\_\-ip} & the N\-A\-M\-E of the ultimate destination, which must be a router\\
+\hline
+\end{DoxyParams}
+\begin{DoxyWarning}{Warning}
+assertion triggered if the packet type isn't R\-O\-U\-T\-I\-N\-G 
+\end{DoxyWarning}
+\hypertarget{classpacket_a32d7fad8b9fb8e6b130d6d93fefb675d}{\index{packet@{packet}!packet@{packet}}
+\index{packet@{packet}!packet@{packet}}
+\subsubsection[{packet}]{\setlength{\rightskip}{0pt plus 5cm}packet\-::packet (
+\begin{DoxyParamCaption}
+\item[{{\bf packet\-\_\-type}}]{type, }
+\item[{{\bf netflow} \&}]{parent\-\_\-flow, }
+\item[{int}]{seqnum}
+\end{DoxyParamCaption}
+)}}\label{classpacket_a32d7fad8b9fb8e6b130d6d93fefb675d}
+
+
+This constructor infers the size of a packet from the given type, which must be A\-C\-K or F\-L\-O\-W since the source and destination are inferred from a parent flow. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em type} & one of the values of the {\ttfamily packet\-\_\-type} enum, but must be R\-O\-U\-T\-I\-N\-G for this constructor \\
+\hline
+{\em parent\-\_\-flow} & flow to which this packet belongs. A\-C\-K and F\-L\-O\-W packets belong to flows. \\
+\hline
+{\em seqnum} & sequence number for this packet, where the first packet in flow is numbered 1. Pass in anything (or {\ttfamily S\-E\-Q\-N\-U\-M\-\_\-\-F\-O\-R\-\_\-\-N\-O\-N\-F\-L\-O\-W\-S}) for A\-C\-K packets; their seqnums are just set to {\ttfamily S\-E\-Q\-N\-U\-M\-\_\-\-F\-O\-R\-\_\-\-N\-O\-N\-F\-L\-O\-W\-S}.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyWarning}{Warning}
+assertion is triggered if the packet type is not A\-C\-K or F\-L\-O\-W. 
+\end{DoxyWarning}
+
+
+\subsection{Member Function Documentation}
+\hypertarget{classpacket_a1b2e0681850de65dd7cf384a0ac62b36}{\index{packet@{packet}!get\-Destination@{get\-Destination}}
+\index{get\-Destination@{get\-Destination}!packet@{packet}}
+\subsubsection[{get\-Destination}]{\setlength{\rightskip}{0pt plus 5cm}string packet\-::get\-Destination (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classpacket_a1b2e0681850de65dd7cf384a0ac62b36}
+
+
+Getter for the destination host of this packet. 
+
+\begin{DoxyReturn}{Returns}
+destination host name 
+\end{DoxyReturn}
+\hypertarget{classpacket_a65ccf9c5fd0833c0070b62204268d533}{\index{packet@{packet}!get\-Distances@{get\-Distances}}
+\index{get\-Distances@{get\-Distances}!packet@{packet}}
+\subsubsection[{get\-Distances}]{\setlength{\rightskip}{0pt plus 5cm}const map$<$ string, double $>$ \& packet\-::get\-Distances (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classpacket_a65ccf9c5fd0833c0070b62204268d533}
+
+
+Getter for the distances map. 
+
+\begin{DoxyReturn}{Returns}
+distnaces map 
+\end{DoxyReturn}
+\hypertarget{classpacket_a6bd880d868f03dd6ac2ef29053e6612d}{\index{packet@{packet}!get\-Id@{get\-Id}}
+\index{get\-Id@{get\-Id}!packet@{packet}}
+\subsubsection[{get\-Id}]{\setlength{\rightskip}{0pt plus 5cm}long packet\-::get\-Id (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classpacket_a6bd880d868f03dd6ac2ef29053e6612d}
+
+
+Getter for the unique I\-D of this packet. 
+
+\begin{DoxyReturn}{Returns}
+I\-D number 
+\end{DoxyReturn}
+\hypertarget{classpacket_aa6a8a41c8147772a01a97c1100b9ed11}{\index{packet@{packet}!get\-Parent\-Flow@{get\-Parent\-Flow}}
+\index{get\-Parent\-Flow@{get\-Parent\-Flow}!packet@{packet}}
+\subsubsection[{get\-Parent\-Flow}]{\setlength{\rightskip}{0pt plus 5cm}{\bf netflow} $\ast$ packet\-::get\-Parent\-Flow (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classpacket_aa6a8a41c8147772a01a97c1100b9ed11}
+
+
+Getter for the parent flow of this packet. 
+
+\begin{DoxyReturn}{Returns}
+parent flow 
+\end{DoxyReturn}
+\hypertarget{classpacket_a73ded904b5e293e7e33ae1a57d470fd5}{\index{packet@{packet}!get\-Seq@{get\-Seq}}
+\index{get\-Seq@{get\-Seq}!packet@{packet}}
+\subsubsection[{get\-Seq}]{\setlength{\rightskip}{0pt plus 5cm}int packet\-::get\-Seq (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classpacket_a73ded904b5e293e7e33ae1a57d470fd5}
+
+
+Getter for the sequence number of this packet. 
+
+\begin{DoxyReturn}{Returns}
+sequence number 
+\end{DoxyReturn}
+\hypertarget{classpacket_a936359db71dc4a210e5b53d614cf3b79}{\index{packet@{packet}!get\-Size\-Bytes@{get\-Size\-Bytes}}
+\index{get\-Size\-Bytes@{get\-Size\-Bytes}!packet@{packet}}
+\subsubsection[{get\-Size\-Bytes}]{\setlength{\rightskip}{0pt plus 5cm}long packet\-::get\-Size\-Bytes (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classpacket_a936359db71dc4a210e5b53d614cf3b79}
+
+
+Getter for the size in bytes of this packet. 
+
+\begin{DoxyReturn}{Returns}
+size in bytes. 
+\end{DoxyReturn}
+\hypertarget{classpacket_a58e64ca03f52a042dca4268c608ca6b2}{\index{packet@{packet}!get\-Size\-Mb@{get\-Size\-Mb}}
+\index{get\-Size\-Mb@{get\-Size\-Mb}!packet@{packet}}
+\subsubsection[{get\-Size\-Mb}]{\setlength{\rightskip}{0pt plus 5cm}double packet\-::get\-Size\-Mb (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classpacket_a58e64ca03f52a042dca4268c608ca6b2}
+
+
+Getter for the size in megabits of this packet. 
+
+\begin{DoxyReturn}{Returns}
+size in megabits. 
+\end{DoxyReturn}
+\hypertarget{classpacket_a9df0e590a6e0528a44f5109059e67e87}{\index{packet@{packet}!get\-Source@{get\-Source}}
+\index{get\-Source@{get\-Source}!packet@{packet}}
+\subsubsection[{get\-Source}]{\setlength{\rightskip}{0pt plus 5cm}string packet\-::get\-Source (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classpacket_a9df0e590a6e0528a44f5109059e67e87}
+
+
+Getter for the source host of this packet. 
+
+\begin{DoxyReturn}{Returns}
+source host name 
+\end{DoxyReturn}
+\hypertarget{classpacket_a6deed8840b2e675824633f123b07734b}{\index{packet@{packet}!get\-Transmit\-Timestamp@{get\-Transmit\-Timestamp}}
+\index{get\-Transmit\-Timestamp@{get\-Transmit\-Timestamp}!packet@{packet}}
+\subsubsection[{get\-Transmit\-Timestamp}]{\setlength{\rightskip}{0pt plus 5cm}double packet\-::get\-Transmit\-Timestamp (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classpacket_a6deed8840b2e675824633f123b07734b}
+
+
+Getter for the transmit timestamp for this packet. 
+
+\begin{DoxyReturn}{Returns}
+transmit timestamp 
+\end{DoxyReturn}
+\hypertarget{classpacket_ae71a8e7630d96485dac3b2a68371caff}{\index{packet@{packet}!get\-Type@{get\-Type}}
+\index{get\-Type@{get\-Type}!packet@{packet}}
+\subsubsection[{get\-Type}]{\setlength{\rightskip}{0pt plus 5cm}{\bf packet\-\_\-type} packet\-::get\-Type (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classpacket_ae71a8e7630d96485dac3b2a68371caff}
+
+
+Getter for the type of this packet. 
+
+\begin{DoxyReturn}{Returns}
+packet type 
+\end{DoxyReturn}
+\hypertarget{classpacket_ac5c6ad2cc857a2c93def278a6cb37829}{\index{packet@{packet}!get\-Type\-String@{get\-Type\-String}}
+\index{get\-Type\-String@{get\-Type\-String}!packet@{packet}}
+\subsubsection[{get\-Type\-String}]{\setlength{\rightskip}{0pt plus 5cm}string packet\-::get\-Type\-String (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classpacket_ac5c6ad2cc857a2c93def278a6cb37829}
+
+
+Getter for the type of this packet as a string. 
+
+\begin{DoxyReturn}{Returns}
+type as a string. 
+\end{DoxyReturn}
+\hypertarget{classpacket_ae85fc39129ba8cc568a56d2b5f7dfa29}{\index{packet@{packet}!is\-Null\-Packet@{is\-Null\-Packet}}
+\index{is\-Null\-Packet@{is\-Null\-Packet}!packet@{packet}}
+\subsubsection[{is\-Null\-Packet}]{\setlength{\rightskip}{0pt plus 5cm}bool packet\-::is\-Null\-Packet (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classpacket_ae85fc39129ba8cc568a56d2b5f7dfa29}
+
+
+Some functions are forced to return a packet value, so the default packet constructor makes packets with ids of 0, and they're considered null in calling functions. 
+
+This function just checks if a given packet is a \char`\"{}fake\char`\"{} packet.
+
+\begin{DoxyReturn}{Returns}
+true if null packets 
+\end{DoxyReturn}
+\hypertarget{classpacket_a5f0d34c38a7f075a99cf701c6e9ee5bf}{\index{packet@{packet}!print\-Helper@{print\-Helper}}
+\index{print\-Helper@{print\-Helper}!packet@{packet}}
+\subsubsection[{print\-Helper}]{\setlength{\rightskip}{0pt plus 5cm}void packet\-::print\-Helper (
+\begin{DoxyParamCaption}
+\item[{ostream \&}]{os}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [virtual]}}}\label{classpacket_a5f0d34c38a7f075a99cf701c6e9ee5bf}
+
+
+Print helper function which partially overrides the one in {\ttfamily netdevice}. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em os} & The output stream to which to write. \\
+\hline
+\end{DoxyParams}
+\hypertarget{classpacket_a989bc3f928b4254b6130e286bff83db6}{\index{packet@{packet}!set\-Distances@{set\-Distances}}
+\index{set\-Distances@{set\-Distances}!packet@{packet}}
+\subsubsection[{set\-Distances}]{\setlength{\rightskip}{0pt plus 5cm}void packet\-::set\-Distances (
+\begin{DoxyParamCaption}
+\item[{map$<$ string, double $>$}]{distances}
+\end{DoxyParamCaption}
+)}}\label{classpacket_a989bc3f928b4254b6130e286bff83db6}
+
+
+Setter for the distances map. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em distances} & \\
+\hline
+\end{DoxyParams}
+\hypertarget{classpacket_ad9cf233e7dc54745944934d1aa9adf51}{\index{packet@{packet}!set\-Transmit\-Timestamp@{set\-Transmit\-Timestamp}}
+\index{set\-Transmit\-Timestamp@{set\-Transmit\-Timestamp}!packet@{packet}}
+\subsubsection[{set\-Transmit\-Timestamp}]{\setlength{\rightskip}{0pt plus 5cm}void packet\-::set\-Transmit\-Timestamp (
+\begin{DoxyParamCaption}
+\item[{double}]{time}
+\end{DoxyParamCaption}
+)}}\label{classpacket_ad9cf233e7dc54745944934d1aa9adf51}
+
+
+Setter for the transmit timestamp. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em time} & \\
+\hline
+\end{DoxyParams}
+
+
+\subsection{Member Data Documentation}
+\hypertarget{classpacket_adc3b99f39d577549ea3701d4b4de2839}{\index{packet@{packet}!id\-\_\-gen@{id\-\_\-gen}}
+\index{id\-\_\-gen@{id\-\_\-gen}!packet@{packet}}
+\subsubsection[{id\-\_\-gen}]{\setlength{\rightskip}{0pt plus 5cm}long packet\-::id\-\_\-gen = 1\hspace{0.3cm}{\ttfamily [static]}}}\label{classpacket_adc3b99f39d577549ea3701d4b4de2839}
+
+
+Unique I\-D number generator. 
+
+Initialized in corresponding cpp file. 
+
+The documentation for this class was generated from the following files\-:\begin{DoxyCompactItemize}
+\item 
+src/\hyperlink{network_8h}{network.\-h}\item 
+src/network.\-cpp\end{DoxyCompactItemize}

@@ -1,0 +1,762 @@
+\hypertarget{classnetflow}{\section{netflow Class Reference}
+\label{classnetflow}\index{netflow@{netflow}}
+}
+
+
+Represents a flow in a simple network.  
+
+
+
+
+{\ttfamily \#include $<$network.\-h$>$}
+
+Inheritance diagram for netflow\-:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classnetflow}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{classnetflow_aefd21ce2f7c362163e51776672e1ebeb}{netflow} (string name, double start\-\_\-time, double size\-\_\-mb, \hyperlink{classnethost}{nethost} \&source, \hyperlink{classnethost}{nethost} \&destination, bool using\-F\-A\-S\-T, \hyperlink{classsimulation}{simulation} \&sim)
+\begin{DoxyCompactList}\small\item\em Initializes the flow's basic attributes as well as attributes required to perform T\-C\-P Reno transmissions, like window size, last A\-C\-K seen, number of duplicate A\-C\-Ks, etc. \end{DoxyCompactList}\item 
+\hyperlink{classnetflow_ac64edff00ca0ff62217243ce8abb94e6}{netflow} (string name, double start\-\_\-time, double size\-\_\-mb, \hyperlink{classnethost}{nethost} \&source, \hyperlink{classnethost}{nethost} \&destination, \hyperlink{classsimulation}{simulation} \&sim)
+\begin{DoxyCompactList}\small\item\em Same as other constructor but {\ttfamily using\-F\-A\-S\-T} is set to false. \end{DoxyCompactList}\item 
+double \hyperlink{classnetflow_a6c89dfa31291104fd5207f10a4bb424b}{get\-Start\-Time\-Sec} () const 
+\begin{DoxyCompactList}\small\item\em Getter for start time in seconds. \end{DoxyCompactList}\item 
+double \hyperlink{classnetflow_a4ca3539d49814e6ffaf46c9db28d4cb1}{get\-Start\-Time\-Ms} () const 
+\begin{DoxyCompactList}\small\item\em Getter for start time in milliseconds. \end{DoxyCompactList}\item 
+double \hyperlink{classnetflow_a8afb866e40738f7038d18bdb9a572500}{get\-Size\-Mb} () const 
+\begin{DoxyCompactList}\small\item\em Getter for size in megabits. \end{DoxyCompactList}\item 
+\hyperlink{classnethost}{nethost} $\ast$ \hyperlink{classnetflow_a07af3290478934720fd1500f89c5586d}{get\-Destination} () const 
+\begin{DoxyCompactList}\small\item\em Getter for pointer to destination host. \end{DoxyCompactList}\item 
+\hyperlink{classnethost}{nethost} $\ast$ \hyperlink{classnetflow_a8a2f81127fcecaafeb83570dfb77d669}{get\-Source} () const 
+\begin{DoxyCompactList}\small\item\em Getter for pointer to source host. \end{DoxyCompactList}\item 
+int \hyperlink{classnetflow_a248e9f4bf73f873608bed283a7897340}{get\-Pkt\-Tally} () const 
+\begin{DoxyCompactList}\small\item\em Getter for the count of flow packets received by destination within the interval. \end{DoxyCompactList}\item 
+double \hyperlink{classnetflow_a21b2e6d775c5d8eab0adff3f238a41fc}{get\-Left\-Time} () const 
+\begin{DoxyCompactList}\small\item\em Getter for the start time of the packet count interval. \end{DoxyCompactList}\item 
+double \hyperlink{classnetflow_ad70e1973aa9856ec2eea2f54c578acc4}{get\-Right\-Time} () const 
+\begin{DoxyCompactList}\small\item\em Getter for the ending time of the packet count interval. \end{DoxyCompactList}\item 
+int \hyperlink{classnetflow_afd6c72736a88766d407f3a66871996bb}{get\-Num\-Total\-Packets} () const 
+\begin{DoxyCompactList}\small\item\em Getter for number of packets used in a flawless transmission of this flow. \end{DoxyCompactList}\item 
+double \hyperlink{classnetflow_a02e309d963c2bca12b77b66b890b9c66}{get\-Timeout\-Length\-Ms} () const 
+\begin{DoxyCompactList}\small\item\em Getter for the dynamically adjusted timeout length in milliseconds. \end{DoxyCompactList}\item 
+int \hyperlink{classnetflow_ac27a75c664720d1da286ec61906564db}{get\-Highest\-Ack\-Seqnum} () const 
+\begin{DoxyCompactList}\small\item\em Getter for the sequence number of the last A\-C\-K seen. \end{DoxyCompactList}\item 
+int \hyperlink{classnetflow_abee82205b8482a99036148d7ef869ae2}{get\-Num\-Duplicate\-Acks} () const 
+\begin{DoxyCompactList}\small\item\em Getter for the number of duplicate A\-C\-Ks seen so far. \end{DoxyCompactList}\item 
+double \hyperlink{classnetflow_a4825a3c57231c9f474e9cd1a76e60f66}{get\-Avg\-R\-T\-T} () const 
+\begin{DoxyCompactList}\small\item\em Getter for the average round trip time. \end{DoxyCompactList}\item 
+double \hyperlink{classnetflow_a58b013589d73c37349547c37a35db128}{get\-Min\-R\-T\-T} () const 
+\begin{DoxyCompactList}\small\item\em Getter for the minimum round trip time seen so far for this flow. \end{DoxyCompactList}\item 
+bool \hyperlink{classnetflow_ababb5a520cb2b826ad906bd9cade0ecb}{is\-Using\-F\-A\-S\-T} () const 
+\begin{DoxyCompactList}\small\item\em True if using T\-C\-P F\-A\-S\-T, false if Tahoe. \end{DoxyCompactList}\item 
+const map$<$ int, double $>$ \& \hyperlink{classnetflow_a08f6d8d01f51c861a00710a533f3b604}{get\-Round\-Trip\-Times} () const 
+\begin{DoxyCompactList}\small\item\em Getter for a const reference to the round-\/trip times map. \end{DoxyCompactList}\item 
+double \hyperlink{classnetflow_aa73fac7bfc0f25946e7b345f46115dc9}{get\-Window\-Size} () const 
+\begin{DoxyCompactList}\small\item\em Getter for the current window size. \end{DoxyCompactList}\item 
+int \hyperlink{classnetflow_a7c44701ace1f15dbef9227fb06f419af}{get\-Window\-Start} () const 
+\begin{DoxyCompactList}\small\item\em Getter for the sequence number at which the current window starts. \end{DoxyCompactList}\item 
+double \hyperlink{classnetflow_a7b2904e3229ddb7baba23c1c2abd4941}{get\-Lin\-Growth\-Winsize\-Threshold} () const 
+\begin{DoxyCompactList}\small\item\em Getter for the linear growth threshold (i.\-e., the window size after which the window size will be increased as 1/n instead of 1 per A\-C\-K) \end{DoxyCompactList}\item 
+virtual void \hyperlink{classnetflow_acbcb512e7ba8fb2f4dfb5c49f792b837}{print\-Helper} (ostream \&os) const 
+\begin{DoxyCompactList}\small\item\em Print helper function which partially overrides the one in netdevice. \end{DoxyCompactList}\item 
+double \hyperlink{classnetflow_a2f30ed4c8b1934dc70cad568b009384b}{get\-Flow\-Rate\-Bytes\-Per\-Sec} () const 
+\begin{DoxyCompactList}\small\item\em Getter for the flow rate in bytes per second. \end{DoxyCompactList}\item 
+double \hyperlink{classnetflow_a8e05bddc18878c14b815dba199996aa0}{get\-Flow\-Rate\-Mbps} (double time) const 
+\begin{DoxyCompactList}\small\item\em Getter for the flow rate in megabits per second. \end{DoxyCompactList}\item 
+double \hyperlink{classnetflow_ade54f5be8b44ca85de0f1b453857519d}{get\-Flow\-Percentage} () const 
+\begin{DoxyCompactList}\small\item\em Getter for the percentage of flow that has been transmitted so far Useful for debugging; can be graphed along with other flow metrics. \end{DoxyCompactList}\item 
+double \hyperlink{classnetflow_af9eaf8bcc1f369201b400ca8ffa98f34}{get\-Pkt\-Delay} (double curr\-Time) const 
+\begin{DoxyCompactList}\small\item\em Packet delay is defined as time elapsed since packet is send and acknowledgment is received. \end{DoxyCompactList}\item 
+void \hyperlink{classnetflow_afb017e85595e2d18ed839c26c5a37289}{set\-Source} (\hyperlink{classnethost}{nethost} \&source)
+\begin{DoxyCompactList}\small\item\em Setter for the source host. \end{DoxyCompactList}\item 
+void \hyperlink{classnetflow_a5ce0bbc79c6400fe89da80487f509415}{set\-Destination} (\hyperlink{classnethost}{nethost} \&destination)
+\begin{DoxyCompactList}\small\item\em Setter for the destination host. \end{DoxyCompactList}\item 
+void \hyperlink{classnetflow_a1b5aadc26000de914d77a0f18c3af2a9}{update\-Pkt\-Tally} (double time)
+\begin{DoxyCompactList}\small\item\em Updates packet tally depending on whether {\ttfamily \hyperlink{classreceive__packet__event}{receive\-\_\-packet\-\_\-event}} occurs during rate\-\_\-interval. \end{DoxyCompactList}\item 
+void \hyperlink{classnetflow_a9f3ef1670c996d54dbd32a1c941e2d83}{set\-F\-A\-S\-T\-Window\-Size} (double new\-\_\-size)
+\begin{DoxyCompactList}\small\item\em Changes a flow's window size during an \hyperlink{classupdate__window__event}{update\-\_\-window\-\_\-event}. \end{DoxyCompactList}\item 
+void \hyperlink{classnetflow_ad91146f3b19e8d2812e297714a4ef5d4}{set\-Left\-Time} (double new\-Time)
+\begin{DoxyCompactList}\small\item\em Sets left time. \end{DoxyCompactList}\item 
+void \hyperlink{classnetflow_a09b799f9166e0df50091a73516063c64}{set\-Right\-Time} (double new\-Time)
+\begin{DoxyCompactList}\small\item\em Sets right time. \end{DoxyCompactList}\item 
+void \hyperlink{classnetflow_a5865695e5360027ce36e047b3368ff25}{register\-Ack\-Event} (int seq, double time)
+\begin{DoxyCompactList}\small\item\em Makes an {\ttfamily \hyperlink{classack__event}{ack\-\_\-event}} and puts it on the simulation's event queue. \end{DoxyCompactList}\item 
+vector$<$ \hyperlink{classpacket}{packet} $>$ \hyperlink{classnetflow_ad9974ffa5f9b264b561355c07bc0bd9f}{peek\-Outstanding\-Packets} ()
+\begin{DoxyCompactList}\small\item\em Gets all the packets in this window that must be sent. \end{DoxyCompactList}\item 
+vector$<$ \hyperlink{classpacket}{packet} $>$ \hyperlink{classnetflow_ae072b9c8069401bbc45e6ad9853eb45f}{pop\-Outstanding\-Packets} (double start\-\_\-time, double link\-Free\-At)
+\begin{DoxyCompactList}\small\item\em Gets all the packets in this window that must be sent. \end{DoxyCompactList}\item 
+void \hyperlink{classnetflow_a7d2582540a1cc34a7fc5b1c6ce41d329}{received\-Ack} (\hyperlink{classpacket}{packet} \&pkt, double end\-\_\-time\-\_\-ms, double link\-Free\-At\-Time)
+\begin{DoxyCompactList}\small\item\em When an A\-C\-K is received (it's assumed that the packet is arriving at this flow's source) this function must be called so the window will slide and resize, so duplicate A\-C\-Ks will register, and so the timeout length will adjust. \end{DoxyCompactList}\item 
+void \hyperlink{classnetflow_a3fab65a6f9fbfe3f54af066d260cd0b8}{received\-Flow\-Packet} (\hyperlink{classpacket}{packet} \&pkt, double arrival\-\_\-time)
+\begin{DoxyCompactList}\small\item\em When a F\-L\-O\-W packet is received (it's assumed that the packet is arriving at this flow's destination) this function should be called to make and queue an immediate duplicate\-\_\-ack\-\_\-event. \end{DoxyCompactList}\item 
+void \hyperlink{classnetflow_ad914b2fc48fd4727464619823b09a856}{timeout\-Occurred} ()
+\begin{DoxyCompactList}\small\item\em This function should be called after a timeout so the window size can change accordingly and so the old \hyperlink{classtimeout__event}{timeout\-\_\-event} can be cancelled. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Static Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+static const int \hyperlink{classnetflow_ace7122626410ab50fbe69dcc0f77dcb0}{F\-A\-S\-T\-\_\-\-R\-E\-T\-R\-A\-N\-S\-M\-I\-T\-\_\-\-D\-U\-P\-L\-I\-C\-A\-T\-E\-\_\-\-A\-C\-K\-\_\-\-T\-H\-R\-E\-S\-H\-O\-L\-D} = 3
+\begin{DoxyCompactList}\small\item\em Number of duplicate A\-C\-Ks before fast retransmit is used. \end{DoxyCompactList}\item 
+\hypertarget{classnetflow_a7dd619873b5d292074adc5d4ec0aa103}{static constexpr double \hyperlink{classnetflow_a7dd619873b5d292074adc5d4ec0aa103}{D\-E\-F\-A\-U\-L\-T\-\_\-\-I\-N\-I\-T\-I\-A\-L\-\_\-\-T\-I\-M\-E\-O\-U\-T} = 1000.\-0}\label{classnetflow_a7dd619873b5d292074adc5d4ec0aa103}
+
+\begin{DoxyCompactList}\small\item\em The timeout value for the very first packet sent in a flow; the timeout value is later seeded with the first packet's R\-T\-T and then changed with recursive average and deviation algorithms. \end{DoxyCompactList}\item 
+static constexpr double \hyperlink{classnetflow_a0461fac67c5f304973461a1644b58dd3}{B\-\_\-\-T\-I\-M\-E\-O\-U\-T\-\_\-\-C\-A\-L\-C} = 0.\-1
+\begin{DoxyCompactList}\small\item\em The constant 'b' from the recursive average and std formulas. \end{DoxyCompactList}\item 
+\hypertarget{classnetflow_abfab6219768889c4b22a382d3be2147d}{static constexpr double \hyperlink{classnetflow_abfab6219768889c4b22a382d3be2147d}{T\-I\-M\-E\-\_\-\-E\-P\-S\-I\-L\-O\-N} = 0.\-0000000001}\label{classnetflow_abfab6219768889c4b22a382d3be2147d}
+
+\begin{DoxyCompactList}\small\item\em A small fraction of a millisecond used to order timeout events and regular send packet events. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Represents a flow in a simple network. 
+
+Uses various constants defined in {\ttfamily util.\-cpp}. 
+
+\subsection{Constructor \& Destructor Documentation}
+\hypertarget{classnetflow_aefd21ce2f7c362163e51776672e1ebeb}{\index{netflow@{netflow}!netflow@{netflow}}
+\index{netflow@{netflow}!netflow@{netflow}}
+\subsubsection[{netflow}]{\setlength{\rightskip}{0pt plus 5cm}netflow\-::netflow (
+\begin{DoxyParamCaption}
+\item[{string}]{name, }
+\item[{double}]{start\-\_\-time, }
+\item[{double}]{size\-\_\-mb, }
+\item[{{\bf nethost} \&}]{source, }
+\item[{{\bf nethost} \&}]{destination, }
+\item[{bool}]{using\-F\-A\-S\-T, }
+\item[{{\bf simulation} \&}]{sim}
+\end{DoxyParamCaption}
+)}}\label{classnetflow_aefd21ce2f7c362163e51776672e1ebeb}
+
+
+Initializes the flow's basic attributes as well as attributes required to perform T\-C\-P Reno transmissions, like window size, last A\-C\-K seen, number of duplicate A\-C\-Ks, etc. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em name} & of this flow \\
+\hline
+{\em start\-\_\-time} & in seconds at which this flow starts \\
+\hline
+{\em size\-\_\-mb} & size of this flow in megabits \\
+\hline
+{\em source} & host at which this flow starts \\
+\hline
+{\em destination} & host at which this flow ends \\
+\hline
+{\em using\-F\-A\-S\-T} & true if using F\-A\-S\-T T\-C\-P, false if using T\-C\-P Tahoe \\
+\hline
+{\em sim} & \\
+\hline
+\end{DoxyParams}
+\hypertarget{classnetflow_ac64edff00ca0ff62217243ce8abb94e6}{\index{netflow@{netflow}!netflow@{netflow}}
+\index{netflow@{netflow}!netflow@{netflow}}
+\subsubsection[{netflow}]{\setlength{\rightskip}{0pt plus 5cm}netflow\-::netflow (
+\begin{DoxyParamCaption}
+\item[{string}]{name, }
+\item[{double}]{start\-\_\-time, }
+\item[{double}]{size\-\_\-mb, }
+\item[{{\bf nethost} \&}]{source, }
+\item[{{\bf nethost} \&}]{destination, }
+\item[{{\bf simulation} \&}]{sim}
+\end{DoxyParamCaption}
+)}}\label{classnetflow_ac64edff00ca0ff62217243ce8abb94e6}
+
+
+Same as other constructor but {\ttfamily using\-F\-A\-S\-T} is set to false. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em name} & of this flow \\
+\hline
+{\em start\-\_\-time} & in seconds at which this flow starts \\
+\hline
+{\em size\-\_\-mb} & size of this flow in megabits \\
+\hline
+{\em source} & host at which this flow starts \\
+\hline
+{\em destination} & host at which this flow ends \\
+\hline
+{\em sim} & \\
+\hline
+\end{DoxyParams}
+
+
+\subsection{Member Function Documentation}
+\hypertarget{classnetflow_a4825a3c57231c9f474e9cd1a76e60f66}{\index{netflow@{netflow}!get\-Avg\-R\-T\-T@{get\-Avg\-R\-T\-T}}
+\index{get\-Avg\-R\-T\-T@{get\-Avg\-R\-T\-T}!netflow@{netflow}}
+\subsubsection[{get\-Avg\-R\-T\-T}]{\setlength{\rightskip}{0pt plus 5cm}double netflow\-::get\-Avg\-R\-T\-T (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classnetflow_a4825a3c57231c9f474e9cd1a76e60f66}
+
+
+Getter for the average round trip time. 
+
+\begin{DoxyReturn}{Returns}
+average R\-T\-T 
+\end{DoxyReturn}
+\hypertarget{classnetflow_a07af3290478934720fd1500f89c5586d}{\index{netflow@{netflow}!get\-Destination@{get\-Destination}}
+\index{get\-Destination@{get\-Destination}!netflow@{netflow}}
+\subsubsection[{get\-Destination}]{\setlength{\rightskip}{0pt plus 5cm}{\bf nethost} $\ast$ netflow\-::get\-Destination (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classnetflow_a07af3290478934720fd1500f89c5586d}
+
+
+Getter for pointer to destination host. 
+
+\begin{DoxyReturn}{Returns}
+pointer to destination host. 
+\end{DoxyReturn}
+\hypertarget{classnetflow_ade54f5be8b44ca85de0f1b453857519d}{\index{netflow@{netflow}!get\-Flow\-Percentage@{get\-Flow\-Percentage}}
+\index{get\-Flow\-Percentage@{get\-Flow\-Percentage}!netflow@{netflow}}
+\subsubsection[{get\-Flow\-Percentage}]{\setlength{\rightskip}{0pt plus 5cm}double netflow\-::get\-Flow\-Percentage (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classnetflow_ade54f5be8b44ca85de0f1b453857519d}
+
+
+Getter for the percentage of flow that has been transmitted so far Useful for debugging; can be graphed along with other flow metrics. 
+
+\begin{DoxyReturn}{Returns}
+the percentage of the flow that's been completed. 
+\end{DoxyReturn}
+\hypertarget{classnetflow_a2f30ed4c8b1934dc70cad568b009384b}{\index{netflow@{netflow}!get\-Flow\-Rate\-Bytes\-Per\-Sec@{get\-Flow\-Rate\-Bytes\-Per\-Sec}}
+\index{get\-Flow\-Rate\-Bytes\-Per\-Sec@{get\-Flow\-Rate\-Bytes\-Per\-Sec}!netflow@{netflow}}
+\subsubsection[{get\-Flow\-Rate\-Bytes\-Per\-Sec}]{\setlength{\rightskip}{0pt plus 5cm}double netflow\-::get\-Flow\-Rate\-Bytes\-Per\-Sec (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classnetflow_a2f30ed4c8b1934dc70cad568b009384b}
+
+
+Getter for the flow rate in bytes per second. 
+
+\begin{DoxyReturn}{Returns}
+flow rate in bytes/sec. 
+\end{DoxyReturn}
+\hypertarget{classnetflow_a8e05bddc18878c14b815dba199996aa0}{\index{netflow@{netflow}!get\-Flow\-Rate\-Mbps@{get\-Flow\-Rate\-Mbps}}
+\index{get\-Flow\-Rate\-Mbps@{get\-Flow\-Rate\-Mbps}!netflow@{netflow}}
+\subsubsection[{get\-Flow\-Rate\-Mbps}]{\setlength{\rightskip}{0pt plus 5cm}double netflow\-::get\-Flow\-Rate\-Mbps (
+\begin{DoxyParamCaption}
+\item[{double}]{time}
+\end{DoxyParamCaption}
+) const}}\label{classnetflow_a8e05bddc18878c14b815dba199996aa0}
+
+
+Getter for the flow rate in megabits per second. 
+
+\begin{DoxyReturn}{Returns}
+flow rate. 
+\end{DoxyReturn}
+\hypertarget{classnetflow_ac27a75c664720d1da286ec61906564db}{\index{netflow@{netflow}!get\-Highest\-Ack\-Seqnum@{get\-Highest\-Ack\-Seqnum}}
+\index{get\-Highest\-Ack\-Seqnum@{get\-Highest\-Ack\-Seqnum}!netflow@{netflow}}
+\subsubsection[{get\-Highest\-Ack\-Seqnum}]{\setlength{\rightskip}{0pt plus 5cm}int netflow\-::get\-Highest\-Ack\-Seqnum (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classnetflow_ac27a75c664720d1da286ec61906564db}
+
+
+Getter for the sequence number of the last A\-C\-K seen. 
+
+\begin{DoxyReturn}{Returns}
+last A\-C\-K's sequence number. 
+\end{DoxyReturn}
+\hypertarget{classnetflow_a21b2e6d775c5d8eab0adff3f238a41fc}{\index{netflow@{netflow}!get\-Left\-Time@{get\-Left\-Time}}
+\index{get\-Left\-Time@{get\-Left\-Time}!netflow@{netflow}}
+\subsubsection[{get\-Left\-Time}]{\setlength{\rightskip}{0pt plus 5cm}double netflow\-::get\-Left\-Time (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classnetflow_a21b2e6d775c5d8eab0adff3f238a41fc}
+
+
+Getter for the start time of the packet count interval. 
+
+\begin{DoxyReturn}{Returns}
+left side of pkt count interval 
+\end{DoxyReturn}
+\hypertarget{classnetflow_a7b2904e3229ddb7baba23c1c2abd4941}{\index{netflow@{netflow}!get\-Lin\-Growth\-Winsize\-Threshold@{get\-Lin\-Growth\-Winsize\-Threshold}}
+\index{get\-Lin\-Growth\-Winsize\-Threshold@{get\-Lin\-Growth\-Winsize\-Threshold}!netflow@{netflow}}
+\subsubsection[{get\-Lin\-Growth\-Winsize\-Threshold}]{\setlength{\rightskip}{0pt plus 5cm}double netflow\-::get\-Lin\-Growth\-Winsize\-Threshold (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classnetflow_a7b2904e3229ddb7baba23c1c2abd4941}
+
+
+Getter for the linear growth threshold (i.\-e., the window size after which the window size will be increased as 1/n instead of 1 per A\-C\-K) 
+
+\begin{DoxyReturn}{Returns}
+linear growth window size threshold 
+\end{DoxyReturn}
+\hypertarget{classnetflow_a58b013589d73c37349547c37a35db128}{\index{netflow@{netflow}!get\-Min\-R\-T\-T@{get\-Min\-R\-T\-T}}
+\index{get\-Min\-R\-T\-T@{get\-Min\-R\-T\-T}!netflow@{netflow}}
+\subsubsection[{get\-Min\-R\-T\-T}]{\setlength{\rightskip}{0pt plus 5cm}double netflow\-::get\-Min\-R\-T\-T (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classnetflow_a58b013589d73c37349547c37a35db128}
+
+
+Getter for the minimum round trip time seen so far for this flow. 
+
+\begin{DoxyReturn}{Returns}
+min R\-T\-T 
+\end{DoxyReturn}
+\hypertarget{classnetflow_abee82205b8482a99036148d7ef869ae2}{\index{netflow@{netflow}!get\-Num\-Duplicate\-Acks@{get\-Num\-Duplicate\-Acks}}
+\index{get\-Num\-Duplicate\-Acks@{get\-Num\-Duplicate\-Acks}!netflow@{netflow}}
+\subsubsection[{get\-Num\-Duplicate\-Acks}]{\setlength{\rightskip}{0pt plus 5cm}int netflow\-::get\-Num\-Duplicate\-Acks (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classnetflow_abee82205b8482a99036148d7ef869ae2}
+
+
+Getter for the number of duplicate A\-C\-Ks seen so far. 
+
+\begin{DoxyReturn}{Returns}
+num duplicate A\-C\-Ks 
+\end{DoxyReturn}
+\hypertarget{classnetflow_afd6c72736a88766d407f3a66871996bb}{\index{netflow@{netflow}!get\-Num\-Total\-Packets@{get\-Num\-Total\-Packets}}
+\index{get\-Num\-Total\-Packets@{get\-Num\-Total\-Packets}!netflow@{netflow}}
+\subsubsection[{get\-Num\-Total\-Packets}]{\setlength{\rightskip}{0pt plus 5cm}int netflow\-::get\-Num\-Total\-Packets (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classnetflow_afd6c72736a88766d407f3a66871996bb}
+
+
+Getter for number of packets used in a flawless transmission of this flow. 
+
+In reality some packets may be dropped or lost, so this is really the largest packet sequence number in this flow, where the first packet has a sequence number of 1. \begin{DoxyReturn}{Returns}
+number of packets in this flow 
+\end{DoxyReturn}
+\hypertarget{classnetflow_af9eaf8bcc1f369201b400ca8ffa98f34}{\index{netflow@{netflow}!get\-Pkt\-Delay@{get\-Pkt\-Delay}}
+\index{get\-Pkt\-Delay@{get\-Pkt\-Delay}!netflow@{netflow}}
+\subsubsection[{get\-Pkt\-Delay}]{\setlength{\rightskip}{0pt plus 5cm}double netflow\-::get\-Pkt\-Delay (
+\begin{DoxyParamCaption}
+\item[{double}]{curr\-Time}
+\end{DoxyParamCaption}
+) const}}\label{classnetflow_af9eaf8bcc1f369201b400ca8ffa98f34}
+
+
+Packet delay is defined as time elapsed since packet is send and acknowledgment is received. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em curr\-Time} & current time \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+packet delay 
+\end{DoxyReturn}
+\hypertarget{classnetflow_a248e9f4bf73f873608bed283a7897340}{\index{netflow@{netflow}!get\-Pkt\-Tally@{get\-Pkt\-Tally}}
+\index{get\-Pkt\-Tally@{get\-Pkt\-Tally}!netflow@{netflow}}
+\subsubsection[{get\-Pkt\-Tally}]{\setlength{\rightskip}{0pt plus 5cm}int netflow\-::get\-Pkt\-Tally (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classnetflow_a248e9f4bf73f873608bed283a7897340}
+
+
+Getter for the count of flow packets received by destination within the interval. 
+
+\begin{DoxyReturn}{Returns}
+number of flow packets received 
+\end{DoxyReturn}
+\hypertarget{classnetflow_ad70e1973aa9856ec2eea2f54c578acc4}{\index{netflow@{netflow}!get\-Right\-Time@{get\-Right\-Time}}
+\index{get\-Right\-Time@{get\-Right\-Time}!netflow@{netflow}}
+\subsubsection[{get\-Right\-Time}]{\setlength{\rightskip}{0pt plus 5cm}double netflow\-::get\-Right\-Time (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classnetflow_ad70e1973aa9856ec2eea2f54c578acc4}
+
+
+Getter for the ending time of the packet count interval. 
+
+\begin{DoxyReturn}{Returns}
+right side of pkt count interval 
+\end{DoxyReturn}
+\hypertarget{classnetflow_a08f6d8d01f51c861a00710a533f3b604}{\index{netflow@{netflow}!get\-Round\-Trip\-Times@{get\-Round\-Trip\-Times}}
+\index{get\-Round\-Trip\-Times@{get\-Round\-Trip\-Times}!netflow@{netflow}}
+\subsubsection[{get\-Round\-Trip\-Times}]{\setlength{\rightskip}{0pt plus 5cm}const map$<$ int, double $>$ \& netflow\-::get\-Round\-Trip\-Times (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classnetflow_a08f6d8d01f51c861a00710a533f3b604}
+
+
+Getter for a const reference to the round-\/trip times map. 
+
+This map stores the start time for packets in transit; when packets arrive their arrival times are added to their (negated) start times to get the round trip time, then their entries are removed from the R\-T\-T map. \begin{DoxyReturn}{Returns}
+const reference to round trip times map 
+\end{DoxyReturn}
+\hypertarget{classnetflow_a8afb866e40738f7038d18bdb9a572500}{\index{netflow@{netflow}!get\-Size\-Mb@{get\-Size\-Mb}}
+\index{get\-Size\-Mb@{get\-Size\-Mb}!netflow@{netflow}}
+\subsubsection[{get\-Size\-Mb}]{\setlength{\rightskip}{0pt plus 5cm}double netflow\-::get\-Size\-Mb (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classnetflow_a8afb866e40738f7038d18bdb9a572500}
+
+
+Getter for size in megabits. 
+
+\begin{DoxyReturn}{Returns}
+size in megabits 
+\end{DoxyReturn}
+\hypertarget{classnetflow_a8a2f81127fcecaafeb83570dfb77d669}{\index{netflow@{netflow}!get\-Source@{get\-Source}}
+\index{get\-Source@{get\-Source}!netflow@{netflow}}
+\subsubsection[{get\-Source}]{\setlength{\rightskip}{0pt plus 5cm}{\bf nethost} $\ast$ netflow\-::get\-Source (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classnetflow_a8a2f81127fcecaafeb83570dfb77d669}
+
+
+Getter for pointer to source host. 
+
+\begin{DoxyReturn}{Returns}
+get pointer to the source host. 
+\end{DoxyReturn}
+\hypertarget{classnetflow_a4ca3539d49814e6ffaf46c9db28d4cb1}{\index{netflow@{netflow}!get\-Start\-Time\-Ms@{get\-Start\-Time\-Ms}}
+\index{get\-Start\-Time\-Ms@{get\-Start\-Time\-Ms}!netflow@{netflow}}
+\subsubsection[{get\-Start\-Time\-Ms}]{\setlength{\rightskip}{0pt plus 5cm}double netflow\-::get\-Start\-Time\-Ms (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classnetflow_a4ca3539d49814e6ffaf46c9db28d4cb1}
+
+
+Getter for start time in milliseconds. 
+
+\begin{DoxyReturn}{Returns}
+start time in milliseconds from beginning of simulation. 
+\end{DoxyReturn}
+\hypertarget{classnetflow_a6c89dfa31291104fd5207f10a4bb424b}{\index{netflow@{netflow}!get\-Start\-Time\-Sec@{get\-Start\-Time\-Sec}}
+\index{get\-Start\-Time\-Sec@{get\-Start\-Time\-Sec}!netflow@{netflow}}
+\subsubsection[{get\-Start\-Time\-Sec}]{\setlength{\rightskip}{0pt plus 5cm}double netflow\-::get\-Start\-Time\-Sec (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classnetflow_a6c89dfa31291104fd5207f10a4bb424b}
+
+
+Getter for start time in seconds. 
+
+\begin{DoxyReturn}{Returns}
+start time in seconds from beginning of simulation. 
+\end{DoxyReturn}
+\hypertarget{classnetflow_a02e309d963c2bca12b77b66b890b9c66}{\index{netflow@{netflow}!get\-Timeout\-Length\-Ms@{get\-Timeout\-Length\-Ms}}
+\index{get\-Timeout\-Length\-Ms@{get\-Timeout\-Length\-Ms}!netflow@{netflow}}
+\subsubsection[{get\-Timeout\-Length\-Ms}]{\setlength{\rightskip}{0pt plus 5cm}double netflow\-::get\-Timeout\-Length\-Ms (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classnetflow_a02e309d963c2bca12b77b66b890b9c66}
+
+
+Getter for the dynamically adjusted timeout length in milliseconds. 
+
+\begin{DoxyReturn}{Returns}
+timeout length in milliseconds. 
+\end{DoxyReturn}
+\hypertarget{classnetflow_aa73fac7bfc0f25946e7b345f46115dc9}{\index{netflow@{netflow}!get\-Window\-Size@{get\-Window\-Size}}
+\index{get\-Window\-Size@{get\-Window\-Size}!netflow@{netflow}}
+\subsubsection[{get\-Window\-Size}]{\setlength{\rightskip}{0pt plus 5cm}double netflow\-::get\-Window\-Size (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classnetflow_aa73fac7bfc0f25946e7b345f46115dc9}
+
+
+Getter for the current window size. 
+
+\begin{DoxyReturn}{Returns}
+window size 
+\end{DoxyReturn}
+\hypertarget{classnetflow_a7c44701ace1f15dbef9227fb06f419af}{\index{netflow@{netflow}!get\-Window\-Start@{get\-Window\-Start}}
+\index{get\-Window\-Start@{get\-Window\-Start}!netflow@{netflow}}
+\subsubsection[{get\-Window\-Start}]{\setlength{\rightskip}{0pt plus 5cm}int netflow\-::get\-Window\-Start (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classnetflow_a7c44701ace1f15dbef9227fb06f419af}
+
+
+Getter for the sequence number at which the current window starts. 
+
+\begin{DoxyReturn}{Returns}
+the packet on which the window starts. 
+\end{DoxyReturn}
+\hypertarget{classnetflow_ababb5a520cb2b826ad906bd9cade0ecb}{\index{netflow@{netflow}!is\-Using\-F\-A\-S\-T@{is\-Using\-F\-A\-S\-T}}
+\index{is\-Using\-F\-A\-S\-T@{is\-Using\-F\-A\-S\-T}!netflow@{netflow}}
+\subsubsection[{is\-Using\-F\-A\-S\-T}]{\setlength{\rightskip}{0pt plus 5cm}bool netflow\-::is\-Using\-F\-A\-S\-T (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classnetflow_ababb5a520cb2b826ad906bd9cade0ecb}
+
+
+True if using T\-C\-P F\-A\-S\-T, false if Tahoe. 
+
+\begin{DoxyReturn}{Returns}
+true for F\-A\-S\-T, false for Tahoe 
+\end{DoxyReturn}
+\hypertarget{classnetflow_ad9974ffa5f9b264b561355c07bc0bd9f}{\index{netflow@{netflow}!peek\-Outstanding\-Packets@{peek\-Outstanding\-Packets}}
+\index{peek\-Outstanding\-Packets@{peek\-Outstanding\-Packets}!netflow@{netflow}}
+\subsubsection[{peek\-Outstanding\-Packets}]{\setlength{\rightskip}{0pt plus 5cm}vector$<$ {\bf packet} $>$ netflow\-::peek\-Outstanding\-Packets (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{classnetflow_ad9974ffa5f9b264b561355c07bc0bd9f}
+
+
+Gets all the packets in this window that must be sent. 
+
+This function assumes the user isn't going to send them, so it doesn't change the last packet sent number.
+
+\begin{DoxyReturn}{Returns}
+all the outstanding packets in the window 
+\end{DoxyReturn}
+\hypertarget{classnetflow_ae072b9c8069401bbc45e6ad9853eb45f}{\index{netflow@{netflow}!pop\-Outstanding\-Packets@{pop\-Outstanding\-Packets}}
+\index{pop\-Outstanding\-Packets@{pop\-Outstanding\-Packets}!netflow@{netflow}}
+\subsubsection[{pop\-Outstanding\-Packets}]{\setlength{\rightskip}{0pt plus 5cm}vector$<$ {\bf packet} $>$ netflow\-::pop\-Outstanding\-Packets (
+\begin{DoxyParamCaption}
+\item[{double}]{start\-\_\-time, }
+\item[{double}]{link\-Free\-At}
+\end{DoxyParamCaption}
+)}}\label{classnetflow_ae072b9c8069401bbc45e6ad9853eb45f}
+
+
+Gets all the packets in this window that must be sent. 
+
+This function assumes the user W\-I\-L\-L send them, so it D\-O\-E\-S change the last sent packet number. It also stores the starting time for each packet so R\-T\-Ts can be computed later. It stores corresponding timeout events locally and puts them on the simulation's event queue too.
+
+
+\begin{DoxyParams}{Parameters}
+{\em start\-\_\-time} & time at which packets will enter link buffer \\
+\hline
+{\em link\-Free\-At} & time in milliseconds at packets will get on the link \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+all the outstanding F\-L\-O\-W packets in the window 
+\end{DoxyReturn}
+\hypertarget{classnetflow_acbcb512e7ba8fb2f4dfb5c49f792b837}{\index{netflow@{netflow}!print\-Helper@{print\-Helper}}
+\index{print\-Helper@{print\-Helper}!netflow@{netflow}}
+\subsubsection[{print\-Helper}]{\setlength{\rightskip}{0pt plus 5cm}void netflow\-::print\-Helper (
+\begin{DoxyParamCaption}
+\item[{ostream \&}]{os}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [virtual]}}}\label{classnetflow_acbcb512e7ba8fb2f4dfb5c49f792b837}
+
+
+Print helper function which partially overrides the one in netdevice. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em os} & The output stream to which to write. \\
+\hline
+\end{DoxyParams}
+\hypertarget{classnetflow_a7d2582540a1cc34a7fc5b1c6ce41d329}{\index{netflow@{netflow}!received\-Ack@{received\-Ack}}
+\index{received\-Ack@{received\-Ack}!netflow@{netflow}}
+\subsubsection[{received\-Ack}]{\setlength{\rightskip}{0pt plus 5cm}void netflow\-::received\-Ack (
+\begin{DoxyParamCaption}
+\item[{{\bf packet} \&}]{pkt, }
+\item[{double}]{end\-\_\-time\-\_\-ms, }
+\item[{double}]{link\-Free\-At\-Time}
+\end{DoxyParamCaption}
+)}}\label{classnetflow_a7d2582540a1cc34a7fc5b1c6ce41d329}
+
+
+When an A\-C\-K is received (it's assumed that the packet is arriving at this flow's source) this function must be called so the window will slide and resize, so duplicate A\-C\-Ks will register, and so the timeout length will adjust. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em pkt} & the received A\-C\-K packet. \\
+\hline
+{\em end\-\_\-time\-\_\-ms} & time in milliseconds at which this A\-C\-K was received; used to calculate R\-T\-Ts. \\
+\hline
+{\em link\-Free\-At\-Time} & absolute time at which the link will be free\\
+\hline
+\end{DoxyParams}
+\begin{DoxyWarning}{Warning}
+D\-O\-E\-S\-N'T S\-E\-N\-D P\-A\-C\-K\-E\-T\-S, use {\ttfamily pop\-Outstanding\-Packets} to get the packets to send after this function is called. 
+\end{DoxyWarning}
+\hypertarget{classnetflow_a3fab65a6f9fbfe3f54af066d260cd0b8}{\index{netflow@{netflow}!received\-Flow\-Packet@{received\-Flow\-Packet}}
+\index{received\-Flow\-Packet@{received\-Flow\-Packet}!netflow@{netflow}}
+\subsubsection[{received\-Flow\-Packet}]{\setlength{\rightskip}{0pt plus 5cm}void netflow\-::received\-Flow\-Packet (
+\begin{DoxyParamCaption}
+\item[{{\bf packet} \&}]{pkt, }
+\item[{double}]{arrival\-\_\-time}
+\end{DoxyParamCaption}
+)}}\label{classnetflow_a3fab65a6f9fbfe3f54af066d260cd0b8}
+
+
+When a F\-L\-O\-W packet is received (it's assumed that the packet is arriving at this flow's destination) this function should be called to make and queue an immediate duplicate\-\_\-ack\-\_\-event. 
+
+When the duplicate\-\_\-ack\-\_\-event runs it will send an A\-C\-K packet immediately and will also chain (queue) a future duplicate\-\_\-ack\-\_\-event in case the next F\-L\-O\-W packet never comes. This function also removes the previous packet's corresponding duplicate\-\_\-ack\-\_\-event from the local map.
+
+
+\begin{DoxyParams}{Parameters}
+{\em pkt} & arriving F\-L\-O\-W packet \\
+\hline
+{\em arrival\-\_\-time} & \\
+\hline
+\end{DoxyParams}
+\hypertarget{classnetflow_a5865695e5360027ce36e047b3368ff25}{\index{netflow@{netflow}!register\-Ack\-Event@{register\-Ack\-Event}}
+\index{register\-Ack\-Event@{register\-Ack\-Event}!netflow@{netflow}}
+\subsubsection[{register\-Ack\-Event}]{\setlength{\rightskip}{0pt plus 5cm}void netflow\-::register\-Ack\-Event (
+\begin{DoxyParamCaption}
+\item[{int}]{seq, }
+\item[{double}]{time}
+\end{DoxyParamCaption}
+)}}\label{classnetflow_a5865695e5360027ce36e047b3368ff25}
+
+
+Makes an {\ttfamily \hyperlink{classack__event}{ack\-\_\-event}} and puts it on the simulation's event queue. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em seq} & the {\ttfamily \hyperlink{classack__event}{ack\-\_\-event}} will contain an A\-C\-K packet with this sequence number  time at which the {\ttfamily \hyperlink{classack__event}{ack\-\_\-event}} should run \\
+\hline
+\end{DoxyParams}
+\hypertarget{classnetflow_a5ce0bbc79c6400fe89da80487f509415}{\index{netflow@{netflow}!set\-Destination@{set\-Destination}}
+\index{set\-Destination@{set\-Destination}!netflow@{netflow}}
+\subsubsection[{set\-Destination}]{\setlength{\rightskip}{0pt plus 5cm}void netflow\-::set\-Destination (
+\begin{DoxyParamCaption}
+\item[{{\bf nethost} \&}]{destination}
+\end{DoxyParamCaption}
+)}}\label{classnetflow_a5ce0bbc79c6400fe89da80487f509415}
+
+
+Setter for the destination host. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em destination} & \\
+\hline
+\end{DoxyParams}
+\hypertarget{classnetflow_a9f3ef1670c996d54dbd32a1c941e2d83}{\index{netflow@{netflow}!set\-F\-A\-S\-T\-Window\-Size@{set\-F\-A\-S\-T\-Window\-Size}}
+\index{set\-F\-A\-S\-T\-Window\-Size@{set\-F\-A\-S\-T\-Window\-Size}!netflow@{netflow}}
+\subsubsection[{set\-F\-A\-S\-T\-Window\-Size}]{\setlength{\rightskip}{0pt plus 5cm}void netflow\-::set\-F\-A\-S\-T\-Window\-Size (
+\begin{DoxyParamCaption}
+\item[{double}]{new\-\_\-size}
+\end{DoxyParamCaption}
+)}}\label{classnetflow_a9f3ef1670c996d54dbd32a1c941e2d83}
+
+
+Changes a flow's window size during an \hyperlink{classupdate__window__event}{update\-\_\-window\-\_\-event}. 
+
+Used only if the flow is using F\-A\-S\-T T\-C\-P for congestion control. 
+\begin{DoxyParams}{Parameters}
+{\em new\-\_\-size} & \\
+\hline
+\end{DoxyParams}
+\hypertarget{classnetflow_ad91146f3b19e8d2812e297714a4ef5d4}{\index{netflow@{netflow}!set\-Left\-Time@{set\-Left\-Time}}
+\index{set\-Left\-Time@{set\-Left\-Time}!netflow@{netflow}}
+\subsubsection[{set\-Left\-Time}]{\setlength{\rightskip}{0pt plus 5cm}void netflow\-::set\-Left\-Time (
+\begin{DoxyParamCaption}
+\item[{double}]{new\-Time}
+\end{DoxyParamCaption}
+)}}\label{classnetflow_ad91146f3b19e8d2812e297714a4ef5d4}
+
+
+Sets left time. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em new\-Time} & \\
+\hline
+\end{DoxyParams}
+\hypertarget{classnetflow_a09b799f9166e0df50091a73516063c64}{\index{netflow@{netflow}!set\-Right\-Time@{set\-Right\-Time}}
+\index{set\-Right\-Time@{set\-Right\-Time}!netflow@{netflow}}
+\subsubsection[{set\-Right\-Time}]{\setlength{\rightskip}{0pt plus 5cm}void netflow\-::set\-Right\-Time (
+\begin{DoxyParamCaption}
+\item[{double}]{new\-Time}
+\end{DoxyParamCaption}
+)}}\label{classnetflow_a09b799f9166e0df50091a73516063c64}
+
+
+Sets right time. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em new\-Time} & \\
+\hline
+\end{DoxyParams}
+\hypertarget{classnetflow_afb017e85595e2d18ed839c26c5a37289}{\index{netflow@{netflow}!set\-Source@{set\-Source}}
+\index{set\-Source@{set\-Source}!netflow@{netflow}}
+\subsubsection[{set\-Source}]{\setlength{\rightskip}{0pt plus 5cm}void netflow\-::set\-Source (
+\begin{DoxyParamCaption}
+\item[{{\bf nethost} \&}]{source}
+\end{DoxyParamCaption}
+)}}\label{classnetflow_afb017e85595e2d18ed839c26c5a37289}
+
+
+Setter for the source host. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em source} & \\
+\hline
+\end{DoxyParams}
+\hypertarget{classnetflow_ad914b2fc48fd4727464619823b09a856}{\index{netflow@{netflow}!timeout\-Occurred@{timeout\-Occurred}}
+\index{timeout\-Occurred@{timeout\-Occurred}!netflow@{netflow}}
+\subsubsection[{timeout\-Occurred}]{\setlength{\rightskip}{0pt plus 5cm}void netflow\-::timeout\-Occurred (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{classnetflow_ad914b2fc48fd4727464619823b09a856}
+
+
+This function should be called after a timeout so the window size can change accordingly and so the old \hyperlink{classtimeout__event}{timeout\-\_\-event} can be cancelled. 
+
+It's the caller's responsibility to make and queue a new \hyperlink{classsend__packet__event}{send\-\_\-packet\-\_\-event} and a new \hyperlink{classtimeout__event}{timeout\-\_\-event}. \hypertarget{classnetflow_a1b5aadc26000de914d77a0f18c3af2a9}{\index{netflow@{netflow}!update\-Pkt\-Tally@{update\-Pkt\-Tally}}
+\index{update\-Pkt\-Tally@{update\-Pkt\-Tally}!netflow@{netflow}}
+\subsubsection[{update\-Pkt\-Tally}]{\setlength{\rightskip}{0pt plus 5cm}void netflow\-::update\-Pkt\-Tally (
+\begin{DoxyParamCaption}
+\item[{double}]{time}
+\end{DoxyParamCaption}
+)}}\label{classnetflow_a1b5aadc26000de914d77a0f18c3af2a9}
+
+
+Updates packet tally depending on whether {\ttfamily \hyperlink{classreceive__packet__event}{receive\-\_\-packet\-\_\-event}} occurs during rate\-\_\-interval. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em time} & \\
+\hline
+\end{DoxyParams}
+
+
+\subsection{Member Data Documentation}
+\hypertarget{classnetflow_a0461fac67c5f304973461a1644b58dd3}{\index{netflow@{netflow}!B\-\_\-\-T\-I\-M\-E\-O\-U\-T\-\_\-\-C\-A\-L\-C@{B\-\_\-\-T\-I\-M\-E\-O\-U\-T\-\_\-\-C\-A\-L\-C}}
+\index{B\-\_\-\-T\-I\-M\-E\-O\-U\-T\-\_\-\-C\-A\-L\-C@{B\-\_\-\-T\-I\-M\-E\-O\-U\-T\-\_\-\-C\-A\-L\-C}!netflow@{netflow}}
+\subsubsection[{B\-\_\-\-T\-I\-M\-E\-O\-U\-T\-\_\-\-C\-A\-L\-C}]{\setlength{\rightskip}{0pt plus 5cm}constexpr double netflow\-::\-B\-\_\-\-T\-I\-M\-E\-O\-U\-T\-\_\-\-C\-A\-L\-C = 0.\-1\hspace{0.3cm}{\ttfamily [static]}}}\label{classnetflow_a0461fac67c5f304973461a1644b58dd3}
+
+
+The constant 'b' from the recursive average and std formulas. 
+
+\hypertarget{classnetflow_ace7122626410ab50fbe69dcc0f77dcb0}{\index{netflow@{netflow}!F\-A\-S\-T\-\_\-\-R\-E\-T\-R\-A\-N\-S\-M\-I\-T\-\_\-\-D\-U\-P\-L\-I\-C\-A\-T\-E\-\_\-\-A\-C\-K\-\_\-\-T\-H\-R\-E\-S\-H\-O\-L\-D@{F\-A\-S\-T\-\_\-\-R\-E\-T\-R\-A\-N\-S\-M\-I\-T\-\_\-\-D\-U\-P\-L\-I\-C\-A\-T\-E\-\_\-\-A\-C\-K\-\_\-\-T\-H\-R\-E\-S\-H\-O\-L\-D}}
+\index{F\-A\-S\-T\-\_\-\-R\-E\-T\-R\-A\-N\-S\-M\-I\-T\-\_\-\-D\-U\-P\-L\-I\-C\-A\-T\-E\-\_\-\-A\-C\-K\-\_\-\-T\-H\-R\-E\-S\-H\-O\-L\-D@{F\-A\-S\-T\-\_\-\-R\-E\-T\-R\-A\-N\-S\-M\-I\-T\-\_\-\-D\-U\-P\-L\-I\-C\-A\-T\-E\-\_\-\-A\-C\-K\-\_\-\-T\-H\-R\-E\-S\-H\-O\-L\-D}!netflow@{netflow}}
+\subsubsection[{F\-A\-S\-T\-\_\-\-R\-E\-T\-R\-A\-N\-S\-M\-I\-T\-\_\-\-D\-U\-P\-L\-I\-C\-A\-T\-E\-\_\-\-A\-C\-K\-\_\-\-T\-H\-R\-E\-S\-H\-O\-L\-D}]{\setlength{\rightskip}{0pt plus 5cm}const int netflow\-::\-F\-A\-S\-T\-\_\-\-R\-E\-T\-R\-A\-N\-S\-M\-I\-T\-\_\-\-D\-U\-P\-L\-I\-C\-A\-T\-E\-\_\-\-A\-C\-K\-\_\-\-T\-H\-R\-E\-S\-H\-O\-L\-D = 3\hspace{0.3cm}{\ttfamily [static]}}}\label{classnetflow_ace7122626410ab50fbe69dcc0f77dcb0}
+
+
+Number of duplicate A\-C\-Ks before fast retransmit is used. 
+
+
+
+The documentation for this class was generated from the following files\-:\begin{DoxyCompactItemize}
+\item 
+src/\hyperlink{network_8h}{network.\-h}\item 
+src/network.\-cpp\end{DoxyCompactItemize}

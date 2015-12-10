@@ -1,0 +1,101 @@
+\hypertarget{driver_8cpp}{\section{src/driver.cpp File Reference}
+\label{driver_8cpp}\index{src/driver.\-cpp@{src/driver.\-cpp}}
+}
+
+
+This file reads a network description from a J\-S\-O\-N file then starts a simulation of the network.  
+
+
+{\ttfamily \#include $<$iostream$>$}\\*
+{\ttfamily \#include $<$string$>$}\\*
+{\ttfamily \#include $<$cstdlib$>$}\\*
+{\ttfamily \#include $<$string.\-h$>$}\\*
+{\ttfamily \#include \char`\"{}simulation.\-h\char`\"{}}\\*
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \hyperlink{driver_8cpp_ab978b4842ecd248235f5a14142cd9666}{print\-\_\-usage\-\_\-statement} (char $\ast$progname)
+\begin{DoxyCompactList}\small\item\em Prints a usage statement to stderr. \end{DoxyCompactList}\item 
+char $\ast$ \hyperlink{driver_8cpp_a1ce59744bad236bde5b7e5fcebb20cae}{process\-\_\-console\-\_\-args} (int argc, char $\ast$$\ast$argv)
+\begin{DoxyCompactList}\small\item\em Processes console arguments, returning the input filename and setting flags like the debug one. \end{DoxyCompactList}\item 
+\hypertarget{driver_8cpp_a3c04138a5bfe5d72780bb7e82a18e627}{int \hyperlink{driver_8cpp_a3c04138a5bfe5d72780bb7e82a18e627}{main} (int argc, char $\ast$$\ast$argv)}\label{driver_8cpp_a3c04138a5bfe5d72780bb7e82a18e627}
+
+\begin{DoxyCompactList}\small\item\em Reads a J\-S\-O\-N file from disk, populates in-\/memory collections of hosts, routers, links, and flows, starts a simulation, then logs data. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+bool \hyperlink{driver_8cpp_a398527b3e9e358c345c5047b16871957}{debug} = false
+\begin{DoxyCompactList}\small\item\em If true lots of debugging output is shown. \end{DoxyCompactList}\item 
+\hypertarget{driver_8cpp_a7766f78695ce29e0b42fa8966015711b}{bool \hyperlink{driver_8cpp_a7766f78695ce29e0b42fa8966015711b}{detail} = false}\label{driver_8cpp_a7766f78695ce29e0b42fa8966015711b}
+
+\begin{DoxyCompactList}\small\item\em If true even more debugging output is shown and the output pauses between events for analysis. \end{DoxyCompactList}\item 
+ostream \& \hyperlink{driver_8cpp_a8e1c5eaa16af1f8c320bd11588d11fba}{debug\-\_\-os} = cout
+\begin{DoxyCompactList}\small\item\em Output stream to which to write debugging statements. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+This file reads a network description from a J\-S\-O\-N file then starts a simulation of the network. It logs data as the simulation progresses then dumps it to to disk so scripts can generate graphs. 
+
+\subsection{Function Documentation}
+\hypertarget{driver_8cpp_ab978b4842ecd248235f5a14142cd9666}{\index{driver.\-cpp@{driver.\-cpp}!print\-\_\-usage\-\_\-statement@{print\-\_\-usage\-\_\-statement}}
+\index{print\-\_\-usage\-\_\-statement@{print\-\_\-usage\-\_\-statement}!driver.cpp@{driver.\-cpp}}
+\subsubsection[{print\-\_\-usage\-\_\-statement}]{\setlength{\rightskip}{0pt plus 5cm}void print\-\_\-usage\-\_\-statement (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{progname}
+\end{DoxyParamCaption}
+)}}\label{driver_8cpp_ab978b4842ecd248235f5a14142cd9666}
+
+
+Prints a usage statement to stderr. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em progname} & name of this program. \\
+\hline
+\end{DoxyParams}
+\hypertarget{driver_8cpp_a1ce59744bad236bde5b7e5fcebb20cae}{\index{driver.\-cpp@{driver.\-cpp}!process\-\_\-console\-\_\-args@{process\-\_\-console\-\_\-args}}
+\index{process\-\_\-console\-\_\-args@{process\-\_\-console\-\_\-args}!driver.cpp@{driver.\-cpp}}
+\subsubsection[{process\-\_\-console\-\_\-args}]{\setlength{\rightskip}{0pt plus 5cm}char $\ast$ process\-\_\-console\-\_\-args (
+\begin{DoxyParamCaption}
+\item[{int}]{argc, }
+\item[{char $\ast$$\ast$}]{argv}
+\end{DoxyParamCaption}
+)}}\label{driver_8cpp_a1ce59744bad236bde5b7e5fcebb20cae}
+
+
+Processes console arguments, returning the input filename and setting flags like the debug one. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em argc} & number of console arguments \\
+\hline
+{\em argv} & console arguments \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+the input filename 
+\end{DoxyReturn}
+\begin{DoxyPostcond}{Postcondition}
+sets the debug flag 
+\end{DoxyPostcond}
+\begin{DoxyWarning}{Warning}
+exits from this process after printing a usage statement if the console arguments don't conform to the usage statement 
+\end{DoxyWarning}
+
+
+\subsection{Variable Documentation}
+\hypertarget{driver_8cpp_a398527b3e9e358c345c5047b16871957}{\index{driver.\-cpp@{driver.\-cpp}!debug@{debug}}
+\index{debug@{debug}!driver.cpp@{driver.\-cpp}}
+\subsubsection[{debug}]{\setlength{\rightskip}{0pt plus 5cm}bool debug = false}}\label{driver_8cpp_a398527b3e9e358c345c5047b16871957}
+
+
+If true lots of debugging output is shown. 
+
+\hypertarget{driver_8cpp_a8e1c5eaa16af1f8c320bd11588d11fba}{\index{driver.\-cpp@{driver.\-cpp}!debug\-\_\-os@{debug\-\_\-os}}
+\index{debug\-\_\-os@{debug\-\_\-os}!driver.cpp@{driver.\-cpp}}
+\subsubsection[{debug\-\_\-os}]{\setlength{\rightskip}{0pt plus 5cm}ostream\& debug\-\_\-os = cout}}\label{driver_8cpp_a8e1c5eaa16af1f8c320bd11588d11fba}
+
+
+Output stream to which to write debugging statements. 
+
+Might be customized to be a file output stream, stderr, or something else. 

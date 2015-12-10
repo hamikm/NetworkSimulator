@@ -1,0 +1,93 @@
+\hypertarget{classack__event}{\section{ack\-\_\-event Class Reference}
+\label{classack__event}\index{ack\-\_\-event@{ack\-\_\-event}}
+}
+
+
+This event should be queued when a destination host wants to send an A\-C\-K (not just duplicate A\-C\-Ks--any A\-C\-K\-S).  
+
+
+
+
+{\ttfamily \#include $<$events.\-h$>$}
+
+Inheritance diagram for ack\-\_\-event\-:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classack__event}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{classack__event_ad3ac242accdc6db4f37da57a28e7f120}{ack\-\_\-event} ()
+\begin{DoxyCompactList}\small\item\em Default constructor, sets everything to dummy or N\-U\-L\-L. \end{DoxyCompactList}\item 
+\hypertarget{classack__event_a5a1e4cc597de2f0fda0a454a47544ef6}{\hyperlink{classack__event_a5a1e4cc597de2f0fda0a454a47544ef6}{ack\-\_\-event} (double time, \hyperlink{classsimulation}{simulation} \&\hyperlink{classevent_a08c6d828bfb6f5539dcd1491e8ac77d2}{sim}, \hyperlink{classnetflow}{netflow} \&flow, \hyperlink{classpacket}{packet} \&dup\-\_\-pkt)}\label{classack__event_a5a1e4cc597de2f0fda0a454a47544ef6}
+
+\begin{DoxyCompactList}\small\item\em Initializes this event's time to the given one, sets the event I\-D, and sets the flow to which this \hyperlink{classack__event}{ack\-\_\-event} belongs. \end{DoxyCompactList}\item 
+\hyperlink{classack__event_aa5e993d447f4d3bccc2559af3526a138}{$\sim$ack\-\_\-event} ()
+\begin{DoxyCompactList}\small\item\em Destructor. \end{DoxyCompactList}\item 
+\hypertarget{classack__event_a7c56c7da987f6092c855d27a114e9b33}{void \hyperlink{classack__event_a7c56c7da987f6092c855d27a114e9b33}{run\-Event} ()}\label{classack__event_a7c56c7da987f6092c855d27a114e9b33}
+
+\begin{DoxyCompactList}\small\item\em Send an A\-C\-K packet then chains (queues another) \hyperlink{classack__event}{ack\-\_\-event}. \end{DoxyCompactList}\item 
+void \hyperlink{classack__event_a56be0eef82f482ebb0d63277ae9429de}{print\-Helper} (ostream \&os)
+\begin{DoxyCompactList}\small\item\em Print helper function. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Additional Inherited Members}
+
+
+\subsection{Detailed Description}
+This event should be queued when a destination host wants to send an A\-C\-K (not just duplicate A\-C\-Ks--any A\-C\-K\-S). 
+
+The event automatically queues another \hyperlink{classack__event}{ack\-\_\-event} so that duplicate A\-C\-Ks will be sent in the future if the destination doesn't get the correct F\-L\-O\-W packets. Pending ack\-\_\-events should be cancelled when the destination gets the correct F\-L\-O\-W packet. 
+
+\subsection{Constructor \& Destructor Documentation}
+\hypertarget{classack__event_ad3ac242accdc6db4f37da57a28e7f120}{\index{ack\-\_\-event@{ack\-\_\-event}!ack\-\_\-event@{ack\-\_\-event}}
+\index{ack\-\_\-event@{ack\-\_\-event}!ack_event@{ack\-\_\-event}}
+\subsubsection[{ack\-\_\-event}]{\setlength{\rightskip}{0pt plus 5cm}ack\-\_\-event\-::ack\-\_\-event (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{classack__event_ad3ac242accdc6db4f37da57a28e7f120}
+
+
+Default constructor, sets everything to dummy or N\-U\-L\-L. 
+
+\hypertarget{classack__event_aa5e993d447f4d3bccc2559af3526a138}{\index{ack\-\_\-event@{ack\-\_\-event}!$\sim$ack\-\_\-event@{$\sim$ack\-\_\-event}}
+\index{$\sim$ack\-\_\-event@{$\sim$ack\-\_\-event}!ack_event@{ack\-\_\-event}}
+\subsubsection[{$\sim$ack\-\_\-event}]{\setlength{\rightskip}{0pt plus 5cm}ack\-\_\-event\-::$\sim$ack\-\_\-event (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{classack__event_aa5e993d447f4d3bccc2559af3526a138}
+
+
+Destructor. 
+
+
+
+\subsection{Member Function Documentation}
+\hypertarget{classack__event_a56be0eef82f482ebb0d63277ae9429de}{\index{ack\-\_\-event@{ack\-\_\-event}!print\-Helper@{print\-Helper}}
+\index{print\-Helper@{print\-Helper}!ack_event@{ack\-\_\-event}}
+\subsubsection[{print\-Helper}]{\setlength{\rightskip}{0pt plus 5cm}void ack\-\_\-event\-::print\-Helper (
+\begin{DoxyParamCaption}
+\item[{ostream \&}]{os}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [virtual]}}}\label{classack__event_a56be0eef82f482ebb0d63277ae9429de}
+
+
+Print helper function. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em os} & The output stream to which to write event information. \\
+\hline
+\end{DoxyParams}
+
+
+Reimplemented from \hyperlink{classevent_a14ef1b59ef1f5a8311c7cac315c271df}{event}.
+
+
+
+The documentation for this class was generated from the following files\-:\begin{DoxyCompactItemize}
+\item 
+src/\hyperlink{events_8h}{events.\-h}\item 
+src/events.\-cpp\end{DoxyCompactItemize}

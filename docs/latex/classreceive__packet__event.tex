@@ -1,0 +1,97 @@
+\hypertarget{classreceive__packet__event}{\section{receive\-\_\-packet\-\_\-event Class Reference}
+\label{classreceive__packet__event}\index{receive\-\_\-packet\-\_\-event@{receive\-\_\-packet\-\_\-event}}
+}
+
+
+Event that represents the arrival of a packet at either an intermediate node (router) or a final destination (host).  
+
+
+
+
+{\ttfamily \#include $<$events.\-h$>$}
+
+Inheritance diagram for receive\-\_\-packet\-\_\-event\-:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classreceive__packet__event}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{classreceive__packet__event_ab160e0614169ef1ee78c52406a9dbcc4}{\hyperlink{classreceive__packet__event_ab160e0614169ef1ee78c52406a9dbcc4}{receive\-\_\-packet\-\_\-event} (double time, \hyperlink{classsimulation}{simulation} \&\hyperlink{classevent_a08c6d828bfb6f5539dcd1491e8ac77d2}{sim}, \hyperlink{classnetflow}{netflow} \&flow, \hyperlink{classpacket}{packet} \&pkt, \hyperlink{classnetnode}{netnode} \&step\-\_\-destination, \hyperlink{classnetlink}{netlink} \&link)}\label{classreceive__packet__event_ab160e0614169ef1ee78c52406a9dbcc4}
+
+\begin{DoxyCompactList}\small\item\em Constructor for receive packet events for lone packets; the window size and start are set to 1 and this packet's sequence number, respectively. \end{DoxyCompactList}\item 
+\hypertarget{classreceive__packet__event_a62cf5ad6dc6702e99182f297ad46f877}{\hyperlink{classreceive__packet__event_a62cf5ad6dc6702e99182f297ad46f877}{receive\-\_\-packet\-\_\-event} (double time, \hyperlink{classsimulation}{simulation} \&\hyperlink{classevent_a08c6d828bfb6f5539dcd1491e8ac77d2}{sim}, \hyperlink{classpacket}{packet} \&pkt, \hyperlink{classnetnode}{netnode} \&step\-\_\-destination, \hyperlink{classnetlink}{netlink} \&link)}\label{classreceive__packet__event_a62cf5ad6dc6702e99182f297ad46f877}
+
+\begin{DoxyCompactList}\small\item\em Constructor for receive packet events for packets that do not belong to a flow (i.\-e., routing packets). \end{DoxyCompactList}\item 
+\hyperlink{classreceive__packet__event_a5c41daa5c0cd069eb069b1a9cc450c65}{$\sim$receive\-\_\-packet\-\_\-event} ()
+\begin{DoxyCompactList}\small\item\em Destructor. \end{DoxyCompactList}\item 
+void \hyperlink{classreceive__packet__event_ae7c0b0f1defa3e225373bea73f98b2ba}{run\-Event} ()
+\begin{DoxyCompactList}\small\item\em If this arrival event is at a router then we consult the routing table for the link to use for this packet's destination and use it to generate a \hyperlink{classsend__packet__event}{send\-\_\-packet\-\_\-event} down that link. \end{DoxyCompactList}\item 
+void \hyperlink{classreceive__packet__event_a0da19ff9fc6f51c9599b095e064ee8ce}{print\-Helper} (ostream \&os)
+\begin{DoxyCompactList}\small\item\em Print helper function. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Additional Inherited Members}
+
+
+\subsection{Detailed Description}
+Event that represents the arrival of a packet at either an intermediate node (router) or a final destination (host). 
+
+The packet can be a F\-L\-O\-W, A\-C\-K, or R\-O\-U\-T\-I\-N\-G packet. 
+
+\subsection{Constructor \& Destructor Documentation}
+\hypertarget{classreceive__packet__event_a5c41daa5c0cd069eb069b1a9cc450c65}{\index{receive\-\_\-packet\-\_\-event@{receive\-\_\-packet\-\_\-event}!$\sim$receive\-\_\-packet\-\_\-event@{$\sim$receive\-\_\-packet\-\_\-event}}
+\index{$\sim$receive\-\_\-packet\-\_\-event@{$\sim$receive\-\_\-packet\-\_\-event}!receive_packet_event@{receive\-\_\-packet\-\_\-event}}
+\subsubsection[{$\sim$receive\-\_\-packet\-\_\-event}]{\setlength{\rightskip}{0pt plus 5cm}receive\-\_\-packet\-\_\-event\-::$\sim$receive\-\_\-packet\-\_\-event (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{classreceive__packet__event_a5c41daa5c0cd069eb069b1a9cc450c65}
+
+
+Destructor. 
+
+
+
+\subsection{Member Function Documentation}
+\hypertarget{classreceive__packet__event_a0da19ff9fc6f51c9599b095e064ee8ce}{\index{receive\-\_\-packet\-\_\-event@{receive\-\_\-packet\-\_\-event}!print\-Helper@{print\-Helper}}
+\index{print\-Helper@{print\-Helper}!receive_packet_event@{receive\-\_\-packet\-\_\-event}}
+\subsubsection[{print\-Helper}]{\setlength{\rightskip}{0pt plus 5cm}void receive\-\_\-packet\-\_\-event\-::print\-Helper (
+\begin{DoxyParamCaption}
+\item[{ostream \&}]{os}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [virtual]}}}\label{classreceive__packet__event_a0da19ff9fc6f51c9599b095e064ee8ce}
+
+
+Print helper function. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em os} & The output stream to which to write event information. \\
+\hline
+\end{DoxyParams}
+
+
+Reimplemented from \hyperlink{classevent_a14ef1b59ef1f5a8311c7cac315c271df}{event}.
+
+\hypertarget{classreceive__packet__event_ae7c0b0f1defa3e225373bea73f98b2ba}{\index{receive\-\_\-packet\-\_\-event@{receive\-\_\-packet\-\_\-event}!run\-Event@{run\-Event}}
+\index{run\-Event@{run\-Event}!receive_packet_event@{receive\-\_\-packet\-\_\-event}}
+\subsubsection[{run\-Event}]{\setlength{\rightskip}{0pt plus 5cm}void receive\-\_\-packet\-\_\-event\-::run\-Event (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [virtual]}}}\label{classreceive__packet__event_ae7c0b0f1defa3e225373bea73f98b2ba}
+
+
+If this arrival event is at a router then we consult the routing table for the link to use for this packet's destination and use it to generate a \hyperlink{classsend__packet__event}{send\-\_\-packet\-\_\-event} down that link. 
+
+If the packet is arriving at a host then we create an A\-C\-K packet, make and queue a \hyperlink{classsend__packet__event}{send\-\_\-packet\-\_\-event} for the A\-C\-K, and queue a future \hyperlink{classsend__packet__event}{send\-\_\-packet\-\_\-event} for a duplicate A\-C\-K in case we don't see the next packet in the sequence. We also remove the flow's pending duplicate A\-C\-K \hyperlink{classsend__packet__event}{send\-\_\-packet\-\_\-event} for the packet with the preceding sequence number. 
+
+Reimplemented from \hyperlink{classevent_a74b7b9e3b4dd30fb42a2612968def7ef}{event}.
+
+
+
+The documentation for this class was generated from the following files\-:\begin{DoxyCompactItemize}
+\item 
+src/\hyperlink{events_8h}{events.\-h}\item 
+src/events.\-cpp\end{DoxyCompactItemize}

@@ -1,0 +1,159 @@
+\hypertarget{classnetelement}{\section{netelement Class Reference}
+\label{classnetelement}\index{netelement@{netelement}}
+}
+
+
+Superclass of all network elements including routers, hosts, links, packets, flows.  
+
+
+
+
+{\ttfamily \#include $<$network.\-h$>$}
+
+Inheritance diagram for netelement\-:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=3.000000cm]{classnetelement}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{classnetelement_a3c5679d2661bf66345db1e743bd3b134}{netelement} ()
+\begin{DoxyCompactList}\small\item\em Default constructor. \end{DoxyCompactList}\item 
+\hyperlink{classnetelement_a3bd01f2c0dba151f0f801ce3a9b64bd6}{netelement} (string name)
+\begin{DoxyCompactList}\small\item\em Sets name to given one and sets nesting depth to 0. \end{DoxyCompactList}\item 
+virtual \hyperlink{classnetelement_a5a19b5ac59274fe4e7da4588f9368f90}{$\sim$netelement} ()
+\begin{DoxyCompactList}\small\item\em Destructor. \end{DoxyCompactList}\item 
+const string \& \hyperlink{classnetelement_ae60065a5439cf34e8661a0f69e3a9b0e}{get\-Name} () const 
+\begin{DoxyCompactList}\small\item\em Getter for name. \end{DoxyCompactList}\item 
+void \hyperlink{classnetelement_a71b9122e5914b097d54453afd5f410dd}{set\-Nesting\-Depth} (int depth)
+\begin{DoxyCompactList}\small\item\em Setter for the nesting depth. \end{DoxyCompactList}\item 
+string \hyperlink{classnetelement_a6e5f6fd9636b94ecb10d9c60c3a52591}{nesting\-Prefix} (int delta) const 
+\begin{DoxyCompactList}\small\item\em Gets a string with as many spaces as (nesting depth + delta) $\ast$ spaces per level. \end{DoxyCompactList}\item 
+virtual void \hyperlink{classnetelement_a0763e38cebe07a50be6cfed014619de9}{print\-Helper} (std\-::ostream \&os) const 
+\begin{DoxyCompactList}\small\item\em Print helper function. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Superclass of all network elements including routers, hosts, links, packets, flows. 
+
+\char`\"{}\-Device\char`\"{} is a bit of a misnomer for the latter but they all share a superclass so they can share an output operator overload and so they can co-\/exist in the same S\-T\-L collection if necessary. 
+
+\subsection{Constructor \& Destructor Documentation}
+\hypertarget{classnetelement_a3c5679d2661bf66345db1e743bd3b134}{\index{netelement@{netelement}!netelement@{netelement}}
+\index{netelement@{netelement}!netelement@{netelement}}
+\subsubsection[{netelement}]{\setlength{\rightskip}{0pt plus 5cm}netelement\-::netelement (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{classnetelement_a3c5679d2661bf66345db1e743bd3b134}
+
+
+Default constructor. 
+
+Sets nesting depth to 0, name to empty string. \hypertarget{classnetelement_a3bd01f2c0dba151f0f801ce3a9b64bd6}{\index{netelement@{netelement}!netelement@{netelement}}
+\index{netelement@{netelement}!netelement@{netelement}}
+\subsubsection[{netelement}]{\setlength{\rightskip}{0pt plus 5cm}netelement\-::netelement (
+\begin{DoxyParamCaption}
+\item[{string}]{name}
+\end{DoxyParamCaption}
+)}}\label{classnetelement_a3bd01f2c0dba151f0f801ce3a9b64bd6}
+
+
+Sets name to given one and sets nesting depth to 0. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em name} & of this network element. \\
+\hline
+\end{DoxyParams}
+\hypertarget{classnetelement_a5a19b5ac59274fe4e7da4588f9368f90}{\index{netelement@{netelement}!$\sim$netelement@{$\sim$netelement}}
+\index{$\sim$netelement@{$\sim$netelement}!netelement@{netelement}}
+\subsubsection[{$\sim$netelement}]{\setlength{\rightskip}{0pt plus 5cm}netelement\-::$\sim$netelement (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [virtual]}}}\label{classnetelement_a5a19b5ac59274fe4e7da4588f9368f90}
+
+
+Destructor. 
+
+
+
+\subsection{Member Function Documentation}
+\hypertarget{classnetelement_ae60065a5439cf34e8661a0f69e3a9b0e}{\index{netelement@{netelement}!get\-Name@{get\-Name}}
+\index{get\-Name@{get\-Name}!netelement@{netelement}}
+\subsubsection[{get\-Name}]{\setlength{\rightskip}{0pt plus 5cm}const string \& netelement\-::get\-Name (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classnetelement_ae60065a5439cf34e8661a0f69e3a9b0e}
+
+
+Getter for name. 
+
+\begin{DoxyReturn}{Returns}
+name of this network element. 
+\end{DoxyReturn}
+\hypertarget{classnetelement_a6e5f6fd9636b94ecb10d9c60c3a52591}{\index{netelement@{netelement}!nesting\-Prefix@{nesting\-Prefix}}
+\index{nesting\-Prefix@{nesting\-Prefix}!netelement@{netelement}}
+\subsubsection[{nesting\-Prefix}]{\setlength{\rightskip}{0pt plus 5cm}string netelement\-::nesting\-Prefix (
+\begin{DoxyParamCaption}
+\item[{int}]{delta}
+\end{DoxyParamCaption}
+) const}}\label{classnetelement_a6e5f6fd9636b94ecb10d9c60c3a52591}
+
+
+Gets a string with as many spaces as (nesting depth + delta) $\ast$ spaces per level. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em delta} & effective nesting depth will be actual depth + delta \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+string with number of spaces determined by desting depth and the delta from that desting depth. 
+\end{DoxyReturn}
+\hypertarget{classnetelement_a0763e38cebe07a50be6cfed014619de9}{\index{netelement@{netelement}!print\-Helper@{print\-Helper}}
+\index{print\-Helper@{print\-Helper}!netelement@{netelement}}
+\subsubsection[{print\-Helper}]{\setlength{\rightskip}{0pt plus 5cm}void netelement\-::print\-Helper (
+\begin{DoxyParamCaption}
+\item[{std\-::ostream \&}]{os}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [virtual]}}}\label{classnetelement_a0763e38cebe07a50be6cfed014619de9}
+
+
+Print helper function. 
+
+Derived classes should (partially) override this. 
+\begin{DoxyParams}{Parameters}
+{\em os} & The output stream to which to write netdevice information. \\
+\hline
+\end{DoxyParams}
+
+
+Reimplemented in \hyperlink{classnetnode_acf1330a7d57a1358064b3736b888b464}{netnode}.
+
+\hypertarget{classnetelement_a71b9122e5914b097d54453afd5f410dd}{\index{netelement@{netelement}!set\-Nesting\-Depth@{set\-Nesting\-Depth}}
+\index{set\-Nesting\-Depth@{set\-Nesting\-Depth}!netelement@{netelement}}
+\subsubsection[{set\-Nesting\-Depth}]{\setlength{\rightskip}{0pt plus 5cm}void netelement\-::set\-Nesting\-Depth (
+\begin{DoxyParamCaption}
+\item[{int}]{depth}
+\end{DoxyParamCaption}
+)}}\label{classnetelement_a71b9122e5914b097d54453afd5f410dd}
+
+
+Setter for the nesting depth. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em depth} & \\
+\hline
+\end{DoxyParams}
+
+
+The documentation for this class was generated from the following files\-:\begin{DoxyCompactItemize}
+\item 
+src/\hyperlink{network_8h}{network.\-h}\item 
+src/network.\-cpp\end{DoxyCompactItemize}
