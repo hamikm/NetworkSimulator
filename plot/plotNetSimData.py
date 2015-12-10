@@ -77,7 +77,7 @@ def makeLegDict(legend, plottedLines):
 	'''
 	linker = {}
 	for legLine, plotLine in zip(legend.get_lines(), plottedLines):
-		legLine.set_picker(5)    # set tolerance
+		legLine.set_picker(10)    # set tolerance
 		linker[legLine] = plotLine
 
 	return linker
@@ -133,27 +133,40 @@ def plotLinkData(time, linksData):
 	# set window title
 	f.canvas.set_window_title("Link Metrics Graph")
 
-	# create dictionary connecting line in legend to plot
+	#########################################################################
+	# Enabling interactivity.
+
+	# create dictionary for each subplot connecting line in legend to plot
 	linkDict = makeLegDict(lleg, linkLines)
 	bfDict = makeLegDict(boleg, bufocLines)
 	plDict = makeLegDict(pleg, pktloLines)
 
-	def onpick(event):
-	    # on the pick event, find the orig line corresponding to the
-	    # legend proxy line, and toggle the visibility
+	def onSelectLink(event):
+	    # get the link selected
 	    legline = event.artist
-	    origline = linkDict[legline]
+	    
+	    # Figure out which subplot is being acted on
+	    if legline in linkDict:
+	    	origline = linkDict[legline]
+	    elif legline in bfDict:
+	    	origline = bfDict[legline]
+	    elif legline in plDict:
+	    	origline = plDict[legline]
+	    else:
+	    	print "Should never get to this case.\n"
+
 	    vis = not origline.get_visible()
 	    origline.set_visible(vis)
-	    # Change the alpha on the line in the legend so we can see what lines
-	    # have been toggled
+	    # Change transparency of legend symbol
 	    if vis:
 	        legline.set_alpha(1.0)
 	    else:
 	        legline.set_alpha(0.2)
 	    f.canvas.draw()
 
-	f.canvas.mpl_connect('pick_event', onpick)
+	# connect event to canvas
+	# seems to be bug in matplotlib that only allows one connection
+	f.canvas.mpl_connect('pick_event', onSelectLink)
 
 def plotFlowData(time, flowsData):
 	'''
@@ -207,26 +220,40 @@ def plotFlowData(time, flowsData):
 	# set window title
 	f.canvas.set_window_title("Flow Metrics Graph")
 
-	FlowDict = makeLegDict(fleg, flowLines)
-	wxDict = makeLegDict(winleg, winLines)
+	#########################################################################
+	# Enabling interactivity.
+
+	# create dictionary for each subplot connecting line in legend to plot
+	flowDict = makeLegDict(fleg, flowLines)
+	wsDict = makeLegDict(winleg, winLines)
 	pdDict = makeLegDict(pktleg, pktdLines)
 
-	def onpick(event):
-	    # on the pick event, find the orig line corresponding to the
-	    # legend proxy line, and toggle the visibility
+	def onSelectFlow(event):
+	    # get the link selected
 	    legline = event.artist
-	    origline = FlowDict[legline]
+	    
+	    # Figure out which subplot is being acted on
+	    if legline in flowDict:
+	    	origline = flowDict[legline]
+	    elif legline in wsDict:
+	    	origline = wsDict[legline]
+	    elif legline in pdDict:
+	    	origline = pdDict[legline]
+	    else:
+	    	print "Should never get to this case.\n"
+
 	    vis = not origline.get_visible()
 	    origline.set_visible(vis)
-	    # Change the alpha on the line in the legend so we can see what lines
-	    # have been toggled
+	    # Change transparency of legend symbol
 	    if vis:
 	        legline.set_alpha(1.0)
 	    else:
 	        legline.set_alpha(0.2)
 	    f.canvas.draw()
 
-	f.canvas.mpl_connect('pick_event', onpick)
+	# connect event to canvas
+	# seems to be bug in matplotlib that only allows one connection
+	f.canvas.mpl_connect('pick_event', onSelectFlow)
 
 def plotAll(time, linksData, flowsData):
 	''' Generates plots for flow and link data'''
