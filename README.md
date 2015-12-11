@@ -14,11 +14,15 @@ We encourage you to use our Doxygen-generated HTML documentation as you acquaint
 
 ### Purpose and scope
 
-This is a simulation of a network consisting of a few simple components: hosts which send data flows to other hosts, optional routers, and half-duplex links which connect hosts and routers. We tried to mirror reality closely; hosts partition data flows into packets which are used to send data down links to routers which forward them through the best known link towards the destination. Destinations receive packets and acknowledge them with the TCP ACK scheme. Packets are sent and received under a user-chosen TCP protocol--either TCP Tahoe or TCP FAST. The intent of the simulation was to help the authors better learn TCP through coding and simulation-generated graphs of various flow and link metrics. A full description of the project can be found at the PDF file in the base directory of this project
+A full description of the project can be found at `NetworkSimGuidelines-2015.pdf` in the base directory of this project. The intent of the simulation was to help the authors better learn TCP through coding and through analysis of simulation-generated graphs of flow and link metrics. An ancillary goal for the authors was to not fail their class.
+
+This is a simulation of a network consisting of a few simple components: hosts which send data flows to other hosts, optional routers, and half-duplex links which connect hosts and routers. We tried to mirror reality closely; hosts partition data flows into packets which are used to send data down links to routers which forward them through the best known link towards the destination, but packets contain no payloads. As such error correction techniques like parity bits and checksums are not simulated. Destinations receive packets and acknowledge them with the TCP ACK scheme. Packets are sent and received under a user-chosen TCP protocol--either TCP Tahoe or TCP FAST. Routers periodically run the Bellman-Ford algorithms on the network--i.e, they send and receive routing packets to judge network congestion and distances to other nodes--to populate their routing tables. 
 
 ### Architecture
 
-The network topology and other network parameters like the sizes, start times, and TCP protocols of flows are all specified 
+We use a discrete event-driven simulation. What this means is that 
+
+The network topology and other network parameters like the sizes, start times, and TCP protocols of flows are all specified by the user 
 
 #### Logging
 
