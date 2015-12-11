@@ -38,3 +38,9 @@ Makefile.bak
 netsim
 tests
 sample1_unittest
+
+# Directories
+docs
+
+# Plots
+plot/test*.json
