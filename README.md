@@ -2,21 +2,30 @@
 
 Simulates a user-specified network of hosts, half-duplex links, routers, and flows. Outputs graphs so network behavior can be analyzed easily. Written to satisfy the group project requirement for Caltech's introductory networking class, CS/EE 143.
 
-### Authors: Jessica Li, Hamik Mukelyan, Jingwen Wang (alphabetical order)
+### Authors (in alphabetic order): Jessica Li, Hamik Mukelyan, Jingwen Wang
 
-### Quick start
+### Quick Start
 
-Pull the repository--it should pull smart_gbn, which is the default branch---into a Linux machine then `make`. The simulation probably won't compile on OSX and definitely won't compile in Windows; we have been using Ubuntu VMs. The Makefile generates several binaries: one of them belongs to the unit testing library and can be ignored, the other is a suite of unit tests called `tests`, and the other is the actual simulation and is called `netsim`. The unit tests were used early in development so they are behind relative to the project's architecture and use cases. They were nevertheless important early on and I encourage you to run them as `./tests`.
+Pull the repository--it should pull smart_gbn, which is the default branch---into a Linux machine then `make`. The simulation probably won't compile on OSX and definitely won't compile in Windows; we have been using Ubuntu VMs. The Makefile generates several binaries: one of them belongs to the unit testing library and can be ignored, the other is a suite of unit tests called `tests`, and the other is the actual simulation and is called `netsim`. The unit tests were used early in development so they are behind relative to the project's architecture and use cases. They were nevertheless important early on and we encourage you to run them as `./tests`.
 
-The run the simulation itself type `./netsim` without args to see a usage message then try `./netsim -d input_files/test_case_0_tahoe`. Kill it if it takes too long to terminate then run it without the debug flag `-d`. Run `python plot/plotNetSimData.py plot/test_case_0_tahoe_log.json` to see the output graphs. Note that you can scale the graphs and turn specific lines on and off by clicking on their respective colored lines in the keys. 
+To run the simulation itself type `./netsim` without args to see a usage message then try `./netsim -d input_files/test_case_0_tahoe`. Kill it if it takes too long to terminate then run it without the debug flag `-d`.
+
+To generate plots of simulation metrics, run `python plot/plotNetSimData.py plot/test_case_0_tahoe_log.json` to see the output graphs. To plot the graphs in the background, add an ` & ` to the end of that command. Two windows should appear, one for flow related metrics and one for link related metrics. Graphs can be scaled by resizing the windows or using the magnify tool in the bottom left. To faciliate comparisons, data sets plotted in each subplot can be made visible or removed from view by clicking the respective icon in the subplot's legend.
 
 We encourage you to use our Doxygen-generated HTML documentation as you acquaint yourself with the codebase. Here's the [class documentation](http://users.cms.caltech.edu/~hamik/docs/html/annotated.html) and here's the [file documentation](http://users.cms.caltech.edu/~hamik/docs/html/files.html). Type `make clean` to clean up, `make docs` to generate potentially newer documentation locally--open `docs/html/index.html` in a browser to see them--and although it shouldn't be necessary you can run `make depend` to see the Makefile automatically generate its own dependencies.
 
-### Purpose and scope
+### Purpose and Scope
 
-A full description of the project can be found at `NetworkSimGuidelines-2015.pdf` in the base directory of this project. The intent of the simulation was to help the authors better learn TCP through coding and through analysis of simulation-generated graphs of flow and link metrics. An ancillary goal for the authors was to not fail their class.
+A full description of the project can be found at `NetworkSimGuidelines-2015.pdf` in the base directory of this project. The intent of the simulation was to help the authors better learn TCP through coding a network simulator and analyzing the results for the given test cases.
 
-This is a simulation of a network consisting of a few simple components: hosts which send data flows to other hosts, optional routers, and half-duplex links which connect hosts and routers. We tried to mirror reality closely; hosts partition data flows into packets which are used to send data down links to routers which forward them through the best known link towards the destination, but packets contain no payloads. As such error correction techniques like parity bits and checksums are not simulated. Destinations receive packets and acknowledge them with the TCP ACK scheme. Packets are sent and received under a user-chosen TCP protocol--either TCP Tahoe or TCP FAST. Routers periodically run the Bellman-Ford algorithms on the network--i.e, they send and receive routing packets to judge network congestion and distances to other nodes--to populate their routing tables. 
+This networks in this simulation consist of:
+* *routers*, which dynamically update routing tables
+* *hosts*, which send data flows to other hosts through routers
+* half-duplex *links* connecting hosts and routers
+* *flows*, which represents data transfers
+* *packets*, which do not have a payload size, but not an actual payload
+
+Hosts partition data flows into packets, which are enqueued onto links, which pass them to routers, which forward them to the flow's destination. As such error correction techniques, such as parity bits and checksums, are not simulated. Destinations receive packets and acknowledge them. Users choose which protocol to transfer flows with. This simulation supports TCP Tahoe and TCP-FAST. Routers periodically update their routing table by running the Bellman-Ford algorithmon the network. Routing table update occur within the simulation. In other works, routing packets use to find routers must wait to be transfered as would flow and ack packets.
 
 ### Architecture
 
@@ -32,44 +41,60 @@ The network topology and other network parameters like the sizes, start times, a
     "routers": [ "R1", "R2", "more routers here" , "R<m>" ],
     "links": [ 
         { "id": "L1", 
-          "rate": rate_in_mbps, 
-          "delay": signal_propagation_delay_in_ms,
-          "buf_len": buffer_size_in_kb,
+          "rate": <rate in mbps>, 
+          "delay": <signal propagation delay in ms>,
+          "buf_len": <buffer size in kb>,
           "endpt_1": "host or router name",
           "endpt_2": "host or router name" },
-        { "more links here" } ],
+        ... 
+        { "id": "L<p>", 
+          "rate": <rate in mbps>, 
+          "delay": <signal propagation delay in ms>,
+          "buf_len": <buffer size in kb>,
+          "endpt_1": "host or router name",
+          "endpt_2": "host or router name" } ],
     "flows": [
         { "id": "F1",
           "src": "host string",
           "dst": "host string",
-          "size": data_transmission_size_in_mb,
-          "start": flow_start_time_in_sec },
-        { "more flows here" } ]
+          "size": <data transmission size in mb>,
+          "start": <flow start time in sec> },
+        ...
+        { "id": "F<q>",
+          "src": "host string",
+          "dst": "host string",
+          "size": <data transmission size in mb>,
+          "start": <flow start time in sec> } ]
 }
 ```
 
 #### Driver
-
-The `main` function for `netsim` lives in the `driver.cpp` file. The driver file handles console input and registers a signal handler for interruptions so the logger will produce a well-defined json file even if the simulation ends prematurely. `main` has a required console argument for the filename containing the network topology and parameters; this is read in and passed to the simulation 
 
 #### Simulation
 
 #### Logging
 
 
-### Test cases and analysis
+### Analysis of Simulation of TCP on Given Test Cases
 
-We were supplied three test cases...
+Three test cases were provided:
+* **Test Case 0** contains two hosts, a single flow, and no routers, and was useful for verifying our simluation architecture.
+* **Test Case 1** contains two hosts, a single flow, and four routers, and was useful for testing dynamic routing.
+* **Test Case 2** contains six hosts, three flows, and four routers, and was useful for testing our simulation on multiple flows.
 
-We have analytical prediction of TCP FAST performance for test case 2
+#### TCP Tahoe
 
-#### Test case 0
+##### Test Case 0
+##### Test Case 1
+##### Test Case 2
 
-#### Test case 1
+#### TCP-FAST
 
-#### Test case 2
+##### Test Case 0
+##### Test Case 1
+##### Test Case 2
 
-### Division of labor
+### Division of Labor
 
 #### Jingwen
 
