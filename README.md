@@ -6,7 +6,7 @@ Simulates TCP on a user-specified network of hosts, half-duplex links, routers, 
 
 ### Quick Start
 
-Pull the repository--it should pull `smart_gbn`, which is the default branch---into a Linux machine then `make`. The simulation probably won't compile on OSX and definitely won't compile in Windows; we have been using Ubuntu VMs. The Makefile generates several binaries: one of them belongs to the unit testing library and can be ignored, the other is a suite of unit tests called `tests`, and the other is the actual simulation and is called `netsim`. The unit tests were used early in development so they are behind relative to the project's architecture and use cases. They were nevertheless important early on and we encourage you to run them as `./tests`.
+Pull the repository--it should pull `smart_gbn`, which is the default branch--into a Linux machine then `make`. The simulation probably won't compile on OSX and definitely won't compile in Windows; we have been using Ubuntu VMs. The Makefile generates several binaries: one of them belongs to the unit testing library and can be ignored, the other is a suite of unit tests called `tests`, and the other is the actual simulation and is called `netsim`. The unit tests were used early in development so they are behind relative to the project's architecture and use cases. They were nevertheless important early on and we encourage you to run them as `./tests`.
 
 To run the simulation itself type `./netsim` without args to see a usage message then try `./netsim -d input_files/test_case_0_tahoe plot/nameofLogger.json`. Kill it if it takes too long to terminate then run it without the debug flag `-d`.
 
@@ -16,7 +16,7 @@ We encourage you to use our Doxygen-generated HTML documentation as you acquaint
 
 ### Purpose and Scope
 
-A full description of the project can be found at `NetworkSimGuidelines-2015.pdf` in the base directory of this project. The intent of the simulation was to help the authors better learn TCP through coding a network simulator and analyzing the results for the given test cases.
+A full description of the project can be found at `NetworkSimGuidelines-2015.pdf` in the root directory of this project. The intent of the simulation was to help the authors better learn TCP through coding a network simulator and analyzing the results for the given test cases.
 
 This networks in this simulation consist of:
 * *routers*, which dynamically update routing tables
@@ -91,10 +91,7 @@ Flow Metrics
 
 ### Analysis of Simulation of TCP on Given Test Cases
 
-Three test cases were provided:
-* **Test Case 0** contains two hosts, a single flow, and no routers, and was useful for verifying our simluation architecture.
-* **Test Case 1** contains two hosts, a single flow, and four routers, and was useful for testing dynamic routing.
-* **Test Case 2** contains six hosts, three flows, and four routers, and was useful for testing our simulation on multiple flows.
+See `NetworkSimTestCases-2015.pdf` in the root directory for an explanation 
 
 #### TCP Tahoe
 
@@ -115,12 +112,17 @@ Three test cases were provided:
 TODO
 
 #### Jessica 
+* implemented logging from simulation into JSON formatted log file using JSON for Modern C++ instead of RapidJSON
+* implemented plotting simulation metrics
+    * implemented interactive plot 
+* created presentations
+* implemented selective acknowledgement scheme
 
 #### Hamik
 
 * Decided the JSON input file format, wrote the test cases, and chose the RapidJSON library
 * Chose the Doxygen documentation generator and uploaded the final docs to his website
-* Wrote the rather long Makefile
+* Wrote the long Makefile
 * Decided an inheritance hierarchy and wrote skeleton flow, host, router, link, packet, simulation, and event classes. He also wrote the `driver.cpp` file as the entry point for the simulation and tested the skeleton simulation against some unit tests written under the Google C++ unit testing framework.
 * Played a support role for Jessica and Jingwen after the project was bootstrapped, which included helping with debugging, occasionally writing new code or bug fixes, and clarifying C++ concepts since they were less familiar with C++ than he was.
 * Merged a lot of the code from other branches into the default branch, since his editor (Eclipse) was best at it.
