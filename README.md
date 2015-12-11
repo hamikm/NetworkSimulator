@@ -63,11 +63,11 @@ We have written up the three provided test cases in this format, but the simulat
 
 #### Driver File and Simulation Class
 
-Our `main` function lives in `driver.cpp.`. This file handles console arguments and initializes a `simulation` object, whose job is to parse input files, populate in-memory flow, router, host, and link collections, and queue some initial events. The driver then instructs the simulation object to enter its main loop, where events are dequeued and run. 
+Our `main` function lives in `driver.cpp`. This file handles console arguments and initializes a `simulation` object, whose job is to parse input files, populate in-memory flow, router, host, and link collections, and queue some initial events. The driver then instructs the simulation object to enter its main loop, where events are dequeued and run. 
 
 #### Logging
 
-JSON for Modern C++ is the C++ JSON parsing module used to write the log file in JSON format. A logger file is created every time a simluation is run, thus all logger related functions are stored under a simulation object. Data is logged every time an event is run. In order to speed up graphing and reduce the size of the log file, 1 in every 10 events is actually logged.
+JSON for Modern C++ is the C++ JSON parsing module used to write the log file in JSON format. A logger file is created every time a simluation is run, thus all logger related functions are stored under a simulation object. Data is logged every time an event is run. In order to speed up graphing and reduce the size of the log file, 1 in every 10 events is actually logged. See `sampleDataFile.json` for example of log file format.
 
 This simulation logs the following:
 
@@ -86,7 +86,7 @@ Flow Metrics
     - stored as state variable
     - updated according to flow's TCP
 - *packet delay*
-    - calculated per pakcet as time elapsed since packet was sent and respective acknowledgement was received
+    - calculated per packet as time elapsed since packet was sent and respective acknowledgement was received
 
 
 ### Analysis of Simulation of TCP on Given Test Cases
@@ -109,11 +109,14 @@ See `NetworkSimTestCases-2015.pdf` in the root directory for an explanation
 
 #### Jingwen
 
-TODO
+- Helped design event handling
+- Designed and implemented dynamic routing and associated events
+- Implemented FAST TCP and associated events
+- Found fixes for bugs in sending/receiving packets, duplicate and selective ack handling, window resizing, and incurring half-duplex link costs
 
 #### Jessica 
 * implemented logging from simulation into JSON formatted log file using JSON for Modern C++ instead of RapidJSON
-* implemented plotting simulation metrics
+* implemented plotting of simulation metrics by parsing JSON logger
     * implemented interactive plot 
 * created presentations
 * implemented selective acknowledgement scheme
