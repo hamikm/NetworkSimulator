@@ -50,6 +50,8 @@ The network topology and other network parameters like the sizes, start times, a
 
 #### Driver
 
+The `main` function for `netsim` lives in the `driver.cpp` file. The driver file handles console input and registers a signal handler for interruptions so the logger will produce a well-defined json file even if the simulation ends prematurely. `main` has a required console argument for the filename containing the network topology and parameters; this is read in and passed to the simulation 
+
 #### Simulation
 
 #### Logging
