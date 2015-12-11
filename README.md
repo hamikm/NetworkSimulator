@@ -29,8 +29,9 @@ Hosts partition data flows into packets, which are enqueued onto links, which pa
 
 ### Architecture
 
-Event driven simulation
-We will follow the flow of the `netsim` program from start to finish and will omit a discussion of the unit tests.
+Our simulation is event-driven, which means that it initially seeds an event queue with starter events--`start_flow_event` instances in our case--then enters a loop in which it dequeues an event, calls its `runEvent` function, then logs some data before iterating. Each event occurs at a particular time, which was determined at the time the event was created and which is used to order the events in the events queue, and each event can in turn queue more events. For example, a `send_packet_event` might enqueue a `receive_packet_event` after determining the time at which its packet will be received at the other end of the link. That process is explained in detail in the documentation in the corresponding class. 
+
+As we explain the architecture in more detail we will follow the flow of the `netsim` program from start to finish. The unit test architecture is not discussed.
 
 #### Program Input
 
@@ -58,13 +59,15 @@ The network topology and other network parameters like the sizes, start times, a
 }
 ```
 
-#### Driver
-Main file that parses console arguments to generate a network from the JSON input file, create a simulation object and log file, and begin simulation. 
+We have written up the three provided test cases in this format, but the simulation will in principle handle others.
 
-#### Simulation
+#### Driver File and Simulation Class
+
+Our `main` function lives in `driver.cpp.`. This file handles console arguments and initializes a `simulation` object, whose job is to parse input files, populate in-memory flow, router, host, and link collections, and queue some initial events. The driver then instructs the simulation object to enter its main loop, where events are dequeued and run. 
 
 #### Logging
-JSON for Modern C++ is the C++ JSON parsing module used to write the logger in JSON format. A logger file is created every time a simluation is run, thus all logger related functions are stored under a simulation object. Data is logged every time an event is run. In order to speed up graphing and reduce the size of the log file, 1 in every 10 events is actually logged.
+
+JSON for Modern C++ is the C++ JSON parsing module used to write the log file in JSON format. A logger file is created every time a simluation is run, thus all logger related functions are stored under a simulation object. Data is logged every time an event is run. In order to speed up graphing and reduce the size of the log file, 1 in every 10 events is actually logged.
 
 This simulation logs the following:
 
