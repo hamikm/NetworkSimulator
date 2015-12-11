@@ -267,7 +267,7 @@ void simulation::runSimulation() {
 	
 	// Loop over the flows, making a start flow event for each and adding
 	// it to the events queue.
-	// If the flow is using FAST TCP for congestrion control, also push 
+	// If the flow is using FAST TCP for congestion control, also push
 	// update_window_events at regular intervals.
 	for (map<string, netflow *>::iterator itr = flows.begin();
 			itr != flows.end(); itr++) {
@@ -291,7 +291,7 @@ void simulation::runSimulation() {
 
 	// Loop over the events in the events queue, running the one with the
 	// smallest start time.
-	while (!events.empty()) {
+	while (!events.empty() && !(allFlowsDone())) {
 		multimap<double, event *>::iterator it = events.begin();
 		event *curr_event = (*it).second;
 		events.erase(it);
@@ -306,18 +306,6 @@ void simulation::runSimulation() {
 			}
 		}
 	}
-
-	// Check resulting routing tables
-	
-	for (map<string, netrouter*>::iterator it_rt = routers.begin();
-		 it_rt != routers.end(); it_rt++) {
-
-		
-		it_rt->second->printHelper(cout);
-		cout << endl;
-	}
-	
-
 }
 
 void simulation::addEvent(event *e) {
@@ -340,6 +328,18 @@ void simulation::removeEvent(event *e) {
 		}
 		it++;
 	}
+}
+
+bool simulation::allFlowsDone() {
+	map<string, netflow *>::iterator fitr;
+
+	bool isDone = true;
+	// iterate through all flows
+	for (fitr = flows.begin(); fitr != flows.end(); fitr++) {
+			isDone = isDone && fitr->second->doneTransmitting();
+	}
+
+	return isDone;
 }
 
 /********** SIMULATION LOGGER RELATED FUNCTIONS **********/
@@ -470,9 +470,9 @@ json simulation::logFlowMetric(netflow flow, double currTime) {
   
 	// retrieve flow metrics
     string name = flow.getName();
-    // double rate = flow.getFlowRateMbps(currTime);
+    double rate = flow.getFlowRateMbps(currTime);
     // above line is correct, below line is for debugging for time being
-    double percent = flow.getFlowPercentage();
+    // double percent = flow.getFlowPercentage();
     int window = flow.getWindowSize();
     double delay = flow.getPktDelay(currTime);
 
@@ -480,8 +480,8 @@ json simulation::logFlowMetric(netflow flow, double currTime) {
     json flowMetric =
     {
         {"FlowID" , name},
-        //{"FlowRate" , rate},
-		{"FlowRate", percent},
+        {"FlowRate" , rate},
+		//{"FlowRate", percent},
         {"WinSize" , window},
         {"PktDelay" , delay},
     };

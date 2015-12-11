@@ -330,7 +330,6 @@ netflow::netflow (string name, double start_time, double size_mb,
 			false, DEFAULT_INITIAL_TIMEOUT, sim);
 }
 
-
 double netflow::getStartTimeSec() const { return start_time_sec; }
 
 double netflow::getStartTimeMs() const { return start_time_sec * MS_PER_SEC; }
@@ -450,6 +449,20 @@ double netflow::getFlowPercentage() const {
 double netflow::getPktDelay(double currTime) const {
 	return pkt_RTT;
 }
+
+/** Returns true if flow has finished transmitting */
+bool netflow::doneTransmitting() {
+
+	if (amt_received_mb > 159)
+		cerr << amt_received_mb << endl;
+
+	if (amt_received_mb + ((double)FLOW_PACKET_SIZE) / BYTES_PER_MEGABIT
+			>= size_mb) {
+		return true;
+	}
+	else { return false; }
+}
+
 
 void netflow::registerAckEvent(int seq, double time) {
 	// Update and queue up new ack_event

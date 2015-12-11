@@ -114,7 +114,7 @@ def plotLinkData(time, linksData):
 
 	# add titles, labels and legend; set lower bound of y axis
 	lrates.set_xlabel('Time (ms)')
-	lrates.set_ylabel('Link Rate (Mbps)')
+	lrates.set_ylabel('Link Throughput (Mbps)')
 	lleg = lrates.legend(loc='best')
 	lrates.set_ylim(ymin=0)
 	
@@ -201,7 +201,7 @@ def plotFlowData(time, flowsData):
 	# add titles, labels, and legends to plots; set lower bound of y axis
 	frates.set_xlabel('Time (ms)')
 	#frates.set_ylabel('Flow Rate (Mbps)')
-	frates.set_ylabel('Flow Percentage (Mbps)') # useful for debugging purposes
+	frates.set_ylabel('Flow Throughput (Mbps)') # useful for debugging purposes
 	fleg = frates.legend(loc='best')
 	frates.set_ylim(ymin=0)
 	

@@ -159,7 +159,12 @@ public:
 	 */
 	void removeEvent(event *e);
 
-	// SIMULATION LOGGER RELATED FUNCTIONS
+	/** Returns true if all flows have finished transmitting
+	 * @return boolean
+	 */
+	bool allFlowsDone();
+
+	//------------ SIMULATION LOGGER RELATED FUNCTIONS -----------------------//
 	
 	/**
 	 * Helper function for logging once every LOG_FREQUENCY.

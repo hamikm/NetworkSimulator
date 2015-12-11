@@ -724,6 +724,9 @@ public:
 	 */
 	double getPktDelay(double currTime) const;
 
+	/** Returns true if flow has finished transmitting */
+	bool doneTransmitting();
+
 	// --------------------------- Mutators -----------------------------------
 
 	/**
