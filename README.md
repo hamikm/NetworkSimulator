@@ -1,12 +1,12 @@
 # Caltech CS/EE 143 Final Technical Report
 
-Simulates a user-specified network of hosts, half-duplex links, routers, and flows. Outputs graphs so network behavior can be analyzed easily. Written to satisfy the group project requirement for Caltech's introductory networking class, CS/EE 143.
+Simulates TCP on a user-specified network of hosts, half-duplex links, routers, and flows. Outputs graphs so network behavior can be analyzed easily. Written to satisfy the group project requirement for Caltech's introductory networking class, CS/EE 143.
 
 ### Authors (alphabetically): Jessica Li, Hamik Mukelyan, Jingwen Wang
 
 ### Quick Start
 
-Pull the repository--it should pull smart_gbn, which is the default branch---into a Linux machine then `make`. The simulation probably won't compile on OSX and definitely won't compile in Windows; we have been using Ubuntu VMs. The Makefile generates several binaries: one of them belongs to the unit testing library and can be ignored, the other is a suite of unit tests called `tests`, and the other is the actual simulation and is called `netsim`. The unit tests were used early in development so they are behind relative to the project's architecture and use cases. They were nevertheless important early on and we encourage you to run them as `./tests`.
+Pull the repository--it should pull `smart_gbn`, which is the default branch---into a Linux machine then `make`. The simulation probably won't compile on OSX and definitely won't compile in Windows; we have been using Ubuntu VMs. The Makefile generates several binaries: one of them belongs to the unit testing library and can be ignored, the other is a suite of unit tests called `tests`, and the other is the actual simulation and is called `netsim`. The unit tests were used early in development so they are behind relative to the project's architecture and use cases. They were nevertheless important early on and we encourage you to run them as `./tests`.
 
 To run the simulation itself type `./netsim` without args to see a usage message then try `./netsim -d input_files/test_case_0_tahoe plot/nameofLogger.json`. Kill it if it takes too long to terminate then run it without the debug flag `-d`.
 
@@ -59,6 +59,7 @@ The network topology and other network parameters like the sizes, start times, a
 ```
 
 #### Driver
+Main file that parses console arguments to generate a network from the JSON input file, create a simulation object and log file, and begin simulation. 
 
 #### Simulation
 
