@@ -358,7 +358,7 @@ int simulation::initializeLog(string filename) {
 	// store name of logger file
 	logName = filename;
 	// opening file with intent of appending to EOF
-    logger.open(logName.c_str(), ios::out |ios::app);
+    logger.open(logName.c_str(), ios::out | ios::trunc);
     // write in first line
     string firstLine = "{ \"Simulation Event Metrics\" : [\n";
     logger << firstLine ;

@@ -12,6 +12,7 @@
 #include <string>
 #include <cstdlib>
 #include <string.h>
+#include <csignal>
 
 // Custom headers.
 #include "simulation.h"
@@ -38,6 +39,13 @@ void print_usage_statement (char *progname);
  */
 char *process_console_args(int argc, char **argv);
 
+/**
+ * Called when the program terminates unexpectedly to append some crucial
+ * characters to the output JSON file.
+ * @param signal
+ */
+void term_sig_handler(int signal);
+
 // ------------------------ Global variables ----------------------------------
 
 /** If true lots of debugging output is shown. */
@@ -55,6 +63,12 @@ bool detail = false;
  */
 ostream &debug_os = cout;
 
+/**
+ * The simulation object is a global variable so that the signal handler can
+ * see it when it tries to clean up the output file.
+ */
+simulation *sim;
+
 // ------------------------------ Main ----------------------------------------
 
 /**
@@ -63,10 +77,14 @@ ostream &debug_os = cout;
  */
 int main (int argc, char **argv) {
 
+	signal(SIGINT, term_sig_handler);
+	signal(SIGSEGV, term_sig_handler);
+	signal(SIGTERM, term_sig_handler);
+
 	char *infile = process_console_args(argc, argv);
 
 	// Load hosts, routers, links, and flows from the JSON input file.
-	simulation sim(infile);
+	sim = new simulation(infile);
 
 	// Create a file in which to log data
 	string logName = infile;
@@ -74,20 +92,29 @@ int main (int argc, char **argv) {
 	// .json output file should end up on plot/ directory
 	logName = logName.substr(11, 20);	
 	logName = "plot" + logName + "_log" + ".json";
-	sim.initializeLog(logName);
+	sim->initializeLog(logName);
 	cout << "log initialized" << endl;
 	// Invoke the simulation loop, which should terminate when all events
 	// have been processed.
 	// Every time an event is executed, network sim metrics are logged.
-	sim.runSimulation();
+	sim->runSimulation();
 	cout << "simulation ended" << endl;
 	// Close .json format log file 
-	sim.closeLog();
+	sim->closeLog();
+
+	delete sim;
 
 	return 0;
 }
 
 // ---------------------------- Functions  ------------------------------------
+
+void term_sig_handler(int signal) {
+	if (sim != NULL)
+		sim->closeLog();
+	exit(1);
+	return;
+}
 
 void print_usage_statement (char *progname) {
 	cerr << "Usage: " << progname << " <JSON input file> [-d|-dd]" << endl;
