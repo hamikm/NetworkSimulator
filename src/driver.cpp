@@ -28,16 +28,15 @@ using namespace std;
 void print_usage_statement (char *progname);
 
 /**
- * Processes console arguments, returning the input filename and setting flags
- * like the debug one.
+ * Processes console arguments and sets the global variables @c infile and
+ * @c outfile.
  * @param argc number of console arguments
  * @param argv console arguments
- * @return the input filename
- * @post sets the debug flag
+ * @post sets the debug flag and infile and outfile global variables.
  * @warning exits from this process after printing a usage statement if the
  * console arguments don't conform to the usage statement
  */
-char *process_console_args(int argc, char **argv);
+void process_console_args(int argc, char **argv);
 
 /**
  * Called when the program terminates unexpectedly to append some crucial
@@ -69,6 +68,12 @@ ostream &debug_os = cout;
  */
 simulation *sim;
 
+/** Input filename */
+char *infile;
+
+/** Output filename */
+char *outfile;
+
 // ------------------------------ Main ----------------------------------------
 
 /**
@@ -81,25 +86,16 @@ int main (int argc, char **argv) {
 	signal(SIGSEGV, term_sig_handler);
 	signal(SIGTERM, term_sig_handler);
 
-	char *infile = process_console_args(argc, argv);
+	process_console_args(argc, argv);
 
 	// Load hosts, routers, links, and flows from the JSON input file.
 	sim = new simulation(infile);
 
-	// Create a file in which to log data
-	string logName = infile;
-	
-	// .json output file should end up on plot/ directory
-	logName = logName.substr(11, 20);	
-	logName = "plot" + logName + "_log" + ".json";
-	sim->initializeLog(logName);
-	cout << "log initialized" << endl;
 	// Invoke the simulation loop, which should terminate when all events
-	// have been processed.
-	// Every time an event is executed, network sim metrics are logged.
+	// have been processed. Every time an event is executed, network sim
+	// metrics are logged.
+	sim->initializeLog(outfile);
 	sim->runSimulation();
-	cout << "simulation ended" << endl;
-	// Close .json format log file 
 	sim->closeLog();
 
 	delete sim;
@@ -117,51 +113,36 @@ void term_sig_handler(int signal) {
 }
 
 void print_usage_statement (char *progname) {
-	cerr << "Usage: " << progname << " <JSON input file> [-d|-dd]" << endl;
+	cerr << endl << "Usage: " << progname << " <JSON input file> "
+			"<JSON output file> [-d|-dd]" << endl;
 	cerr << "  -d to print debugging statements to stdout." << endl;
 	cerr << "  -dd to print detailed, pausing debugging statements to stdout."
-			<< endl;
+			<< endl << endl << "Note that the debug flags must come after "
+			"the two required filenames." << endl << endl;
 }
 
-char *process_console_args(int argc, char **argv) {
+void process_console_args(int argc, char **argv) {
 
 	// See print_usage_statement function for expected console arguments.
-	if (argc != 2 && argc != 3) {
+	if (argc != 3 && argc != 4) {
 		print_usage_statement(argv[0]);
 		exit (1);
 	}
 
-	if (argc == 2) {
-		if (strcmp(argv[1], "-d") != 0 && strcmp(argv[1], "-dd") != 0)
-			return argv[1];
-		else {
-			print_usage_statement(argv[0]);
-			exit (1);
-		}
-	}
-
+	// No flags
 	if (argc == 3) {
-		if (strcmp(argv[1], "-d") == 0) {
-			debug = true;
-			return argv[2];
-		}
-		else if (strcmp(argv[1], "-dd") == 0) {
-			debug = true;
+		debug = false;
+		detail = false;
+	}
+
+	// One debug flag
+	if (argc == 4) {
+		debug = true;
+		if (strcmp(argv[3], "-dd") == 0) {
 			detail = true;
-			return argv[2];
-		}
-		else {
-			if (strcmp(argv[2], "-d") == 0)
-				debug = true;
-			if (strcmp(argv[2], "-dd") == 0) {
-				debug = true;
-				detail = true;
-			}
-			return argv[1];
 		}
 	}
 
-	// Shouldn't get here.
-	print_usage_statement(argv[0]);
-	exit (1);
+	infile = argv[1];
+	outfile = argv[2];
 }

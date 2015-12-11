@@ -4,7 +4,7 @@
 
 #include "simulation.h"
 
-simulation::simulation () {}
+simulation::simulation () : outfile(NULL) {}
 
 simulation::simulation (const char *inputfile) {
 
@@ -348,17 +348,16 @@ int simulation::getEvtCount() const {
 	return eventCount;
 }
 
-string simulation::getLogName() const {
-	return logName;
+char *simulation::getLogName() const {
+	return outfile;
 }
 
-int simulation::initializeLog(string filename) {
+int simulation::initializeLog(char *filename) {
+	outfile = filename;
 	ofstream logger;
 	
-	// store name of logger file
-	logName = filename;
 	// opening file with intent of appending to EOF
-    logger.open(logName.c_str(), ios::out | ios::trunc);
+    logger.open(filename, ios::out | ios::trunc);
     // write in first line
     string firstLine = "{ \"Simulation Event Metrics\" : [\n";
     logger << firstLine ;
@@ -372,7 +371,7 @@ int simulation::closeLog() {
 	ofstream logger;
 	
 	// opening file with intent of appending to EOF
-    logger.open(logName.c_str(), ios::out |ios::app);
+    logger.open(outfile, ios::out |ios::app);
 
     // add last line and close json file
     string lastLine = "] }";
@@ -428,7 +427,7 @@ int simulation::logEvent(double currTime) {
 
     // write to file
     ofstream logger;
-    logger.open(logName.c_str(), ios::out |ios::app);
+    logger.open(outfile, ios::out |ios::app);
 
     appendEventMetric(event, logger);
 

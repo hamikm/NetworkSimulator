@@ -76,7 +76,7 @@ private:
 	multimap<double, event *> events;
 
 	/** Name of file to which simulation metrics are logged */
-	string logName;
+	char *outfile;
 
 	/** Keeps track of how many events have been executed; Used in logging */
 	int eventCount = 0;
@@ -171,7 +171,7 @@ public:
 	 * Getter for the logger filename
 	 * @return logName name of log file
 	 */
-	string getLogName() const;
+	char *getLogName() const;
 
 	/**
 	 * Initializes and sets up a data log for the simulation object
@@ -179,7 +179,7 @@ public:
 	 * @param filename name to give to log file
 	 * @return 0 returned if successful
 	 */
-	int initializeLog(string filename);
+	int initializeLog(char *filename);
 
 	/**
 	 * After simulation has finished i.e. all events have logged data
