@@ -10,7 +10,7 @@ Pull the repository into a Linux machine then `make`. The simulation probably wo
 
 The run the simulation itself type `./netsim` without args to see a usage message then try `./netsim -d input_files/test_case_0_tahoe`. Kill it if it takes too long to terminate then run it without the debug flag `-d`. Run `python plot/plotNetSimData.py plot/test_case_0_tahoe_log.json` to see the output graphs. Note that you can scale the graphs and turn specific lines on and off by clicking on their respective colored lines in the keys. 
 
-We encourage you to use our Doxygen-generated HTML documentation as you acquaint yourself with the codebase. Here's the [class documentation](http://users.cms.caltech.edu/~hamik/docs/html/annotated.html) and here's the [file documentation](http://users.cms.caltech.edu/~hamik/docs/html/files.html). 
+We encourage you to use our Doxygen-generated HTML documentation as you acquaint yourself with the codebase. Here's the [class documentation](http://users.cms.caltech.edu/~hamik/docs/html/annotated.html) and here's the [file documentation](http://users.cms.caltech.edu/~hamik/docs/html/files.html). Type `make clean` to clean up, `make docs` to generate potentially newer documentation locally--open `docs/html/index.html` in a browser to see them--and although it shouldn't be necessary you can run `make depend` to see the Makefile automatically generate its own dependencies.
 
 ### Purpose and scope
 
@@ -20,7 +20,7 @@ This is a simulation of a network consisting of a few simple components: hosts w
 
 ### Architecture
 
-We use a discrete event-driven simulation. What this means is that 
+I will follow the flow 
 
 The network topology and other network parameters like the sizes, start times, and TCP protocols of flows are all specified by the user 
 
@@ -29,6 +29,28 @@ The network topology and other network parameters like the sizes, start times, a
 
 ### Test cases and analysis
 
+We were supplied three test cases...
 
+We have analytical prediction of TCP FAST performance for test case 2
 
+#### Test case 0
 
+#### Test case 1
+
+#### Test case 2
+
+### Division of labor
+
+#### Jingwen
+
+TODO
+
+#### Jessica 
+
+#### Hamik
+
+* Decided the JSON input file format, wrote the test cases, and chose the RapidJSON library
+* Chose the Doxygen documentation generator and uploaded the final docs to his website
+* Wrote the rather long Makefile
+* Decided an inheritance hierarchy and wrote skeleton flow, host, router, link, packet, simulation, and event classes. He also wrote the `driver.cpp` file as the entry point for the simulation and tested the skeleton simulation against some unit tests written under the Google C++ unit testing framework.
+* Played a support role for Jessica and Jingwen after the project was bootstrapped, which included helping with debugging, clarifying C++ concepts since they were less familiar with C++ than I was, and occasionally writing bug fixes.
