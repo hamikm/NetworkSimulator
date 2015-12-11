@@ -41,30 +41,19 @@ The network topology and other network parameters like the sizes, start times, a
     "routers": [ "R1", "R2", "more routers here" , "R<m>" ],
     "links": [ 
         { "id": "L1", 
-          "rate": <rate in mbps>, 
-          "delay": <signal propagation delay in ms>,
-          "buf_len": <buffer size in kb>,
+          "rate": rate_in_mbps, 
+          "delay": signal_propagation_delay_in_ms,
+          "buf_len": buffer_size_in_kb,
           "endpt_1": "host or router name",
           "endpt_2": "host or router name" },
-        ... 
-        { "id": "L<p>", 
-          "rate": <rate in mbps>, 
-          "delay": <signal propagation delay in ms>,
-          "buf_len": <buffer size in kb>,
-          "endpt_1": "host or router name",
-          "endpt_2": "host or router name" } ],
+        { "more links here" } ],
     "flows": [
         { "id": "F1",
           "src": "host string",
           "dst": "host string",
-          "size": <data transmission size in mb>,
-          "start": <flow start time in sec> },
-        ...
-        { "id": "F<q>",
-          "src": "host string",
-          "dst": "host string",
-          "size": <data transmission size in mb>,
-          "start": <flow start time in sec> } ]
+          "size": data_transmission_size_in_mb,
+          "start": flow_start_time_in_sec },
+        { "more flows here" } ]
 }
 ```
 
