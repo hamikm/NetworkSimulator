@@ -2,13 +2,13 @@
 
 Simulates a user-specified network of hosts, half-duplex links, routers, and flows. Outputs graphs so network behavior can be analyzed easily. Written to satisfy the group project requirement for Caltech's introductory networking class, CS/EE 143.
 
-### Authors (in alphabetic order): Jessica Li, Hamik Mukelyan, Jingwen Wang
+### Authors (alphabetically): Jessica Li, Hamik Mukelyan, Jingwen Wang
 
 ### Quick Start
 
 Pull the repository--it should pull smart_gbn, which is the default branch---into a Linux machine then `make`. The simulation probably won't compile on OSX and definitely won't compile in Windows; we have been using Ubuntu VMs. The Makefile generates several binaries: one of them belongs to the unit testing library and can be ignored, the other is a suite of unit tests called `tests`, and the other is the actual simulation and is called `netsim`. The unit tests were used early in development so they are behind relative to the project's architecture and use cases. They were nevertheless important early on and we encourage you to run them as `./tests`.
 
-To run the simulation itself type `./netsim` without args to see a usage message then try `./netsim -d input_files/test_case_0_tahoe`. Kill it if it takes too long to terminate then run it without the debug flag `-d`.
+To run the simulation itself type `./netsim` without args to see a usage message then try `./netsim -d input_files/test_case_0_tahoe plot/nameofLogger.json`. Kill it if it takes too long to terminate then run it without the debug flag `-d`.
 
 To generate plots of simulation metrics, run `python plot/plotNetSimData.py plot/test_case_0_tahoe_log.json` to see the output graphs. To plot the graphs in the background, add an ` & ` to the end of that command. Two windows should appear, one for flow related metrics and one for link related metrics. Graphs can be scaled by resizing the windows or using the magnify tool in the bottom left. To faciliate comparisons, data sets plotted in each subplot can be made visible or removed from view by clicking the respective icon in the subplot's legend.
 
@@ -29,9 +29,10 @@ Hosts partition data flows into packets, which are enqueued onto links, which pa
 
 ### Architecture
 
+Event driven simulation
 We will follow the flow of the `netsim` program from start to finish and will omit a discussion of the unit tests.
 
-#### Program input
+#### Program Input
 
 The network topology and other network parameters like the sizes, start times, and TCP protocols of flows are all specified by the user in JSON files that live in the `input_files` directory. Each `.json` file corresponds to one test case. The format is as follows:
 
@@ -62,6 +63,26 @@ The network topology and other network parameters like the sizes, start times, a
 #### Simulation
 
 #### Logging
+JSON for Modern C++ is the C++ JSON parsing module used to write the logger in JSON format. A logger file is created every time a simluation is run, thus all logger related functions are stored under a simulation object. Data is logged every time an event is run. In order to speed up graphing and reduce the size of the log file, 1 in every 10 events is actually logged.
+
+This simulation logs the following:
+
+Link Metrics
+- *throughput*
+    - calculated by binning the number of packets received by the network node at either end of the link (since every link is half duplex) every RATE_INTERVAL, currently set to 1 second.
+- *buffer capacity*
+    - stored as state variable
+- *packet loss*
+    - computed as number of packets continously dropped from a full buffer, reset every time buffer is not full
+
+Flow Metrics
+- *flow throughput*
+    - calculated by binning number of flow packets received by the flow's destination host every RATE_INTERVAL, currently set to 1 second
+- *window size*
+    - stored as state variable
+    - updated according to flow's TCP
+- *packet delay*
+    - calculated per pakcet as time elapsed since packet was sent and respective acknowledgement was received
 
 
 ### Analysis of Simulation of TCP on Given Test Cases
