@@ -37,25 +37,14 @@ The network topology and other network parameters like the sizes, start times, a
           "buf_len": buffer_size_in_kb,
           "endpt_1": "host or router name",
           "endpt_2": "host or router name" },
-        { "more links here" },
-        { "id": "L<p>", 
-          "rate": rate_in_mbps, 
-          "delay": signal_propagation_delay_in_ms,
-          "buf_len": buffer_size_in_kb,
-          "endpt_1": "host or router name",
-          "endpt_2": "host or router name" } ],
+        { "more links here" } ],
     "flows": [
         { "id": "F1",
           "src": "host string",
           "dst": "host string",
           "size": data_transmission_size_in_mb,
           "start": flow_start_time_in_sec },
-        { "more flows here" },
-        { "id": "F<q>",
-          "src": "host string",
-          "dst": "host string",
-          "size": data_transmission_size_in_mb,
-          "start": flow_start_time_in_sec } ]
+        { "more flows here" } ]
 }
 ```
 
