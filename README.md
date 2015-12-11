@@ -125,4 +125,4 @@ TODO
 * Wrote the long Makefile
 * Decided an inheritance hierarchy and wrote skeleton flow, host, router, link, packet, simulation, and event classes. He also wrote the `driver.cpp` file as the entry point for the simulation and tested the skeleton simulation against some unit tests written under the Google C++ unit testing framework.
 * Played a support role for Jessica and Jingwen after the project was bootstrapped, which included helping with debugging, occasionally writing new code or bug fixes, and clarifying C++ concepts since they were less familiar with C++ than he was.
-* Merged a lot of the code from other branches into the default branch, since his editor (Eclipse) was best at it.
+* Merged a lot of the code from other branches into the default branch, since his editor (Eclipse) was best at it. *A lot of the commits that appear to have originated from Hamik's account are actually mostly Jingwen's or Jessica's, since Hamik just performed the merges.*
