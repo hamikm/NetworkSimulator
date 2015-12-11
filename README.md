@@ -101,18 +101,21 @@ See `NetworkSimTestCases-2015.pdf` in the root directory for an explanation
 
 #### TCP-FAST
 
+Although the window sizes do converge to a steady-state, the run-time (in simulation seconds) is longer than expected and the steady-state window size is lower than expected because our acknowledgement packets and routing packets incur link delays. These delays can be exacerbated by the fact that we have implemented half-duplex links.
+
 ##### Test Case 0
 ##### Test Case 1
 ##### Test Case 2
 
 ### Division of Labor
+*A lot of the commits that appear to have originated from Hamik's account are actually mostly Jingwen's or Jessica's, since Hamik just performed the merges.*
 
 #### Jingwen
 
-- Helped design event handling
-- Designed and implemented dynamic routing and associated events
-- Implemented FAST TCP and associated events
-- Found fixes for bugs in sending/receiving packets, duplicate and selective ack handling, window resizing, and incurring half-duplex link costs
+* Helped design event handling
+* Designed and implemented dynamic routing and associated events
+* Implemented FAST TCP and associated events
+* Found fixes for bugs in sending/receiving packets, duplicate and selective ack handling, window resizing, and incurring half-duplex link costs
 
 #### Jessica 
 * implemented logging from simulation into JSON formatted log file using JSON for Modern C++ instead of RapidJSON
@@ -128,4 +131,4 @@ See `NetworkSimTestCases-2015.pdf` in the root directory for an explanation
 * Wrote the long Makefile
 * Decided an inheritance hierarchy and wrote skeleton flow, host, router, link, packet, simulation, and event classes. He also wrote the `driver.cpp` file as the entry point for the simulation and tested the skeleton simulation against some unit tests written under the Google C++ unit testing framework.
 * Played a support role for Jessica and Jingwen after the project was bootstrapped, which included helping with debugging, occasionally writing new code or bug fixes, and clarifying C++ concepts since they were less familiar with C++ than he was.
-* Merged a lot of the code from other branches into the default branch, since his editor (Eclipse) was best at it. *A lot of the commits that appear to have originated from Hamik's account are actually mostly Jingwen's or Jessica's, since Hamik just performed the merges.*
+* Merged a lot of the code from other branches into the default branch, since his editor (Eclipse) was best at it. 
