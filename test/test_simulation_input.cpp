@@ -43,7 +43,7 @@ protected:
 		// Read the data into an intermediate string, tack that onto a
 		// string buffer, then after file ends copy whole json string.
 		stringstream sstr;
-		ifstream inputfile ("input_files/test_case_2");
+		ifstream inputfile ("input_files/test_case_2_tahoe");
 		string line;
 		if (inputfile.is_open()) {
 			while (getline(inputfile, line)) {

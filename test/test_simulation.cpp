@@ -41,21 +41,21 @@ protected:
 TEST_F(simulationTest, Simulation) {
 
 	cout << endl;
-	const char *input_file0 = "input_files/test_case_0";
+	const char *input_file0 = "input_files/test_case_0_tahoe";
 	cout << "Reading the file \"" << input_file0 << "\" into the simulation. "
 			<< "Here are the simulation elements after the read: " << endl;
 	simulation sim0(input_file0);
 	sim0.print_network(cout);
 	cout << endl;
 
-	const char *input_file1 = "input_files/test_case_1";
+	const char *input_file1 = "input_files/test_case_1_tahoe";
 	cout << "Reading the file \"" << input_file1 << "\" into the simulation. "
 			<< "Here are the simulation elements after the read: " << endl;
 	simulation sim1(input_file1);
 	sim1.print_network(cout);
 	cout << endl;
 
-	const char *input_file2 = "input_files/test_case_2";
+	const char *input_file2 = "input_files/test_case_2_tahoe";
 	cout << "Reading the file \"" << input_file2 << "\" into the simulation. "
 			<< "Here are the simulation elements after the read: " << endl;
 	simulation sim2(input_file2);
