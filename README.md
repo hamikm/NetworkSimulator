@@ -121,9 +121,17 @@ Different from Test Case 0, Test Case 1 has routers. We expect the total time to
 
 Although the window sizes do converge to a steady-state, the run-time (in simulation seconds) is longer than expected and the steady-state window size is lower than expected because our acknowledgement packets and routing packets incur link delays. These delays can be exacerbated by the fact that we have implemented half-duplex links.
 
-##### Test Case 0
-##### Test Case 1
-##### Test Case 2
+##### Analytical Results
+
+As we pointed out above our FAST results are impossible to compare with our analytical results because we're using half-duplex links and because window resizing under FAST doesn't quite work, but here's our analysis anyway: 
+
+``` math
+(Zero to ten seconds) In this time interval	the first flow goes from S1 to T1 using each of the links L1, L2, and L3. Since there is just one flow and since all link capacities and propagation delays are the same the throughput of the first flow is just 2500 packets/s. The queuing delay is then $q_1^* = \alpha / x_1^* = 50 / 2500 = 0.02$ s/packet. Since 2500 packets are sent per second we get a queue length of (link capacity)$\cdot$(queuing delay) $= 2500 \cdot 0.02 = 50$ packets, though packets will only need to queue up at link 1 since the steady-state send-rate keeps packets from needing to queue at links 2 or 3.
+
+(Ten to twenty seconds) $x_1^* = \alpha / q_{1}^*$, where $q_{1}^*$ is the new queuing delay for link 1. However the second flow must account for the original 0-10s delay $q_{1'}^*$, so $x_2^* = \alpha / (q_{1}^* + q_{1'}^*)  = \alpha / (q_1^* - 0.02)$. These throughputs must sum to 2500 packets/s, so we have $\alpha / (q_1^* - 0.02) + \alpha / q_1^* = 50 / (q_1^* - 0.02) + 50 / q_1^* = 2500 \iff q_1^* = \sfrac{1}{100} \cdot (3 \pm \sqrt{5})$ (from Wolfram Alpha). Discarding the smaller solution as ``too small'' we get the new queueing delay is $q_1^* = .05236$s, which generates a queue length of $2500 \cdot .05236 = 131$ packets. We also have $x_1^* = \alpha / q_1^* = 50 / .05236 = 955$ packets/s as the throughput of flow 1 and $x_2^* = \alpha / (q_{1}^* + q_{1'}^*) = 50 / (.05236 - .02) = 1545$ packets/s as the throughput of flow 2. Note that again only flow 1 travels through links 2 and 3, and since its throughput is less than the capacities of those links there are no queueing delays or queues at those links.
+
+(Twenty seconds onward) Instead of explaining again I'm just going to write down the equations, since the reasoning is analogous to what I've already written. We have $x_1^* = \alpha / (q_1^* + q_3^*)$, $x_2^* = \alpha / (q_1^* - q_{1'}^*)$, and $x_3^* = \alpha / q_3^*$. The sum of the throughputs for flows 1 and 2 equals 2500 packets/s, as does the sum of the throughputs for flows 1 and 3. The equations are $2500 = 50 / (q_1^* + q_3^*) + 50 / (q_1^* - .02)$ and  $2500 = 50 / (q_1^* + q_3^*) + 50 / (q_3^*)$. Note that since only flow 2 goes through link 2 and its still rate-limited by link 1 there's no queueing delay $q_2^*$ and no corresponding queue on link 2. Solving these in Wolfram Alpha and taking the physical solutions we get $q_1^* = \sfrac{1}{100} \cdot (3 + \sqrt{3}) \approx .047$s and $q_3^* = \sfrac{1}{100} \cdot (1 + \sqrt{3}) \approx .027$s, which generate queue lengths of 118 and 68 packets on links 1 and 3, respectively. Then $x_1^* = 50 / (q_1^* + q_3^*) \approx 50 / (.027 + .047) = 670$ packets/s, $x_2^* = \alpha / (q_1^* - q_{1'}^*) \approx 50 / (.047 - .02) = 1831$ packets/s, and $x_3^* =  \alpha / q_3^* \approx 50 / .027 = 1831$ packets/s.
+```
 
 ### Division of Labor
 *A lot of the commits that appear to have originated from Hamik's account are actually mostly Jingwen's or Jessica's, since Hamik just performed the merges.*
