@@ -453,9 +453,6 @@ double netflow::getPktDelay(double currTime) const {
 /** Returns true if flow has finished transmitting */
 bool netflow::doneTransmitting() {
 
-	if (amt_received_mb > 159)
-		cerr << amt_received_mb << endl;
-
 	if (amt_received_mb + ((double)FLOW_PACKET_SIZE) / BYTES_PER_MEGABIT
 			>= size_mb) {
 		return true;
