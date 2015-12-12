@@ -74,8 +74,9 @@ This simulation logs the following:
 Link Metrics
 - *throughput*
     - calculated by binning the number of packets received by the network node at either end of the link (since every link is half duplex) every RATE_INTERVAL, currently set to 1 second.
-- *buffer capacity*
+- *buffer occupancy*
     - stored as state variable
+    - calculated as terms of KB rather than packets because all packets get queued, but do not all have the same size
 - *packet loss*
     - computed as number of packets continously dropped from a full buffer, reset every time buffer is not full
 
