@@ -163,7 +163,7 @@ As we pointed out above our FAST results are impossible to compare with our anal
 * Implemented FAST TCP and associated events
 * Found fixes for bugs in sending/receiving packets, duplicate and selective ack handling, window resizing, and incurring half-duplex link costs
 
-*Note: A few early commits were made when my git.config email was set incorrectly, so the contributions are not registered to my account. The commits are still visible under my name if you scroll back through the commit feed.*
+*Note: A few of Jingwen's early commits were done when her git.config email was set incorrectly, so the contributions are not registered to her account. The commits are still visible under her name if you scroll back through the commit feed.*
 
 #### Jessica 
 * implemented logging from simulation into JSON formatted log file using JSON for Modern C++ instead of RapidJSON
