@@ -114,6 +114,11 @@ Different from Test Case 0, Test Case 1 has routers. We expect the total time to
 ![test-case-1-tahoe-link](https://github.com/hamikm/cit_cs143_network_sim/blob/smart_gbn/report_graphs/tc1_tahoe_link_metrics_graph.png)
 
 ##### Test Case 2
+
+Since Test Case 2 contains multiple routers and multiple flows, we expect it to take the longest and exhibit the most complex behavior behavior of the three cases. Looking at plot of flow throughput, we may get a sense for how long each flow took. Flow 1 took the longest to transmit, which is reasonable since it had the longest distance to travel. 
+
+The window size plot is as roughly as expected. There is a spike in window size whenever each plow begins to send due to slow start. Afterwards, each flow's window size is adjusted according to TCP Tahoe. Flow 1's window size continues to readjust throughout the entire simulation. However, Flow 2's and Flow 3's window sizes flatline at approximately 150 seconds and 310 seconds, respectively. These times are also when Flow 2 and Flow 3 finish transmitting. The flatline in the plot is due to the fact that the the simulation continues to log metrics from all flows, until the simulation terminates.
+
 ![test-case-2-tahoe-flow](https://github.com/hamikm/cit_cs143_network_sim/blob/smart_gbn/report_graphs/tc2_tahoe_flow_metrics_graph.png)
 ![test-case-2-tahoe-link](https://github.com/hamikm/cit_cs143_network_sim/blob/smart_gbn/report_graphs/tc2_tahoe_link_metrics_graph.png)
 
