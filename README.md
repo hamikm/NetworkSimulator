@@ -138,6 +138,21 @@ As we pointed out above our FAST results are impossible to compare with our anal
 
 (Twenty seconds onward) Instead of explaining again I'm just going to write down the equations, since the reasoning is analogous to what I've already written. We have x<sub>1</sub><sup>\*</sup> = &#945; / (q<sub>1</sub><sup>\*</sup> + q<sub>3</sub><sup>\*</sup>), x<sub>2</sub><sup>\*</sup> = &#945; / (q<sub>1</sub><sup>\*</sup> - q<sub>1'</sub><sup>\*</sup>), and x<sub>3</sub><sup>\*</sup> = &#945; / q<sub>3</sub><sup>\*</sup>. The sum of the throughputs for flows 1 and 2 equals 2500 packets/s, as does the sum of the throughputs for flows 1 and 3. The equations are 2500 = 50 / (q<sub>1</sub><sup>\*</sup> + q<sub>3</sub><sup>\*</sup>) + 50 / (q<sub>1</sub><sup>\*</sup> - .02) and  2500 = 50 / (q<sub>1</sub><sup>\*</sup> + q<sub>3</sub><sup>\*</sup>) + 50 / (q<sub>3</sub><sup>\*</sup>). Note that since only flow 2 goes through link 2 and its still rate-limited by link 1 there's no queueing delay q<sub>2</sub><sup>\*</sup> and no corresponding queue on link 2. Solving these in Wolfram Alpha and taking the physical solutions we get q<sub>1</sub><sup>\*</sup> = 1/100 \* (3 + &#8730;3) = .047s and q<sub>3</sub><sup>\*</sup> = 1/100 \* (1 + &#8730;3) = .027s, which generate queue lengths of 118 and 68 packets on links 1 and 3, respectively. Then x<sub>1</sub><sup>\*</sup> = 50 / (q<sub>1</sub><sup>\*</sup> + q<sub>3</sub><sup>\*</sup>) = 50 / (.027 + .047) = 670 packets/s, x<sub>2</sub><sup>\*</sup> = &#945; / (q<sub>1</sub><sup>\*</sup> - q<sub>1'</sub><sup>\*</sup>) = 50 / (.047 - .02) = 1831 packets/s, and x<sub>3</sub><sup>\*</sup> =  &#945; / q<sub>3</sub><sup>\*</sup> = 50 / .027 = 1831 packets/s.
 
+##### Test Case 0 Plots
+
+![test-case-0-fast-flow](https://github.com/hamikm/cit_cs143_network_sim/blob/smart_gbn/report_graphs/tc0_FAST_flow_metrics_graph.png)
+![test-case-0-fast-link](https://github.com/hamikm/cit_cs143_network_sim/blob/smart_gbn/report_graphs/tc0_FAST_link_metrics_graph.png)
+
+##### Test Case 1 Plots
+
+![test-case-1-fast-link](https://github.com/hamikm/cit_cs143_network_sim/blob/smart_gbn/report_graphs/tc1_fast_flow_metrics_graph.png)
+![test-case-1-fast-flow](https://github.com/hamikm/cit_cs143_network_sim/blob/smart_gbn/report_graphs/tc1_fast_link_metrics_graph.png)
+
+##### Test Case 2 Plots
+
+![test-case-2-fast-link](https://github.com/hamikm/cit_cs143_network_sim/blob/smart_gbn/report_graphs/tc2_fast_flow_metrics_graph.png)
+![test-case-2-fast-flow](https://github.com/hamikm/cit_cs143_network_sim/blob/smart_gbn/report_graphs/tc2_fast_link_metrics_graph.png)
+
 ### Division of Labor
 *A lot of the commits that appear to have originated from Hamik's account are actually mostly Jingwen's or Jessica's, since Hamik just performed the merges.*
 
