@@ -25,7 +25,8 @@ This networks in this simulation consist of:
 * *flows*, which represents data transfers
 * *packets*, which do not have a payload size, but not an actual payload
 
-Hosts partition data flows into packets, which are enqueued onto links, which pass them to routers, which forward them to the flow's destination. As such error correction techniques, such as parity bits and checksums, are not simulated. Destinations receive packets and acknowledge them. Users choose which protocol to transfer flows with. This simulation supports TCP Tahoe and TCP-FAST. Routers periodically update their routing table by running the Bellman-Ford algorithmon the network. Routing table update occur within the simulation. In other works, routing packets use to find routers must wait to be transfered as would flow and ack packets.
+Hosts partition data flows into packets, which are enqueued onto links, which pass them to routers, which forward them to the flow's destination. As such error correction techniques, such as parity bits and checksums, are not simulated. Destinations receive packets and acknowledge them. Users specify with which protocol to transfer flows in the input file. This simulation supports TCP Tahoe and TCP-FAST. Routers periodically update their routing tables by running the Bellman-Ford algorithm on the network. Routing packets must wait to be transferred through the links along with flow and acknowledgement traffic. For distributed Bellman Ford, the routing messages are sent until the graph becomes stable. The update process is terminated (i.e., no more routing packets are sent from a particular router) when the router does not need to update any more distances in its routing table.
+
 
 ### Architecture
 
@@ -74,8 +75,9 @@ This simulation logs the following:
 Link Metrics
 - *throughput*
     - calculated by binning the number of packets received by the network node at either end of the link (since every link is half duplex) every RATE_INTERVAL, currently set to 1 second.
-- *buffer capacity*
+- *buffer occupancy*
     - stored as state variable
+    - calculated as terms of KB rather than packets because all packets get queued, but do not all have the same size
 - *packet loss*
     - computed as number of packets continously dropped from a full buffer, reset every time buffer is not full
 
@@ -98,24 +100,43 @@ See `NetworkSimTestCases-2015.pdf` in the root directory for an explanation
 ##### Test Case 0
 Since Test Case 0 has only 1 flow transferring over 1 link, a 20 MB flow transferring at full link capacity should take about 16 seconds. However, given congestion control is implemented and that TCP Tahoe is the slowest of the congestion controls, we expect the transmission time to take a little longer. The actual simulation takes ~28 seconds to complete, which is reasonable.
 
-The plot of window sizes also appears to be correct. Slow start is entered in the beginning. Afterwards, every time duplicate acknowledgements are registered, the window size is reset to 1. Slow start is entered again before entering linear growth. This can be seen in the plot of window sizes in the slight gap between each fin. 
+The plot of window sizes also appears to be correct. Slow start is entered in the beginning. Afterwards, every time duplicate acknowledgements are registered (corresponding to spikes in packet delay), the window size is reset to 1. Slow start is entered again before entering linear growth. This can be seen in the plot of window sizes in the slight gap between each fin. 
+
+![test-case-0-tahoe-flow](https://github.com/hamikm/cit_cs143_network_sim/blob/smart_gbn/report_graphs/tc0_tahoe_flow_metrics_graph.png)
+![test-case-0-tahoe-link](https://github.com/hamikm/cit_cs143_network_sim/blob/smart_gbn/report_graphs/tc0_tahoe_link_metrics_graph.png)
 
 ##### Test Case 1
-This test case is intended to test the dynamic routing. Dynamic routing is Each link is assigned a cost that is the sum of static link cost and dynamic link cost, which can be measured as the time it takes a packet to travel from source to destination. This is equal to half of round trip time. While updating the routing table, each router sends routing packets to every other router which allows it to gauge the link congestion. Links between hosts and routers are ignored, since there is no alternative path. 
+This test case is intended to test the dynamic routing. Link cost is determined by the amount of time it takes for packet to traverse the link. This metric includes both static cost (length) and dynamic cost (due to congestion) since traversal time depends on both. Distance to self and adjacent hosts are treated as 0, since each host has only one outgoing link and the next hop will never change. The first router discovery event occurs at time 0, and terminates before any flows start. In subsequent router discovery events, each router’s distance table is reset (although next-hop links are not) and routing packets are sent from each router to its neighboring routers.
 
 We expect flow packets to alternate between L1 and L2, and L3 and L4. It is more difficult to see in the throughput graphs, but easy to see by examing the link buffers. One can clearly see the switching between links, indicating the dynamic routing is working.
 
 Different from Test Case 0, Test Case 1 has routers. We expect the total time to be far longer because the flow running with TCP Tahoe is traveling over many links, and routing table update events are happening while the simulation timer is running.
 
+![test-case-1-tahoe-flow](https://github.com/hamikm/cit_cs143_network_sim/blob/smart_gbn/report_graphs/tc1_tahoe_flow_metrics_graph.png)
+![test-case-1-tahoe-link](https://github.com/hamikm/cit_cs143_network_sim/blob/smart_gbn/report_graphs/tc1_tahoe_link_metrics_graph.png)
+
 ##### Test Case 2
+
+Since Test Case 2 contains multiple routers and multiple flows, we expect it to take the longest and exhibit the most complex behavior behavior of the three cases. Looking at plot of flow throughput, we may get a sense for how long each flow took. Flow 1 took the longest to transmit, which is reasonable since it had the longest distance to travel. 
+
+The window size plot is as roughly as expected. There is a spike in window size whenever each plow begins to send due to slow start. Afterwards, each flow's window size is adjusted according to TCP Tahoe. Flow 1's window size continues to readjust throughout the entire simulation. However, Flow 2's and Flow 3's window sizes flatline at approximately 150 seconds and 310 seconds, respectively. These times are also when Flow 2 and Flow 3 finish transmitting. The flatline in the plot is due to the fact that the the simulation continues to log metrics from all flows, until the simulation terminates.
+
+![test-case-2-tahoe-flow](https://github.com/hamikm/cit_cs143_network_sim/blob/smart_gbn/report_graphs/tc2_tahoe_flow_metrics_graph.png)
+![test-case-2-tahoe-link](https://github.com/hamikm/cit_cs143_network_sim/blob/smart_gbn/report_graphs/tc2_tahoe_link_metrics_graph.png)
 
 #### TCP-FAST
 
-Although the window sizes do converge to a steady-state, the run-time (in simulation seconds) is longer than expected and the steady-state window size is lower than expected because our acknowledgement packets and routing packets incur link delays. These delays can be exacerbated by the fact that we have implemented half-duplex links.
+We used gamma = 1 and alpha = 20. Window size is updated every 20 milliseconds. Although the window sizes do quickly converge to a steady-state, steady-state window size is lower than expected, causing the run-time (in simulation seconds) to longer than expected. We suspect that this is true because our acknowledgement packets and routing packets both incur link delays, which can be exacerbated by the fact that we have implemented half-duplex links.
 
-##### Test Case 0
-##### Test Case 1
-##### Test Case 2
+##### Analytical Results
+
+As we pointed out above our FAST results are impossible to compare with our analytical results because we're using half-duplex links and because window resizing under FAST doesn't quite work, but here's our analysis anyway for test case 2. Note that our buffer occupancy metric is recorded in bytes rather than in packets.
+
+(Zero to ten seconds) In this time interval	the first flow goes from S1 to T1 using each of the links L1, L2, and L3. Since there is just one flow and since all link capacities and propagation delays are the same the throughput of the first flow is just 2500 packets/s. The queuing delay is then q<sub>1</sub><sup>\*</sup> = &#945; / x<sub>1</sub><sup>\*</sup> = 50 / 2500 = 0.02 s/packet. Since 2500 packets are sent per second we get a queue length of (link capacity)\*(queuing delay) = 2500 \* 0.02 = 50 packets, though packets will only need to queue up at link 1 since the steady-state send-rate keeps packets from needing to queue at links 2 or 3.
+
+(Ten to twenty seconds) x<sub>1</sub><sup>\*</sup> = &#945; / q<sub>1</sub><sup>\*</sup>, where q<sub>1</sub><sup>\*</sup> is the new queuing delay for link 1. However the second flow must account for the original 0-10s delay q<sub>1'</sub><sup>\*</sup>, so x<sub>2</sub><sup>\*</sup> = &#945; / (q<sub>1</sub><sup>\*</sup> + q<sub>1'</sub><sup>\*</sup>)  = &#945; / (q<sub>1</sub><sup>\*</sup> - 0.02). These throughputs must sum to 2500 packets/s, so we have &#945; / (q<sub>1</sub><sup>\*</sup> - 0.02) + &#945; / q<sub>1</sub><sup>\*</sup> = 50 / (q<sub>1</sub><sup>\*</sup> - 0.02) + 50 / q<sub>1</sub><sup>\*</sup> = 2500 if and only if q<sub>1</sub><sup>\*</sup> = 1/100 \* (3 &#177; &#8730;5) (from Wolfram Alpha). Discarding the smaller solution as "too small" we get the new queueing delay is q<sub>1</sub><sup>\*</sup> = .05236s, which generates a queue length of 2500 \* .05236 = 131 packets. We also have x<sub>1</sub><sup>\*</sup> = &#945; / q<sub>1</sub><sup>\*</sup> = 50 / .05236 = 955 packets/s as the throughput of flow 1 and x<sub>2</sub><sup>\*</sup> = &#945; / (q<sub>1</sub><sup>\*</sup> + q<sub>1'</sub><sup>\*</sup>) = 50 / (.05236 - .02) = 1545 packets/s as the throughput of flow 2. Note that again only flow 1 travels through links 2 and 3, and since its throughput is less than the capacities of those links there are no queueing delays or queues at those links.
+
+(Twenty seconds onward) Instead of explaining again I'm just going to write down the equations, since the reasoning is analogous to what I've already written. We have x<sub>1</sub><sup>\*</sup> = &#945; / (q<sub>1</sub><sup>\*</sup> + q<sub>3</sub><sup>\*</sup>), x<sub>2</sub><sup>\*</sup> = &#945; / (q<sub>1</sub><sup>\*</sup> - q<sub>1'</sub><sup>\*</sup>), and x<sub>3</sub><sup>\*</sup> = &#945; / q<sub>3</sub><sup>\*</sup>. The sum of the throughputs for flows 1 and 2 equals 2500 packets/s, as does the sum of the throughputs for flows 1 and 3. The equations are 2500 = 50 / (q<sub>1</sub><sup>\*</sup> + q<sub>3</sub><sup>\*</sup>) + 50 / (q<sub>1</sub><sup>\*</sup> - .02) and  2500 = 50 / (q<sub>1</sub><sup>\*</sup> + q<sub>3</sub><sup>\*</sup>) + 50 / (q<sub>3</sub><sup>\*</sup>). Note that since only flow 2 goes through link 2 and its still rate-limited by link 1 there's no queueing delay q<sub>2</sub><sup>\*</sup> and no corresponding queue on link 2. Solving these in Wolfram Alpha and taking the physical solutions we get q<sub>1</sub><sup>\*</sup> = 1/100 \* (3 + &#8730;3) = .047s and q<sub>3</sub><sup>\*</sup> = 1/100 \* (1 + &#8730;3) = .027s, which generate queue lengths of 118 and 68 packets on links 1 and 3, respectively. Then x<sub>1</sub><sup>\*</sup> = 50 / (q<sub>1</sub><sup>\*</sup> + q<sub>3</sub><sup>\*</sup>) = 50 / (.027 + .047) = 670 packets/s, x<sub>2</sub><sup>\*</sup> = &#945; / (q<sub>1</sub><sup>\*</sup> - q<sub>1'</sub><sup>\*</sup>) = 50 / (.047 - .02) = 1831 packets/s, and x<sub>3</sub><sup>\*</sup> =  &#945; / q<sub>3</sub><sup>\*</sup> = 50 / .027 = 1831 packets/s.
 
 ### Division of Labor
 *A lot of the commits that appear to have originated from Hamik's account are actually mostly Jingwen's or Jessica's, since Hamik just performed the merges.*
