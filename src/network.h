@@ -392,7 +392,7 @@ private:
 	/** Pointer to simulation so timeout_events can be made in this class. */
 	simulation *sim;
 
-	void updateTimeoutLength(double end_time_ms, int flow_seqnum);
+	void updateTimeoutLength(double rtt, int flow_seqnum);
 
 	void constructorHelper (double start_time, double size_mb,
 			nethost &source, nethost &destination, double window_size,
@@ -495,6 +495,8 @@ public:
 
 	double getLinGrowthWinsizeThreshold() const;
 
+	double getPktRTT() const;
+
 	const map<int, timeout_event *>& getFutureTimeoutsEvents() const;
 
 	const map<int, ack_event*>& getFutureSendAckEvents() const;
@@ -568,7 +570,7 @@ public:
 	 * @post duplicate_ack_event added to the local map and to the global
 	 * events queue.
 	 */
-	void registerSendDuplicateAckAction(int seq, double time);
+	void registerSendDuplicateAckAction(int seq, double arrival_time, double sent_time);
 
 	/**
 	 * Gets all the packets in this window that must be sent. This function

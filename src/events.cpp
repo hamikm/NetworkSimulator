@@ -164,7 +164,7 @@ void receive_packet_event::runEvent() {
 			if(debug && this) {
 				debug_os << "  Sending packet #" << pkt_it->getSeq() << endl;
 			}
-
+			pkt_it->setTransmitTimestamp(getTime());
 			send_packet_event *e = new send_packet_event(
 					getTime() + i++ * netflow::TIME_EPSILON, *sim,
 					*flow, *pkt_it, *(flow->getSource()->getLink()),
@@ -290,9 +290,16 @@ update_window_event::update_window_event(
 update_window_event::~update_window_event() { }
 
 void update_window_event::runEvent() {
+
 	double w = flow->getWindowSize();
-	double new_windowsize = min(2*w, (1.0 - GAMMA) * w + 
-		GAMMA * (flow->getMinRTT()*w/flow->getAvgRTT() + ALPHA));
+	
+	double new_windowsize;
+	if (flow->getAvgRTT() == -1) {
+		new_windowsize = ALPHA;
+	}
+	else {
+		new_windowsize = w * (flow->getMinRTT()/(flow->getPktRTT())) + ALPHA;
+	}
 
 	flow->setFASTWindowSize(new_windowsize);
 
@@ -490,6 +497,7 @@ void start_flow_event::runEvent() {
 	int first_seqnum_in_window = pkts_to_send[0].getSeq(); // assume is ordered
 	vector<packet>::iterator pkt_it = pkts_to_send.begin();
 	while(pkt_it != pkts_to_send.end()) {
+		pkt_it->setTransmitTimestamp(getTime());
 		send_packet_event *e = new send_packet_event(getTime(), *sim, *flow,
 				*pkt_it, *(flow->getSource()->getLink()),
 				*(flow->getSource()), window_size, first_seqnum_in_window);
@@ -558,6 +566,7 @@ void timeout_event::runEvent() {
 	int first_seqnum_in_window = pkts_to_send[0].getSeq(); // assume is ordered
 	vector<packet>::iterator pkt_it = pkts_to_send.begin();
 	while(pkt_it != pkts_to_send.end()) {
+		pkt_it->setTransmitTimestamp(getTime());
 		send_packet_event *e = new send_packet_event(getTime(), *sim, *flow,
 				*pkt_it, *(flow->getSource()->getLink()),
 				*(flow->getSource()), window_size, first_seqnum_in_window);

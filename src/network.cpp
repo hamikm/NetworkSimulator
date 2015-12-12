@@ -467,18 +467,20 @@ double netflow::getPktDelay(double currTime) const {
 	return pkt_RRT;
 }
 
-void netflow::registerSendDuplicateAckAction(int seq, double time) {
+void netflow::registerSendDuplicateAckAction(int seq, 
+	double arrival_time, double sent_time) {
 	// Update and queue up new ack_event
 	packet p = packet(ACK, *this, seq);
+	p.setTransmitTimestamp(sent_time);
 
 	// If we're sending a duplicate ACK then set the
 	// dont_send_duplicate_ack_until time for subsequent duplicate ACKs
 	// highest_received_flow_seqnum = next_ack_seqnum - 1
 	if (seq == next_ack_seqnum - 1) {
 
-		if (time > dont_send_duplicate_ack_until) {
-			dont_send_duplicate_ack_until = time + avg_RTT;
-			ack_event *e = new ack_event(time, *sim, *this, p);
+		if (arrival_time > dont_send_duplicate_ack_until) {
+			dont_send_duplicate_ack_until = arrival_time + avg_RTT;
+			ack_event *e = new ack_event(arrival_time, *sim, *this, p);
 			sim->addEvent(e);
 		}
 		// don't send a duplicate ACK if time hasn't gone past
@@ -486,7 +488,7 @@ void netflow::registerSendDuplicateAckAction(int seq, double time) {
 	}
 	else {
 		dont_send_duplicate_ack_until = -1;
-		ack_event *e = new ack_event(time, *sim, *this, p);
+		ack_event *e = new ack_event(arrival_time, *sim, *this, p);
 		sim->addEvent(e);
 	}
 
@@ -550,22 +552,11 @@ vector<packet> netflow::popOutstandingPackets(double start_time,
 	return outstanding_pkts;
 }
 
-void netflow::updateTimeoutLength(double end_time_ms, int flow_seqnum) {
-
-	// Make sure we have a departure time for this ACK's corresponding FLOW
-	// packet.
-	assert (rtts.find(flow_seqnum) != rtts.end());
-
-	// Make sure the departure time was stored as a negative number.
-	assert (rtts[flow_seqnum] < 0);
-
-	// If we do then get the round-trip time for this packet then delete
-	// its entry from the RTT table.
-	double rtt = rtts[flow_seqnum] + end_time_ms;
-	rtts.erase(flow_seqnum);
+void netflow::updateTimeoutLength(double rtt, int flow_seqnum) {
 	
 	// update state variable
 	pkt_RRT = rtt;
+	//cout << rtt << endl;
 	
 	// If it's the first ACK we don't have an average or deviation for the
 	// round-trip times, so initialize them to the first RTT
@@ -587,6 +578,8 @@ void netflow::updateTimeoutLength(double end_time_ms, int flow_seqnum) {
 	// Now update the timeout length
 	timeout_length_ms = avg_RTT + 4 * std_RTT;
 }
+
+double netflow::getPktRTT() const { return pkt_RRT; }
 
 void netflow::receivedAck(packet &pkt, double end_time_ms,
 		double linkFreeAtTime) {
@@ -676,7 +669,10 @@ void netflow::receivedAck(packet &pkt, double end_time_ms,
 		// The corresponding FLOW packet had sequence number one less
 		int flow_seqnum = pkt.getSeq() - 1;
 
-		updateTimeoutLength(end_time_ms, flow_seqnum);
+		if (pkt.getTransmitTimestamp() != -1) {
+			updateTimeoutLength(end_time_ms - pkt.getTransmitTimestamp(),
+					 flow_seqnum);
+		}
 
 		// Now adjust the window start and size. Since we just received
 		// an ACK for a successfully received packet we can slide the window
@@ -724,13 +720,14 @@ void netflow::receivedFlowPacket(packet &pkt, double arrival_time) {
 			&& (next_ack_seqnum <= getNumTotalPackets())) {
 		next_ack_seqnum++;	
 	}
-
+	double sent_time = (next_ack_seqnum == pkt.getSeq() + 1) ?
+			 pkt.getTransmitTimestamp() : -1;
 	// TODO: without following timeouts are triggered too early?
 	// delayFlowTimeout(arrival_time + timeout_length_ms);
 
 	// Make and queue (locally and on the simulation event queue) an immediate
 	// duplicate_ack_event.
-	registerSendDuplicateAckAction(next_ack_seqnum, arrival_time);
+	registerSendDuplicateAckAction(next_ack_seqnum, arrival_time, sent_time);
 }
 
 double netflow::getTimeoutLengthMs() const { return timeout_length_ms; }
