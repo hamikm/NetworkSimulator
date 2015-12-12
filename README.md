@@ -25,7 +25,8 @@ This networks in this simulation consist of:
 * *flows*, which represents data transfers
 * *packets*, which do not have a payload size, but not an actual payload
 
-Hosts partition data flows into packets, which are enqueued onto links, which pass them to routers, which forward them to the flow's destination. As such error correction techniques, such as parity bits and checksums, are not simulated. Destinations receive packets and acknowledge them. Users specify with which protocol to transfer flows in the input file. This simulation supports TCP Tahoe and TCP-FAST. Routers periodically update their routing tables by running the Bellman-Ford algorithm on the network. Routing table updates occur within the simulation. In other words, packets used in router discovery events must wait to be transferred through the links as would flow and ack packets.
+Hosts partition data flows into packets, which are enqueued onto links, which pass them to routers, which forward them to the flow's destination. As such error correction techniques, such as parity bits and checksums, are not simulated. Destinations receive packets and acknowledge them. Users specify with which protocol to transfer flows in the input file. This simulation supports TCP Tahoe and TCP-FAST. Routers periodically update their routing tables by running the Bellman-Ford algorithm on the network. Routing packets must wait to be transferred through the links along with flow and acknowledgement traffic. For distributed Bellman Ford, the routing messages are sent until the graph becomes stable. The update process is terminated (i.e., no more routing packets are sent from a particular router) when the router does not need to update any more distances in its routing table.
+
 
 ### Architecture
 
@@ -105,7 +106,7 @@ The plot of window sizes also appears to be correct. Slow start is entered in th
 ![test-case-0-tahoe-link](https://github.com/hamikm/cit_cs143_network_sim/blob/smart_gbn/report_graphs/tc0_tahoe_link_metrics_graph.png)
 
 ##### Test Case 1
-This test case is intended to test the dynamic routing. Dynamic routing is Each link is assigned a cost that is the sum of static link cost and dynamic link cost, which can be measured as the time it takes a packet to travel from source to destination. This is equal to half of round trip time. While updating the routing table, each router sends routing packets to every other router which allows it to gauge the link congestion. Links between hosts and routers are ignored, since there is no alternative path. 
+This test case is intended to test the dynamic routing. Link cost is determined by the amount of time it takes for packet to traverse the link. This metric includes both static cost (length) and dynamic cost (due to congestion) since traversal time depends on both. Distance to self and adjacent hosts are treated as 0, since each host has only one outgoing link and the next hop will never change. The first router discovery event occurs at time 0, and terminates before any flows start. In subsequent router discovery events, each router’s distance table is reset (although next-hop links are not) and routing packets are sent from each router to its neighboring routers.
 
 We expect flow packets to alternate between L1 and L2, and L3 and L4. It is more difficult to see in the throughput graphs, but easy to see by examing the link buffers. One can clearly see the switching between links, indicating the dynamic routing is working.
 
