@@ -491,6 +491,10 @@ public:
 	/**
 	 * Initializes this event's time to the given one, sets the event ID,
 	 * and sets the flow to which this ack_event belongs.
+	 * @param time
+	 * @param sim
+	 * @param flow
+	 * @param dup_pkt
 	 */
 	ack_event(double time, simulation &sim,
 			netflow &flow, packet &dup_pkt);

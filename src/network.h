@@ -614,7 +614,7 @@ public:
 	
 	/**
 	 * Getter for the ending time of the packet count interval.
-	 * @returns right side of pkt count interval
+	 * @return right side of pkt count interval
 	 */
 	double getRightTime() const;
 
@@ -720,11 +720,13 @@ public:
 	 * Packet delay is defined as time elapsed since packet is send and
 	 * acknowledgment is received.
 	 * @param currTime current time
-	 * @returns packet delay
+	 * @return packet delay
 	 */
 	double getPktDelay(double currTime) const;
 
-	/** Returns true if flow has finished transmitting */
+	/** Returns true if flow has finished transmitting
+	 * @return bool
+	 */
 	bool doneTransmitting();
 
 	// --------------------------- Mutators -----------------------------------
