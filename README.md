@@ -96,7 +96,17 @@ See `NetworkSimTestCases-2015.pdf` in the root directory for an explanation
 #### TCP Tahoe
 
 ##### Test Case 0
+Since Test Case 0 has only 1 flow transferring over 1 link, a 20 MB flow transferring at full link capacity should take about 16 seconds. However, given congestion control is implemented and that TCP Tahoe is the slowest of the congestion controls, we expect the transmission time to take a little longer. The actual simulation takes ~28 seconds to complete, which is reasonable.
+
+The plot of window sizes also appears to be correct. Slow start is entered in the beginning. Afterwards, every time duplicate acknowledgements are registered, the window size is reset to 1. Slow start is entered again before entering linear growth. This can be seen in the plot of window sizes in the slight gap between each fin. 
+
 ##### Test Case 1
+This test case is intended to test the dynamic routing. Dynamic routing is Each link is assigned a cost that is the sum of static link cost and dynamic link cost, which can be measured as the time it takes a packet to travel from source to destination. This is equal to half of round trip time. While updating the routing table, each router sends routing packets to every other router which allows it to gauge the link congestion. Links between hosts and routers are ignored, since there is no alternative path. 
+
+We expect flow packets to alternate between L1 and L2, and L3 and L4. It is more difficult to see in the throughput graphs, but easy to see by examing the link buffers. One can clearly see the switching between links, indicating the dynamic routing is working.
+
+Different from Test Case 0, Test Case 1 has routers. We expect the total time to be far longer because the flow running with TCP Tahoe is traveling over many links, and routing table update events are happening while the simulation timer is running.
+
 ##### Test Case 2
 
 #### TCP-FAST
