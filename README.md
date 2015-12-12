@@ -116,7 +116,7 @@ Although the window sizes do converge to a steady-state, the run-time (in simula
 * Designed and implemented dynamic routing and associated events
 * Implemented FAST TCP and associated events
 * Found fixes for bugs in sending/receiving packets, duplicate and selective ack handling, window resizing, and incurring half-duplex link costs
-*Note: A few early commits were made when my git.config email was set incorrectly, so the contributions are not registered to my account. The commits are still visible under my name if you scroll back through the commit feed.*
+* Note: A few early commits were made when my git.config email was set incorrectly, so the contributions are not registered to my account. The commits are still visible under my name if you scroll back through the commit feed.*
 
 #### Jessica 
 * implemented logging from simulation into JSON formatted log file using JSON for Modern C++ instead of RapidJSON
