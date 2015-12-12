@@ -25,7 +25,7 @@ This networks in this simulation consist of:
 * *flows*, which represents data transfers
 * *packets*, which do not have a payload size, but not an actual payload
 
-Hosts partition data flows into packets, which are enqueued onto links, which pass them to routers, which forward them to the flow's destination. As such error correction techniques, such as parity bits and checksums, are not simulated. Destinations receive packets and acknowledge them. Users choose which protocol to transfer flows with. This simulation supports TCP Tahoe and TCP-FAST. Routers periodically update their routing table by running the Bellman-Ford algorithmon the network. Routing table update occur within the simulation. In other works, routing packets use to find routers must wait to be transfered as would flow and ack packets.
+Hosts partition data flows into packets, which are enqueued onto links, which pass them to routers, which forward them to the flow's destination. As such error correction techniques, such as parity bits and checksums, are not simulated. Destinations receive packets and acknowledge them. Users specify with which protocol to transfer flows in the input file. This simulation supports TCP Tahoe and TCP-FAST. Routers periodically update their routing tables by running the Bellman-Ford algorithm on the network. Routing table updates occur within the simulation. In other words, packets used in router discovery events must wait to be transferred through the links as would flow and ack packets.
 
 ### Architecture
 
@@ -124,11 +124,11 @@ The window size plot is as roughly as expected. There is a spike in window size 
 
 #### TCP-FAST
 
-Although the window sizes do converge to a steady-state, the run-time (in simulation seconds) is longer than expected and the steady-state window size is lower than expected because our acknowledgement packets and routing packets incur link delays. These delays can be exacerbated by the fact that we have implemented half-duplex links.
+We used gamma = 1 and alpha = 20. Window size is updated every 20 milliseconds. Although the window sizes do quickly converge to a steady-state, steady-state window size is lower than expected, causing the run-time (in simulation seconds) to longer than expected. We suspect that this is true because our acknowledgement packets and routing packets both incur link delays, which can be exacerbated by the fact that we have implemented half-duplex links.
 
 ##### Analytical Results
 
-As we pointed out above our FAST results are impossible to compare with our analytical results because we're using half-duplex links and because window resizing under FAST doesn't quite work, but here's our analysis anyway for test case 2.
+As we pointed out above our FAST results are impossible to compare with our analytical results because we're using half-duplex links and because window resizing under FAST doesn't quite work, but here's our analysis anyway for test case 2. Note that our buffer occupancy metric is recorded in bytes rather than in packets.
 
 (Zero to ten seconds) In this time interval	the first flow goes from S1 to T1 using each of the links L1, L2, and L3. Since there is just one flow and since all link capacities and propagation delays are the same the throughput of the first flow is just 2500 packets/s. The queuing delay is then q<sub>1</sub><sup>\*</sup> = &#945; / x<sub>1</sub><sup>\*</sup> = 50 / 2500 = 0.02 s/packet. Since 2500 packets are sent per second we get a queue length of (link capacity)\*(queuing delay) = 2500 \* 0.02 = 50 packets, though packets will only need to queue up at link 1 since the steady-state send-rate keeps packets from needing to queue at links 2 or 3.
 
