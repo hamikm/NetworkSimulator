@@ -57,7 +57,7 @@ private:
 protected:
 
 	/**
-	 * Pointer to simulation this event is in so generated events can be
+	 * Pointer to simulation so generated events can be
 	 * added to its events queue.
 	 */
 	simulation *sim;
@@ -133,7 +133,7 @@ class receive_packet_event : public event {
 private:
 
 	/**
-	 * Flow to which the received packet belongs. Is NULL for routing
+	 * Flow to which the received packet belongs. NULL for routing
 	 * packets.
 	 */
 	netflow *flow;
@@ -150,6 +150,11 @@ private:
 	/**
 	 * Constructor helper. Does naive assignments; logic should be in the
 	 * calling constructors.
+	 * @param flow Flow packet originated from
+	 * @param pkt Packet contents
+	 * @param step_destination Node at the other side of link packet is
+	 * currently traveling
+	 * @param link Link packet is currently traveling
 	 */
 	void constructorHelper(netflow *flow, packet &pkt,
 			netnode *step_destination, netlink *link);
@@ -158,6 +163,13 @@ public:
 	/**
 	 * Constructor for receive packet events for lone packets; the window size
 	 * and start are set to 1 and this packet's sequence number, respectively.
+	 * @param time Time when packet should be received
+	 * @param sim
+	 * @param flow Flow packet originated from
+	 * @param pkt Packet associated with this event
+	 * @param step_destination Node at the other side of link packet is
+	 * currently traveling
+	 * @param link Link packet is currently traveling
 	 */
 	receive_packet_event(double time, simulation &sim,
 			netflow &flow, packet &pkt, netnode &step_destination,
@@ -166,6 +178,12 @@ public:
 	/**
 	 * Constructor for receive packet events for packets that do not belong
 	 * to a flow (i.e., routing packets).
+	 * @param time Time when packet should be received
+	 * @param sim
+	 * @param pkt Packet associated with this event
+	 * @param step_destination Node at the other side of link packet is
+	 * currently traveling
+	 * @param link Link packet is currently traveling
 	 */
 	receive_packet_event(double time, simulation &sim, packet &pkt, 
 			netnode &step_destination, netlink &link);
@@ -209,7 +227,9 @@ private:
 public:
 
 	/**
-	 * Initializes this event's time to the given one and sets the event ID,
+	 * Initializes this event's time to the given one and sets the event ID.
+	 * @param time
+	 * @param sim
 	 */
 	router_discovery_event(double time, simulation &sim);
 
@@ -294,6 +314,10 @@ private:
 	/**
 	 * Constructor helper. Does naive assignments; logic should be in the
 	 * calling constructors.
+	 * @param flow
+	 * @param pkt
+	 * @param link
+	 * @param departure_node
 	 */
 	void constructorHelper(netflow *flow, packet &pkt,
 			netlink *link, netnode *departure_node);
@@ -365,6 +389,9 @@ public:
 	/**
 	 * Initializes this event's time to the given one, sets the event ID,
 	 * and sets the flow that this start_flow_event is going to start.
+	 * @param time Time when to start the flow
+	 * @param sim
+	 * @param flow Flow to start
 	 */
 	start_flow_event(double time, simulation &sim, netflow &flow);
 
