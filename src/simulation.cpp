@@ -259,7 +259,7 @@ void simulation::runSimulation() {
 	addEvent(r_event);
 
 	for (int update_t = 550; update_t < UPPER_TIME_ROUTING_LIMIT;
-			update_t += 1000) {
+			update_t += 5000) {
 		router_discovery_event *r_event = new 
 				router_discovery_event(update_t, *this);
 		addEvent(r_event);
@@ -279,8 +279,10 @@ void simulation::runSimulation() {
 		// Add update_window_events here if necessary.
 		if (flow->isUsingFAST()) {
 
-			for (int update_w = flow->getStartTimeMs(); update_w < 20000;
-					update_w += 2000) {
+			for (int update_w = flow->getStartTimeMs(); 
+					update_w < UPPER_TIME_ROUTING_LIMIT;
+					update_w += 20) {
+				
 				update_window_event *w_event = new
 						update_window_event(update_w, *this, *flow);
 				addEvent(w_event);

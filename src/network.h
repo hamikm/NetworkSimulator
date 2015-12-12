@@ -503,12 +503,12 @@ private:
 	/**
 	 * Updates the average round-trip time and standard deviation of round-
 	 * trip times using recursive formulas.
-	 * @param end_time_ms time of receipt of a packet. Used to compute the
+	 * @param rtt time of receipt of a packet. Used to compute the
 	 * round-trip time.
 	 * @param flow_seqnum the sequence number of the packet that was just
 	 * received.
 	 */
-	void updateTimeoutLength(double end_time_ms, int flow_seqnum);
+	void updateTimeoutLength(double rtt, int flow_seqnum);
 
 	/**
 	 * Constructor helper. Does naive assignments; logic should be in the
@@ -691,6 +691,8 @@ public:
 	 */
 	double getLinGrowthWinsizeThreshold() const;
 
+	double getPktRTT() const;
+
 	/**
 	 * Print helper function which partially overrides the one in netdevice.
 	 * @param os The output stream to which to write.
@@ -773,9 +775,10 @@ public:
 	 * Makes an @c ack_event and puts it on the simulation's event queue.
 	 * @param seq the @c ack_event will contain an ACK packet with this
 	 * sequence number
-	 * @time time at which the @c ack_event should run
+	 * @param arrival_time 
+	 * @param sent_time 
 	 */
-	void registerAckEvent(int seq, double time);
+	void registerAckEvent(int seq, double arrival_time, double sent_time);
 
 	/**
 	 * Gets all the packets in this window that must be sent. This function

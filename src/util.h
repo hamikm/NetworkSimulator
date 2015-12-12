@@ -54,7 +54,7 @@ const int LOG_FREQUENCY = 10;
 
 /** Fairness parameter for FAST TCP. Currently each flow uses 
  * the same values. */
-const double GAMMA = 0.5;
+const double GAMMA = 0.2;
 
 /** Fairness parameter for FAST TCP. Currently each flow uses 
  * the same values. */
