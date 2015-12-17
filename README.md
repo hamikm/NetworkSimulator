@@ -18,19 +18,19 @@ We encourage you to use our Doxygen-generated HTML documentation as you acquaint
 
 A full description of the project can be found at `NetworkSimGuidelines-2015.pdf` in the root directory of this project. The intent of the simulation was to help the authors better learn TCP through coding a network simulator and analyzing the results for the given test cases.
 
-This networks in this simulation consist of:
+The networks in this simulation consist of:
 * *routers*, which dynamically update routing tables
 * *hosts*, which send data flows to other hosts through routers
 * half-duplex *links* connecting hosts and routers
 * *flows*, which represents data transfers
-* *packets*, which do not have a payload size, but not an actual payload
+* *packets*, which have no actual payloads but do have payload sizes which are a function of packet type
 
-Hosts partition data flows into packets, which are enqueued onto links, which pass them to routers, which forward them to the flow's destination. As such error correction techniques, such as parity bits and checksums, are not simulated. Destinations receive packets and acknowledge them. Users specify with which protocol to transfer flows in the input file. This simulation supports TCP Tahoe and TCP-FAST. Routers periodically update their routing tables by running the Bellman-Ford algorithm on the network. Routing packets must wait to be transferred through the links along with flow and acknowledgement traffic. For distributed Bellman Ford, the routing messages are sent until the graph becomes stable. The update process is terminated (i.e., no more routing packets are sent from a particular router) when the router does not need to update any more distances in its routing table.
+Hosts partition data flows into packets, which are enqueued onto links, which pass them to routers, which forward them to the flow's destination. Since payloads are effectively empty error correction techniques, such as parity bits and checksums, are not simulated. Destinations receive packets and acknowledge them. Users specify with which protocol to transfer flows in the input file. This simulation supports TCP Tahoe and TCP-FAST. Routers periodically update their routing tables by running the Bellman-Ford algorithm on the network. Routing packets must wait to be transferred through the links along with flow and acknowledgement traffic. For distributed Bellman-Ford the routing messages are sent until the graph becomes stable. The update process is terminated (i.e., no more routing packets are sent from a particular router) when the router does not need to update any more distances in its routing table.
 
 
 ### Architecture
 
-Our simulation is event-driven, which means that it initially seeds an event queue with starter events--`start_flow_event` instances in our case--then enters a loop in which it dequeues an event, calls its `runEvent` function, then logs some data before iterating. Each event occurs at a particular time, which was determined at the time the event was created and which is used to order the events in the events queue, and each event can in turn queue more events. For example, a `send_packet_event` might enqueue a `receive_packet_event` after determining the time at which its packet will be received at the other end of the link. That process is explained in detail in the documentation in the corresponding class. 
+Our simulation is event-driven, which means that it initially seeds an event queue with starter events--`start_flow_event` instances in our case--then enters a loop in which it dequeues an event, calls its `runEvent` function, then logs some data before iterating. Each event occurs at a particular time, which was determined at the time the event was created and which is used to order the events in the events queue, and each event can in turn enqueue more events. For example, a `send_packet_event` might enqueue a `receive_packet_event` after determining the time at which its packet will be received at the other end of the link. That process is explained in detail in the documentation in the corresponding class. 
 
 As we explain the architecture in more detail we will follow the flow of the `netsim` program from start to finish. The unit test architecture is not discussed.
 
@@ -68,7 +68,7 @@ Our `main` function lives in `driver.cpp`. This file handles console arguments a
 
 #### Logging
 
-JSON for Modern C++ is the C++ JSON parsing module used to write the log file in JSON format. A logger file is created every time a simluation is run, thus all logger related functions are stored under a simulation object. Data is logged every time an event is run. In order to speed up graphing and reduce the size of the log file, 1 in every 10 events is actually logged. See `sampleDataFile.json` for example of log file format.
+We use JSON for Modern C++ to *write* in JSON format; RapidJSON is used to *read* it. Jessica preferred the former for writing and Hamik preferred the latter for reading. A logger file is created every time a simluation is run and all logging functions belong to the `Simulation` class. Data is logged every time an event is run. In order to speed up graphing and reduce the size of the log file only 1 in every 10 events is actually logged. See `sampleDataFile.json` for example log file format.
 
 This simulation logs the following:
 
@@ -77,7 +77,7 @@ Link Metrics
     - calculated by binning the number of packets received by the network node at either end of the link (since every link is half duplex) every RATE_INTERVAL, currently set to 1 second.
 - *buffer occupancy*
     - stored as state variable
-    - calculated as terms of KB rather than packets because all packets get queued, but do not all have the same size
+    - calculated in terms of KB rather than packets because all packets get queued, but do not all have the same size
 - *packet loss*
     - computed as number of packets continously dropped from a full buffer, reset every time buffer is not full
 
@@ -93,7 +93,7 @@ Flow Metrics
 
 ### Analysis of Simulation of TCP on Given Test Cases
 
-See `NetworkSimTestCases-2015.pdf` in the root directory for an explanation 
+See `NetworkSimTestCases-2015.pdf` in the root directory for details on each test case.
 
 #### TCP Tahoe
 
@@ -106,7 +106,7 @@ The plot of window sizes also appears to be correct. Slow start is entered in th
 ![test-case-0-tahoe-link](https://github.com/hamikm/cit_cs143_network_sim/blob/smart_gbn/report_graphs/tc0_tahoe_link_metrics_graph.png)
 
 ##### Test Case 1
-This test case is intended to test the dynamic routing. Link cost is determined by the amount of time it takes for packet to traverse the link. This metric includes both static cost (length) and dynamic cost (due to congestion) since traversal time depends on both. Distance to self and adjacent hosts are treated as 0, since each host has only one outgoing link and the next hop will never change. The first router discovery event occurs at time 0, and terminates before any flows start. In subsequent router discovery events, each router’s distance table is reset (although next-hop links are not) and routing packets are sent from each router to its neighboring routers.
+This test case is intended to test the dynamic routing. Link cost is determined by the amount of time it takes for a ROUTING packet to traverse a link. This metric includes both static cost (length) and dynamic cost (due to congestion) since traversal time depends on both. Distance to self and adjacent hosts are treated as 0, since each host has only one outgoing link and the next hop will never change. The first router discovery event occurs at time 0, and terminates before any flows start. In subsequent router discovery events, each router’s distance table is reset (although next-hop links are not) and routing packets are sent from each router to its neighboring routers.
 
 We expect flow packets to alternate between L1 and L2, and L3 and L4. It is more difficult to see in the throughput graphs, but easy to see by examing the link buffers. One can clearly see the switching between links, indicating the dynamic routing is working.
 
@@ -117,7 +117,7 @@ Different from Test Case 0, Test Case 1 has routers. We expect the total time to
 
 ##### Test Case 2
 
-Since Test Case 2 contains multiple routers and multiple flows, we expect it to take the longest and exhibit the most complex behavior behavior of the three cases. Looking at plot of flow throughput, we may get a sense for how long each flow took. Flow 1 took the longest to transmit, which is reasonable since it had the longest distance to travel. 
+Since Test Case 2 contains multiple routers and multiple flows, we expect it to take the longest and exhibit the most complex behavior behavior of the three cases. Looking at the plot of flow throughput we can get a sense for how long each flow took. Flow 1 took the longest to transmit, which is reasonable since it had the longest distance to travel. 
 
 The window size plot is as roughly as expected. There is a spike in window size whenever each plow begins to send due to slow start. Afterwards, each flow's window size is adjusted according to TCP Tahoe. Flow 1's window size continues to readjust throughout the entire simulation. However, Flow 2's and Flow 3's window sizes flatline at approximately 150 seconds and 310 seconds, respectively. These times are also when Flow 2 and Flow 3 finish transmitting. The flatline in the plot is due to the fact that the the simulation continues to log metrics from all flows, until the simulation terminates.
 
@@ -126,11 +126,11 @@ The window size plot is as roughly as expected. There is a spike in window size 
 
 #### TCP-FAST
 
-We used gamma = 1 and alpha = 20. Window size is updated every 20 milliseconds. Although the window sizes do quickly converge to a steady-state, steady-state window size is lower than expected, causing the run-time (in simulation seconds) to longer than expected. We suspect that this is true because our acknowledgement packets and routing packets both incur link delays, which can be exacerbated by the fact that we have implemented half-duplex links.
+We used gamma = 1 and alpha = 20. Window size is updated every 20 milliseconds. Although the window sizes do quickly converge to a steady-state, steady-state window size is lower than expected, causing the run-time (in simulation seconds) to be longer than expected. We suspect that this is true because our ACK and ROUTING packets both incur link delays, which are exacerbated by the fact that we implemented half-duplex links.
 
 ##### Analytical Results
 
-As we pointed out above our FAST results are impossible to compare with our analytical results because we're using half-duplex links and because window resizing under FAST doesn't quite work, but here's our analysis anyway for test case 2. Note that our buffer occupancy metric is recorded in bytes rather than in packets.
+As we pointed out above our FAST results are impossible to compare with our analytical results because we're using half-duplex links and because are ROUTING and ACK packets incur buffering and link delays, but here's our analysis anyway for test case 2. Note that our buffer occupancy metric is recorded in bytes rather than in packets.
 
 (Zero to ten seconds) In this time interval	the first flow goes from S1 to T1 using each of the links L1, L2, and L3. Since there is just one flow and since all link capacities and propagation delays are the same the throughput of the first flow is just 2500 packets/s. The queuing delay is then q<sub>1</sub><sup>\*</sup> = &#945; / x<sub>1</sub><sup>\*</sup> = 50 / 2500 = 0.02 s/packet. Since 2500 packets are sent per second we get a queue length of (link capacity)\*(queuing delay) = 2500 \* 0.02 = 50 packets, though packets will only need to queue up at link 1 since the steady-state send-rate keeps packets from needing to queue at links 2 or 3.
 
@@ -166,17 +166,17 @@ As we pointed out above our FAST results are impossible to compare with our anal
 *Note: A few of Jingwen's early commits were done when her git.config email was set incorrectly, so the contributions are not registered to her account. The commits are still visible under her name if you scroll back through the commit feed.*
 
 #### Jessica 
-* implemented logging from simulation into JSON formatted log file using JSON for Modern C++ instead of RapidJSON
-* implemented plotting of simulation metrics by parsing JSON logger
-    * implemented interactive plot 
-* created presentations
-* implemented selective acknowledgement scheme
+* Implemented logging from simulation into JSON formatted log file using JSON for Modern C++ instead of RapidJSON
+* Implemented plotting of simulation metrics by parsing JSON logger
+    * Implemented interactive plot 
+* Created presentations
+* Implemented selective acknowledgement scheme
 
 #### Hamik
 
 * Decided the JSON input file format, wrote the test cases, and chose the RapidJSON library
 * Chose the Doxygen documentation generator and uploaded the final docs to his website
 * Wrote the long Makefile
-* Decided an inheritance hierarchy and wrote skeleton flow, host, router, link, packet, simulation, and event classes. He also wrote the `driver.cpp` file as the entry point for the simulation and tested the skeleton simulation against some unit tests written under the Google C++ unit testing framework.
-* Played a support role for Jessica and Jingwen after the project was bootstrapped, which included helping with debugging, occasionally writing new code or bug fixes, and clarifying C++ concepts since they were less familiar with C++ than he was.
-* Merged a lot of the code from other branches into the default branch, since his editor (Eclipse) was best at it. 
+* Decided an inheritance hierarchy and wrote skeleton flow, host, router, link, packet, simulation, and event classes. He also wrote the `driver.cpp` file as the entry point for the simulation and tested the skeleton simulation against some unit tests written under the Google C++ unit testing framework
+* Played a support role for Jessica and Jingwen after the project was bootstrapped, which included helping with debugging, occasionally writing new code or bug fixes, and clarifying C++ concepts since they were less familiar with C++ than he was
+* Merged a lot of the code from other branches into the default branch, since his editor (Eclipse) was best at it
