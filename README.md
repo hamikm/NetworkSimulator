@@ -154,7 +154,6 @@ As we pointed out above our FAST results are impossible to compare with our anal
 ![test-case-2-fast-flow](https://github.com/hamikm/cit_cs143_network_sim/blob/smart_gbn/report_graphs/tc2_fast_link_metrics_graph.png)
 
 ### Division of Labor
-*A lot of the commits that appear to have originated from Hamik's account are actually mostly Jingwen's or Jessica's, since Hamik just performed the merges.*
 
 #### Jingwen
 
